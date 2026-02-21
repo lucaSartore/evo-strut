@@ -1,3 +1,6 @@
+mod stages;
+
+
 fn main() {
-    println!("Hello, world!");
+    stages::loading::read("test_meshes/dragon.stl");
 }
