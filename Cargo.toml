@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 stl_io = "0.10.0"
+rerun = "0.29.2"
