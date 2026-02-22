@@ -41,6 +41,24 @@ impl Triangle<'_> {
     pub fn as_raw_indexed(&self) -> IndexedTriangle{
         self.graph.mesh.faces[self.index]
     }
+
+    pub  fn get_height_difference(&self, other: &Triangle<'_>) -> f32 {
+        let distance = self.center() - other.center();
+        distance.z
+    }
+
+    pub  fn is_lower_than(&self, other: &Triangle<'_>) -> bool {
+        self.get_height_difference(other) < 0.
+    }
+    pub  fn is_lower_or_equal_than(&self, other: &Triangle<'_>) -> bool {
+        self.get_height_difference(other) <= 0.
+    }
+    pub  fn is_higher_than(&self, other: &Triangle<'_>) -> bool {
+        self.get_height_difference(other) > 0.
+    }
+    pub  fn is_higher_or_equal_than(&self, other: &Triangle<'_>) -> bool {
+        self.get_height_difference(other) >= 0.
+    }
 }
 
 

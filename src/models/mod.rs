@@ -71,6 +71,14 @@ impl SurfaceGraph {
         self.mesh.vertices.len()
     }
 
+    pub fn iter_adjacent<'a>(&'a self, node: usize) -> impl Iterator<Item=Triangle<'a>>{
+        self.nodes[node]
+            .adjacent
+            .iter()
+            .map(|x| {
+                self.get_triangle(*x)
+            })
+    }
     pub fn iter_vertices(&self) -> impl Iterator<Item=Point>{
         (0..self.count_vertices())
             .map(|x| {self.get_point(x)})
