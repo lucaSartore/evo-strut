@@ -2,8 +2,11 @@ use std::{collections::HashMap, rc::Rc, vec};
 use rerun::external::glam::usize;
 use stl_io::IndexedMesh;
 
+mod settings;
+
 mod point;
 pub use point::Point;
+pub use settings::{BridgeSettings, Settings};
 
 pub struct SurfaceNode {
     pub triangle: usize,
