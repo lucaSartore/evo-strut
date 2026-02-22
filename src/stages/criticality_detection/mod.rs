@@ -43,7 +43,7 @@ impl CriticalityDetector for OrientationBasedCriticality {
 
             // condition based on the fact that the current point has
             // no neighbor that is lower than self
-            if !has_lower_neighbor && angle <= 90. {
+            if !has_lower_neighbor && angle_deg <= 90. {
                 to_return.push(i);
                 continue 'triangles_loop
             }
