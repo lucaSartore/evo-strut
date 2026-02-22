@@ -50,12 +50,13 @@ impl Point {
         }
     }
     pub fn dot(a: Point, b: Point) -> f32 {
-        (a.x - b.x).powi(2) +
-        (a.y - b.y).powi(2) +
-        (a.z - b.z).powi(2)
+        (a.x * b.x) +
+        (a.y * b.y) +
+        (a.z * b.z)
     }
 
-    pub fn angle_between(a: Point, b: Point) -> f32 {
+    /// return the angle between two versors (in radiants)
+    pub fn angle_between(a: &Point, b: &Point) -> f32 {
         let cos = Point::dot(
             a.as_versor(),
             b.as_versor()

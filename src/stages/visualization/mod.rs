@@ -1,4 +1,4 @@
-use crate::models::{SurfaceGraph, Point};
+use crate::{models::{Point, Settings, SurfaceGraph}, stages::criticality_detection::{CriticalityDetector, OrientationBasedCriticality}};
 use anyhow::Result;
 
 use rerun::{
@@ -31,8 +31,39 @@ pub fn visualize_mesh(mesh: SurfaceGraph, name: &str, color: Color) -> Result<()
 
     let rec = rerun::RecordingStreamBuilder::new(name).spawn()?;
 
-    let colors = (0..mesh.mesh.vertices.len())
-        .map(|_| { color });
+    let mut colors = vec![color; mesh.count_vertices()];
+
+    rec.log(
+        "mesh",
+        &rerun::Mesh3D::new(mesh.iter_vertices())
+            .with_vertex_normals(mesh.vertex_normals())
+            .with_vertex_colors(colors)
+            .with_triangle_indices(mesh.iter_triangles()),
+    )?;
+
+    Ok(())
+}
+
+
+pub fn visualize_critical_surfaces(mesh: &SurfaceGraph) -> Result<()> {
+
+    let rec = rerun::RecordingStreamBuilder::new("Critical surfaces").spawn()?;
+
+
+    let mut colors = vec![Color::Green; mesh.count_vertices()];
+
+    let critical_surfaces_indexes = OrientationBasedCriticality::detect_criticality(
+        mesh,
+        &Settings::default()
+    );
+
+    critical_surfaces_indexes.iter().for_each(|x| {
+        let t = mesh.get_triangle(*x).as_raw_indexed();
+        for v in t.vertices {
+            colors[v] = Color::Red;
+        }
+    });
+
 
     rec.log(
         "mesh",
