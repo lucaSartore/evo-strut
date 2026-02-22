@@ -1,7 +1,8 @@
 use stl_io::Vector;
 use std::ops::{Add, Sub};
-use rerun::Position3D;
+use rerun::{Position3D, Vector3D};
 
+#[derive(Debug, Default, Clone)]
 pub struct Point{
     pub x: f32,
     pub y: f32,
@@ -63,6 +64,15 @@ impl Point {
     }
 }
 
+impl From<Vector<f32>> for Point {
+    fn from(value: Vector<f32>) -> Self {
+        Point {
+            x: value.0[0],
+            y: value.0[1],
+            z: value.0[2]
+        }
+    }
+}
 impl From<&Vector<f32>> for Point {
     fn from(value: &Vector<f32>) -> Self {
         Point {
@@ -76,5 +86,11 @@ impl From<&Vector<f32>> for Point {
 impl From<Point> for Position3D {
     fn from(value: Point) -> Self {
         Position3D::new(value.x,value.y,value.z)
+    }
+}
+
+impl From<Point> for Vector3D {
+    fn from(value: Point) -> Self {
+        [value.x,value.y,value.z].into()
     }
 }

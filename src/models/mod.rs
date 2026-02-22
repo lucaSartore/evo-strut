@@ -1,12 +1,15 @@
 use std::{collections::HashMap, rc::Rc, vec};
-use rerun::external::glam::usize;
-use stl_io::IndexedMesh;
+use rerun::external::{crossbeam::epoch::Pointable, glam::usize};
+use stl_io::{IndexedMesh, IndexedTriangle};
 
 mod settings;
+pub use settings::{Settings, CriticalitySettings};
 
 mod point;
 pub use point::Point;
-pub use settings::{BridgeSettings, Settings, CriticalitySettings};
+
+mod triangle;
+pub use triangle::Triangle;
 
 pub struct SurfaceNode {
     pub triangle: usize,
@@ -22,10 +25,15 @@ impl SurfaceNode {
     }
 }
 
+impl SurfaceNode {
+    pub fn get_face(&self, graph: &SurfaceGraph) -> IndexedTriangle {
+        graph.mesh.faces[self.triangle]
+    }
+}
+
 pub struct SurfaceGraph {
     pub mesh: Rc<IndexedMesh>,
     pub nodes: Vec<SurfaceNode>
-    
 }
 
 
@@ -43,6 +51,48 @@ impl SurfaceGraph {
         to_return.fill_adjacent();
         to_return
     }
+
+    pub fn get_point(&self, point: usize) -> Point {
+        self.mesh.vertices[point].into()
+    }
+
+    pub fn get_triangle<'a>(&'a self, node: usize) -> Triangle<'a> {
+        let t_index = self.nodes[node].triangle;
+        Triangle {
+            graph: self,
+            index: t_index,
+        }
+    }
+
+    pub fn count_triangles(&self) -> usize {
+        self.mesh.faces.len()
+    }
+    pub fn count_vertices(&self) -> usize {
+        self.mesh.vertices.len()
+    }
+
+    pub fn iter_vertices(&self) -> impl Iterator<Item=Point>{
+        (0..self.count_vertices())
+            .map(|x| {self.get_point(x)})
+    }
+
+    pub fn iter_triangles<'a>(&'a self) -> impl Iterator<Item=Triangle<'a>>{
+        (0..self.count_triangles())
+            .map(|x| {self.get_triangle(x)})
+    }
+
+    pub fn vertex_normals(&self) -> Vec<Point> {
+        let mut normals = vec![Point::default(); self.count_vertices()];
+        self.iter_triangles()
+            .for_each(|x| {
+                let raw = x.as_raw_indexed();
+                for v in x.as_raw_indexed().vertices {
+                    normals[v] = raw.normal.into();
+                }
+            });
+        normals
+    }
+
 
     fn fill_adjacent(&mut self) {
         let mut adj_map = HashMap::<(usize, usize), Vec<usize>>::new();
@@ -78,12 +128,6 @@ impl SurfaceGraph {
     }
 
     fn mark_adjacent(&mut self, a: usize, b: usize) {
-        self.nodes[a].adjacent.push(b);
-        self.nodes[b].adjacent.push(a);
-    }
-
-
-    fn fill_(&mut self, a: usize, b: usize) {
         self.nodes[a].adjacent.push(b);
         self.nodes[b].adjacent.push(a);
     }
