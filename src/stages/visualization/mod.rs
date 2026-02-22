@@ -2,7 +2,8 @@ use crate::models::{SurfaceGraph, Point};
 use anyhow::Result;
 
 use rerun::{
-    TriangleIndices, Vector3D, blueprint, components::Color as RerunColor, demo_util::{bounce_lerp, color_spiral}, external::crossbeam::epoch::Pointable
+    TriangleIndices,
+    components::Color as RerunColor
 };
 
 
@@ -11,7 +12,7 @@ pub enum Color {
     Blue,
     Red,
     Green,
-    RGB(u8, u8, u8)
+    Rgb(u8, u8, u8)
 }
 
 impl From<Color> for RerunColor {
@@ -20,33 +21,9 @@ impl From<Color> for RerunColor {
             Color::Blue => RerunColor::from_rgb(0,0,255),
             Color::Green => RerunColor::from_rgb(0,255,0),
             Color::Red => RerunColor::from_rgb(255,0,0),
-            Color::RGB(r, g, b) => RerunColor::from_rgb(r, g, b)
+            Color::Rgb(r, g, b) => RerunColor::from_rgb(r, g, b)
         }
     }
-}
-
-pub fn visualization_test() {
-    const NUM_POINTS: usize = 100;
-    const TAU: f32 = 0.5;
-
-    let rec = rerun::RecordingStreamBuilder::new("rerun_example_dna_abacus")
-        .connect_grpc().unwrap();
-
-    let (points1, colors1) = color_spiral(NUM_POINTS, 2.0, 0.02, 0.0, 0.1);
-    let (points2, colors2) = color_spiral(NUM_POINTS, 2.0, 0.02, TAU * 0.5, 0.1);
-
-    rec.log(
-        "dna/structure/left",
-        &rerun::Points3D::new(points1.iter().copied())
-            .with_colors(colors1)
-            .with_radii([0.08]),
-    ).unwrap();
-    rec.log(
-        "dna/structure/right",
-        &rerun::Points3D::new(points2.iter().copied())
-            .with_colors(colors2)
-            .with_radii([0.08]),
-    ).unwrap();
 }
 
 
