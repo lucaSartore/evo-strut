@@ -6,7 +6,7 @@ mod settings;
 
 mod point;
 pub use point::Point;
-pub use settings::{BridgeSettings, Settings};
+pub use settings::{BridgeSettings, Settings, CriticalitySettings};
 
 pub struct SurfaceNode {
     pub triangle: usize,
