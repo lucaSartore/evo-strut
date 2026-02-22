@@ -8,6 +8,20 @@ pub struct Triangle<'a> {
 }
 
 impl Triangle<'_> {
+    pub fn center(&self) -> Point{
+        let [a ,b ,c ] = self.vertexes();
+        let mut p = a + b + c;
+        p.scale(1./3.);
+        p
+    }
+    pub fn vertexes(&self) -> [Point;3]{
+        let t = self.as_raw_indexed();
+        [
+            self.graph.get_point(t.vertices[0]),
+            self.graph.get_point(t.vertices[1]),
+            self.graph.get_point(t.vertices[2])
+        ]
+    }
     pub fn vertex_a(&self) -> Point{
         let t = self.as_raw_indexed();
         self.graph.get_point(t.vertices[0])

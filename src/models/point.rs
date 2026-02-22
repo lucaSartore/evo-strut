@@ -43,11 +43,7 @@ impl Point {
     }
     pub fn as_versor(&self) -> Point {
         let norm = self.abs();
-        Point { 
-            x: self.x/norm,
-            y: self.y/norm,
-            z: self.z/norm 
-        }
+        self.to_scaled(1./norm)
     }
     pub fn dot(a: Point, b: Point) -> f32 {
         (a.x * b.x) +
@@ -62,6 +58,18 @@ impl Point {
             b.as_versor()
         );
         cos.acos()
+    }
+
+    pub fn scale(&mut self, factor: f32) {
+        self.x /= factor;
+        self.y /= factor;
+        self.z /= factor;
+    }
+
+    pub fn to_scaled(&self, factor: f32) -> Point {
+        let mut new = self.clone();
+        new.scale(factor);
+        new
     }
 }
 
