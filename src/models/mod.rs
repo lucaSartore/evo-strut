@@ -1,4 +1,5 @@
-use std::rc::Rc;
+use std::{collections::HashMap, rc::Rc, vec};
+use rerun::external::glam::usize;
 use stl_io::IndexedMesh;
 
 mod point;
@@ -27,7 +28,7 @@ pub struct SurfaceGraph {
 
 impl SurfaceGraph {
     pub fn new(mesh: &Rc<IndexedMesh>) -> Self {
-        Self {
+        let mut to_return = Self {
             mesh: mesh.clone(),
             nodes: mesh
                 .faces
@@ -35,10 +36,53 @@ impl SurfaceGraph {
                 .enumerate()
                 .map(|(i,_)| {SurfaceNode::new(i)})
                 .collect()
+        };
+        to_return.fill_adjacent();
+        to_return
+    }
+
+    fn fill_adjacent(&mut self) {
+        let mut adj_map = HashMap::<(usize, usize), Vec<usize>>::new();
+        self.nodes
+            .iter()
+            .enumerate()
+            .for_each(|(i,n)| {
+                for edge in 0..3 {
+                    let triangle = &self.mesh.faces[n.triangle];
+                    let side_1 = triangle.vertices[edge];
+                    let side_2 = triangle.vertices[(edge+1)%3];
+                    let side_identifier = if side_1 < side_2 {
+                        (side_1, side_2)
+                    } else {
+                        (side_2, side_1) 
+                    };
+
+                    if let Some(v) = adj_map.get_mut(&side_identifier) {
+                        v.push(i);
+                    } else {
+                        adj_map.insert(side_identifier, vec![i]);
+                    }
+                }
+            });
+
+        for (_, adj) in adj_map.iter() {
+            for i in 0..adj.len() {
+                for j in i..adj.len() {
+                    self.mark_adjacent(adj[i], adj[j]);
+                }
+            }
         }
     }
 
-    fn fill_adjacent(self) {
+    fn mark_adjacent(&mut self, a: usize, b: usize) {
+        self.nodes[a].adjacent.push(b);
+        self.nodes[b].adjacent.push(a);
+    }
+
+
+    fn fill_(&mut self, a: usize, b: usize) {
+        self.nodes[a].adjacent.push(b);
+        self.nodes[b].adjacent.push(a);
     }
 }
 
@@ -46,6 +90,6 @@ impl SurfaceGraph {
 impl From<&Rc<IndexedMesh>> for SurfaceGraph {
 
     fn from(value: &Rc<IndexedMesh>) -> Self {
-        return SurfaceGraph::new(value)
+        SurfaceGraph::new(value)
     }
 }
