@@ -2,6 +2,8 @@ use std::f32::consts::PI;
 
 #[derive(Default, Debug, Clone)]
 pub struct Settings {
+    /// input output parameters
+    pub io_settings: IoSettings,
     /// parameters that decide what constitute a valid bridge
     pub bridge_settings: BridgeSettings,
     /// parameters that define what constitute a "critical" surface
@@ -45,3 +47,20 @@ impl Default for BridgeSettings {
         }
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct IoSettings {
+    pub input_file_path: String,
+    pub output_file_path: String
+}
+
+impl Default for IoSettings {
+    fn default() -> Self {
+        Self {
+            input_file_path: "test_meshes/dragon.stl".into(),
+            output_file_path: "output.stl".into()
+        }
+    }
+}
+
+

@@ -1,22 +1,21 @@
-mod stages;
 mod models;
+mod stages;
 use anyhow::Result;
 
-use std::rc::Rc;
-
-use models::SurfaceGraph;
-use stages::visualization::{visualize_mesh, Color};
-
-use crate::stages::visualization::visualize_critical_surfaces;
+use crate::{
+    models::Settings,
+    stages::{
+        OrientationBasedCriticalityDetector, OrientationBasedCriticalityEvaluator, Pipeline,
+        PipelineBehaviour, StartedState,
+    },
+};
 
 fn main() -> Result<()> {
-    let mesh = stages::loading::read("test_meshes/dragon.stl")?;
-    let mesh_rc = Rc::new(mesh);
-    
-    let graph = SurfaceGraph::new(&mesh_rc);
-
-    // visualize_mesh(graph, "foo", Color::Red)?;
-    visualize_critical_surfaces(&graph)?;
-    
+    let settings = Settings::default();
+    type Behaviour = PipelineBehaviour<
+        OrientationBasedCriticalityDetector,
+        OrientationBasedCriticalityEvaluator,
+    >;
+    Pipeline::<StartedState, Behaviour>::run(settings)?;
     Ok(())
 }

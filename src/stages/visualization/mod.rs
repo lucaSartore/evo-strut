@@ -1,76 +1,64 @@
-use crate::{models::{Point, Settings, SurfaceGraph}, stages::criticality_detection::{CriticalityDetector, OrientationBasedCriticality}};
+use crate::{models::{Point, Settings, SurfaceGraph}, stages::{CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait, PipelineState, criticality_detection::{CriticalityDetector, OrientationBasedCriticalityDetector}}};
 use anyhow::Result;
+
+mod color;
+pub use color::Color;
 
 use rerun::{
     TriangleIndices,
     components::Color as RerunColor
 };
 
-
-#[derive(Copy, Clone, Debug)]
-pub enum Color {
-    Blue,
-    Red,
-    Green,
-    Rgb(u8, u8, u8)
+pub trait Visualizer<TS>
+where 
+    TS: PipelineState
+{
+    fn visualize<TB: PipelineBehaviourTrait>(pipeline: &Pipeline<TS, TB>) -> Result<()>;
 }
 
-impl From<Color> for RerunColor {
-    fn from(value: Color) -> Self {
-        match value {
-            Color::Blue => RerunColor::from_rgb(0,0,255),
-            Color::Green => RerunColor::from_rgb(0,255,0),
-            Color::Red => RerunColor::from_rgb(255,0,0),
-            Color::Rgb(r, g, b) => RerunColor::from_rgb(r, g, b)
-        }
+pub struct VisualizationStage {}
+
+impl Visualizer<LoadedState> for VisualizationStage {
+    /// visualize the loaded model in with a simple mesh
+    fn visualize<TB: PipelineBehaviourTrait>(pipeline: &Pipeline<LoadedState, TB>) -> Result<()> {
+        visualize_mesh(&pipeline.state.graph, "loaded model", None)
+    }
+}
+
+impl Visualizer<CriticalityDetectedState> for VisualizationStage {
+    fn visualize<TB: PipelineBehaviourTrait>(pipeline: &Pipeline<CriticalityDetectedState, TB>) -> Result<()> {
+        let graph = &pipeline.state.graph;
+
+        let mut colors = vec![Color::Green; graph.count_vertices()];
+
+        let critical_surfaces = &pipeline.state.critical;
+
+        critical_surfaces.iter().for_each(|x| {
+            let t = graph.get_triangle(*x).as_raw_indexed();
+            for v in t.vertices {
+                colors[v] = Color::Red;
+            }
+        });
+
+        visualize_mesh(graph, "detected critical surfaces", Some(colors))
     }
 }
 
 
-pub fn visualize_mesh(mesh: SurfaceGraph, name: &str, color: Color) -> Result<()> {
-
+fn visualize_mesh(graph: &SurfaceGraph, name: &str, colors: Option<Vec<Color>>) -> Result<()> {
     let rec = rerun::RecordingStreamBuilder::new(name).spawn()?;
 
-    let mut colors = vec![color; mesh.count_vertices()];
+    let colors = match colors {
+        Some(e) => e,
+        None => vec![Color::Green; graph.count_vertices()]
+    };
 
     rec.log(
-        "mesh",
-        &rerun::Mesh3D::new(mesh.iter_vertices())
-            .with_vertex_normals(mesh.vertex_normals())
+        name,
+        &rerun::Mesh3D::new(graph.iter_vertices())
+            .with_vertex_normals(graph.vertex_normals())
             .with_vertex_colors(colors)
-            .with_triangle_indices(mesh.iter_triangles()),
-    )?;
-
-    Ok(())
-}
-
-
-pub fn visualize_critical_surfaces(mesh: &SurfaceGraph) -> Result<()> {
-
-    let rec = rerun::RecordingStreamBuilder::new("Critical surfaces").spawn()?;
-
-
-    let mut colors = vec![Color::Green; mesh.count_vertices()];
-
-    let critical_surfaces_indexes = OrientationBasedCriticality::detect_criticality(
-        mesh,
-        &Settings::default()
-    );
-
-    critical_surfaces_indexes.iter().for_each(|x| {
-        let t = mesh.get_triangle(*x).as_raw_indexed();
-        for v in t.vertices {
-            colors[v] = Color::Red;
-        }
-    });
-
-
-    rec.log(
-        "mesh",
-        &rerun::Mesh3D::new(mesh.iter_vertices())
-            .with_vertex_normals(mesh.vertex_normals())
-            .with_vertex_colors(colors)
-            .with_triangle_indices(mesh.iter_triangles()),
+            .with_triangle_indices(graph.iter_triangles()),
     )?;
 
     Ok(())

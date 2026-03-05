@@ -1,15 +1,40 @@
 use rerun::demo_util::grid;
+use std::marker::PhantomData;
 
-use crate::models::{Point, Settings, SurfaceGraph, Triangle};
+use crate::{models::{Point, Settings, SurfaceGraph, Triangle}, stages::{CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait}};
 
 
+pub struct CriticalityDetectionStage<TB>
+where
+    TB: PipelineBehaviourTrait,
+{
+    _d: PhantomData<TB>,
+}
+
+impl<TB> CriticalityDetectionStage<TB>
+where
+    TB: PipelineBehaviourTrait,
+{
+    pub fn execute(
+        input: Pipeline<LoadedState, TB>
+    ) -> Pipeline<CriticalityDetectedState, TB> {
+        let graph = &input.state.graph;
+        let settings = &input.state.settings;
+        let critical_nodes = TB::TCriticalityDetection::detect_criticality(graph, settings);
+        Pipeline::from_state(CriticalityDetectedState {
+            settings: input.state.settings,
+            graph: input.state.graph,
+            critical: critical_nodes
+        })
+    }
+}
 
 /// trait that given a particular mesh detect which polygons are "critical"
 pub trait CriticalityDetector {
     fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<usize>;
 }
 
-pub struct OrientationBasedCriticality{}
+pub struct OrientationBasedCriticalityDetector {}
 
 fn is_triangle_close_to_the_ground(triangle: &Triangle<'_>, settings: &Settings) -> bool {
     for v in triangle.vertexes() {
@@ -20,17 +45,20 @@ fn is_triangle_close_to_the_ground(triangle: &Triangle<'_>, settings: &Settings)
     false
 }
 
-impl CriticalityDetector for OrientationBasedCriticality {
+impl CriticalityDetector for OrientationBasedCriticalityDetector {
     fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<usize> {
         let mut to_return = vec![];
-        let downward = Point{x:0., y:0., z:-1.};
-        for (i,t) in graph.iter_triangles().enumerate() {
-            
+        let downward = Point {
+            x: 0.,
+            y: 0.,
+            z: -1.,
+        };
+        for (i, t) in graph.iter_triangles().enumerate() {
             if is_triangle_close_to_the_ground(&t, settings) {
-                continue
+                continue;
             }
 
-            // if a triangle has no neighbor that is lower than him, than it is also 
+            // if a triangle has no neighbor that is lower than him, than it is also
             // a critical
             let mut has_lower_neighbor = false;
             for adj in graph.iter_adjacent(i) {
@@ -50,7 +78,7 @@ impl CriticalityDetector for OrientationBasedCriticality {
                 to_return.push(i);
                 continue;
             }
-            
+
             // condition based purely on the angle of the surface
             // note: angle in settings is inverted to follow the same convention
             // as slicers such as cura
