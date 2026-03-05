@@ -1,4 +1,4 @@
-use std::{fs::OpenOptions, rc::Rc};
+use std::{fs::OpenOptions, rc::Rc, sync::Arc};
 use stl_io::IndexedMesh;
 use anyhow::Result;
 use super::*;
@@ -27,7 +27,7 @@ where
         input: Pipeline<StartedState, TB>
     ) -> Result<Pipeline<LoadedState, TB>> {
         let mesh = read(&input.state.settings.io_settings.input_file_path)?;
-        let mesh_rc = Rc::new(mesh);
+        let mesh_rc = Arc::new(mesh);
         let graph = SurfaceGraph::new(&mesh_rc);
         let state = LoadedState {
             settings: input.state.settings,

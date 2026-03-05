@@ -5,38 +5,46 @@ pub mod loading;
 pub mod visualization;
 pub mod criticality_evaluation;
 pub mod criticality_detection;
+pub mod criticality_grouping;
 
 pub use criticality_detection::{CriticalityDetector, CriticalityDetectionStage, OrientationBasedCriticalityDetector};
 pub use criticality_evaluation::{CriticalityEvaluator, CriticalityEvaluationStage, OrientationBasedCriticalityEvaluator};
+use rerun::external::image::imageops::FilterType::Triangle;
 use stl_io::IndexedMesh;
 
-use crate::{models::{Settings, SurfaceGraph}, stages::{loading::LoadingStage}};
+use crate::{models::{Settings, SurfaceGraph, TriangleId}, stages::{criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, loading::LoadingStage}};
 use visualization::{VisualizationStage, Visualizer};
 
 pub trait PipelineBehaviourTrait {
     type TCriticalityDetection: CriticalityDetector;
     type TCriticalityEvaluation: CriticalityEvaluator;
+    type TCriticalityGrouping: CriticalityGrouper;
 }
 
 pub struct PipelineBehaviour<
     TD: CriticalityDetector,
-    TE: CriticalityEvaluator
+    TE: CriticalityEvaluator,
+    TG: CriticalityGrouper
 > {
     _t: PhantomData<(
         TD,
-        TE
+        TE,
+        TG
     )>
 }
 
 impl<
     TCriticalityDetection: CriticalityDetector,
-    TCriticalityEvaluation: CriticalityEvaluator
+    TCriticalityEvaluation: CriticalityEvaluator,
+    TCriticalityGrouping: CriticalityGrouper
 > PipelineBehaviourTrait for PipelineBehaviour<
     TCriticalityDetection,
-    TCriticalityEvaluation
+    TCriticalityEvaluation,
+    TCriticalityGrouping
 > {
     type TCriticalityDetection = TCriticalityDetection;
     type TCriticalityEvaluation = TCriticalityEvaluation;
+    type TCriticalityGrouping = TCriticalityGrouping;
 }
 
 pub trait PipelineState {}
@@ -58,9 +66,17 @@ impl PipelineState for LoadedState { }
 pub struct CriticalityDetectedState {
     pub settings: Settings,
     pub graph: SurfaceGraph,
-    pub critical: Vec<usize>
+    pub critical: Vec<TriangleId>
 }
 impl  PipelineState for CriticalityDetectedState { }
+
+/// we have grouped the criticality into areas
+pub struct CriticalityGroupedState {
+    pub settings: Settings,
+    pub graph: SurfaceGraph,
+    pub critical: Vec<Vec<TriangleId>>
+}
+impl  PipelineState for CriticalityGroupedState { }
 
 pub struct Pipeline<TS, TB> 
 where 
@@ -100,6 +116,8 @@ where
         VisualizationStage::visualize(&p)?;
         let p = CriticalityDetectionStage::<TB>::execute(p);
         VisualizationStage::visualize(&p)?;
-        return Ok(())
+        let p = CriticalityGroupingStage::<TB>::execute(p);
+        VisualizationStage::visualize(&p)?;
+        Ok(())
     }
 }

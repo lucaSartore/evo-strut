@@ -2983,6 +2983,8 @@ name = "evo-strut"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "itertools 0.14.0",
+ "rayon",
  "rerun",
  "stl_io 0.10.0",
 ]

@@ -1,7 +1,6 @@
-use rerun::demo_util::grid;
 use std::marker::PhantomData;
 
-use crate::{models::{Point, Settings, SurfaceGraph, Triangle}, stages::{CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait}};
+use crate::{models::{Point, Settings, SurfaceGraph, Triangle, TriangleId}, stages::{CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait}};
 
 
 pub struct CriticalityDetectionStage<TB>
@@ -31,7 +30,7 @@ where
 
 /// trait that given a particular mesh detect which polygons are "critical"
 pub trait CriticalityDetector {
-    fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<usize>;
+    fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<TriangleId>;
 }
 
 pub struct OrientationBasedCriticalityDetector {}
@@ -46,18 +45,14 @@ fn is_triangle_close_to_the_ground(triangle: &Triangle<'_>, settings: &Settings)
 }
 
 impl CriticalityDetector for OrientationBasedCriticalityDetector {
-    fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<usize> {
+    fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<TriangleId> {
         let mut to_return = vec![];
-        let downward = Point {
-            x: 0.,
-            y: 0.,
-            z: -1.,
-        };
-        for (i, t) in graph.iter_triangles().enumerate() {
+        for t in graph.iter_triangles() {
             if is_triangle_close_to_the_ground(&t, settings) {
                 continue;
             }
 
+            let i = t.index;
             // if a triangle has no neighbor that is lower than him, than it is also
             // a critical
             let mut has_lower_neighbor = false;
@@ -69,7 +64,7 @@ impl CriticalityDetector for OrientationBasedCriticalityDetector {
             }
 
             // calculating the angle of the surface w.r.t. the vector facing downward
-            let angle = Point::angle_between(&downward, &t.normal());
+            let angle = Point::angle_between(&Point::DOWNWARD, &t.normal());
             let angle_deg = angle.to_degrees();
 
             // condition based on the fact that the current point has

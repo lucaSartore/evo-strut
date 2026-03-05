@@ -21,14 +21,20 @@ pub  struct CriticalitySettings {
     /// max detachment from the Z plane that a surface can have
     /// before is considered not supported.
     /// measured in mm
-    pub max_detachment_from_z_plane: f32
+    pub max_detachment_from_z_plane: f32,
+    /// the critical areas are expanded into adjacent surfaces
+    /// in order to merge many small and grouped critical surfaces
+    /// measured in mm
+    pub criticality_expansion_rate: f32
+    
 }
 
 impl Default for CriticalitySettings {
     fn default() -> Self {
         Self { 
             support_overhanging_angle: 60.,
-            max_detachment_from_z_plane: 0.1
+            max_detachment_from_z_plane: 0.1,
+            criticality_expansion_rate: 10.
         }
     }
 }

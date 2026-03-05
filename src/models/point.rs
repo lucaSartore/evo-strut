@@ -2,7 +2,7 @@ use stl_io::Vector;
 use std::ops::{Add, Sub};
 use rerun::{Position3D, Vector3D};
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct Point{
     pub x: f32,
     pub y: f32,
@@ -34,6 +34,9 @@ impl Sub for Point {
 }
 
 impl Point {
+    pub const UPWARD: Point = Point{x: 0., y: 0., z: 1.};
+    pub const DOWNWARD: Point = Point{x: 0., y: 0., z: -1.};
+
     pub fn abs(&self) -> f32 {
         (
             self.x.powi(2) + 
