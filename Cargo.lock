@@ -3004,6 +3004,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "itertools 0.14.0",
+ "log",
  "rand 0.10.0",
  "rayon",
  "rerun",

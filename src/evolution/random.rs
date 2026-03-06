@@ -1,0 +1,106 @@
+use std::{convert::Infallible, ops::DerefMut, sync::Mutex};
+
+use rand::{TryRng, prelude::*, rng};
+use rerun::{TextDocument, external::glam::usize};
+
+pub trait Foo<T: Send + Sync>{}
+
+pub struct Bar{}
+
+impl Foo<Random> for Bar { }
+
+pub enum Random {
+    // is slower due to mutex, but allow for more reproducibility
+    // (better for testing)
+    SeededRandom(Mutex<StdRng>),
+    // is faster, but not reproducible
+    // (better for actual runs)
+    UnSeededRandom
+}
+
+impl Random {
+    pub fn new(seed: Option<u64>) -> Self {
+        match seed {
+            Some(s) => Random::SeededRandom(Mutex::new(StdRng::seed_from_u64(s))),
+            None => Random::UnSeededRandom
+        }
+    }
+}
+
+// marker trait to avoid verbosity
+trait R: TryRng<Error = Infallible> {}
+impl<T: TryRng<Error = Infallible>> R for T {}
+
+
+/// simple macro rule to have different implementation
+/// regardless of the kind of random we are using (seeded or not)
+macro_rules! publish {
+    // implementation for non generic functions
+    ($public_name: ident = $private_name: ident($($arg:ident: $t: ty), *) -> $return:ty) => {
+        pub fn $public_name(&self $(,$arg: $t)*) -> $return{
+            if let Random::SeededRandom(r) = self {
+                let mut guard = r.lock().expect("Another tread has panicked");
+                let r = guard.deref_mut();
+                return self.$private_name($($arg, )* r);
+            } else {
+                let mut r = rand::rng();
+                return self.$private_name($($arg, )* &mut r);
+            }
+        }
+    };
+    // specialized implementation for generic types (lt is lifetime, gt is generic type)
+    ($public_name: ident = $private_name: ident<$($lt:tt), *$($gt:ident), *>($($arg:ident: $t: ty), *) -> $return:ty) => {
+        pub fn $public_name<$($lt, )*$($gt, )*>(&self $(,$arg: $t)*) -> $return{
+            if let Random::SeededRandom(r) = self {
+                let mut guard = r.lock().expect("Another tread has panicked");
+                let r = guard.deref_mut();
+                return self.$private_name($($arg, )* r);
+            } else {
+                let mut r = rand::rng();
+                return self.$private_name($($arg, )* &mut r);
+            }
+        }
+    }
+}
+
+impl Random {
+
+    /// create a copy of the current random
+    /// while maintaining reproducibility using seed
+    pub fn seeded_copy(&self) -> Self {
+        match self {
+            Random::UnSeededRandom => Self::new(None),
+            Random::SeededRandom(_) => Self::new(Some(self.next_u64()))
+        }
+    }
+
+    /// Returns a random element from the slice.
+    /// Panics if the slice is empty.
+    fn choose_or_panic<'a, T>(&self, options: &'a [T]) -> &'a T {
+        self.choose(options).expect("Cannot choose from an empty vector")
+    }
+
+    // Returns a random element from the slice.
+    // Panics if the slice is empty.
+    publish!(choose = _choose<'a, T>(options: &'a [T]) -> Option<&'a T>);
+    fn _choose<'a, T>(&self, options: &'a [T], r: &mut impl R) -> Option<&'a T> {
+        options.choose(r)
+    }
+
+    // Returns n random elements from the slice.
+    // Note: This uses 'choose_multiple', which samples without replacement.
+    publish!(choose_many = _choose_many<'a, T>(n: usize, options: &'a [T]) -> Vec<&'a T>);
+    pub fn _choose_many<'a, T>(&self, n: usize, options: &'a [T], r: &mut impl R) -> Vec<&'a T> {
+        options
+            .sample(r, n)
+            .collect()
+    }
+
+
+    // Returns n random elements from the slice.
+    // Note: This uses 'choose_multiple', which samples without replacement.
+    publish!(next_u64 = _next_u64() -> u64);
+    fn _next_u64(&self, r: &mut impl R) -> u64 {
+        r.next_u64()
+    }
+}
