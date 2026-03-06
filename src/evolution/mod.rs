@@ -11,6 +11,9 @@ pub use score::Cost;
 mod tournament_based_crossover_selection;
 pub use tournament_based_crossover_selection::TournamentBasedCrossoverSelection;
 
+mod elitist_next_generation_selector;
+pub use elitist_next_generation_selector::ElitistNextGenSelector;
+
 mod random;
 pub use random::Random;
 
@@ -50,9 +53,9 @@ pub trait NextGenerationSelector<T,S> {
     fn next_generation(
         &self,
         current_gen: Vec<T>,
-        current_gen_scores: Vec<Cost>,
+        current_gen_costs: Vec<Cost>,
         next_gen: Vec<T>,
-        next_gen_scores: Vec<Cost>
+        next_gen_costs: Vec<Cost>
     ) -> (Vec<T>, Vec<Cost>);
 }
 

@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use log::error;
 
 use crate::evolution::Random;
 use super::*;
@@ -12,10 +12,24 @@ pub struct TournamentBasedCrossoverSelection {
     rand: Random
 }
 
+impl TournamentBasedCrossoverSelection {
+    fn tournament_selection(&self, scores: &[Cost],) -> Option<usize> {
+        let options = self.rand.choose_many(self.settings.k, scores);
+        let element = options
+            .iter()
+            .enumerate()
+            .min_by_key(|x| x.1);
+        if element.is_none() {
+            error!("TournamentBasedCrossoverSelection: trying to make tournament with empty size");
+        }
+        Some(element?.0)
+    }
+}
+
 impl CrossoverSelector<TournamentBasedCrossoverSelectionSettings> for TournamentBasedCrossoverSelection {
     fn new(settings: &TournamentBasedCrossoverSelectionSettings, rand: Random) -> Self {
         TournamentBasedCrossoverSelection {
-            settings: settings.clone(),
+            settings: *settings,
             rand
         }
     }
@@ -23,21 +37,9 @@ impl CrossoverSelector<TournamentBasedCrossoverSelectionSettings> for Tournament
     fn select_for_crossover(&self, scores: &[Cost], n: usize) -> Option<Vec<(usize, usize)>> {
         let mut to_return = vec![];
         for _ in 0..n {
-            let parent_one_options = self.rand.choose_many(self.settings.k, scores);
-            let parent_one = parent_one_options
-                .iter()
-                .enumerate()
-                .min_by_key(|x| x.1)?
-                .0;
-
-            let parent_two_options = self.rand.choose_many(self.settings.k, scores);
-            let parent_two = parent_two_options
-                .iter()
-                .enumerate()
-                .min_by_key(|x| x.1)?
-                .0;
-
-            to_return.push((parent_one, parent_two));
+            let a = self.tournament_selection(scores)?;
+            let b = self.tournament_selection(scores)?;
+            to_return.push((a, b));
         }
         Some(to_return)
     }
