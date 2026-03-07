@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 mod evolver;
-pub use evolver::Evolver;
+pub use evolver::{Evolver, EvolverBehaviourTrait};
 use rand::Rng;
 use rerun::external::glam::usize;
 

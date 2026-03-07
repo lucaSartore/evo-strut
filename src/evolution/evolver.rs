@@ -1,84 +1,98 @@
-use std::cmp::PartialOrd;
-use rayon::prelude::*;
 use super::*;
+use rayon::prelude::*;
+use std::cmp::PartialOrd;
 
-pub struct Evolver<TM, TC, TT, TE, TCS, TNGS, TPI, TGene, SMut, SCross, STerm, SEval, SCrossSel, SNextSel, SInit> 
+pub trait EvolverBehaviourTrait {
+    // behaviour of the various components of teh GA
+    type TMutator: Mutator<Self::TGene, Self::SMut>;
+    type TCrossover: Crossover<Self::TGene, Self::SCross>;
+    type TTermination: TerminationStrategy<Self::STerm>;
+    type TEvaluator: Evaluator<Self::TGene, Self::SEval>;
+    type TCrossoverSelector: CrossoverSelector<Self::SCrossSel>;
+    type TNextGenSelector: NextGenerationSelector<Self::TGene, Self::SNextSel>;
+    type TPopulationInitializer: PopulationInitializer<Self::TGene, Self::SInit>;
+    // type of the gene
+    type TGene;
+    // settings for the various components
+    type SMut;
+    type SCross;
+    type STerm;
+    type SEval;
+    type SCrossSel;
+    type SNextSel;
+    type SInit;
+}
+
+pub struct Evolver<TBehaviour>
 where
-    TM: Mutator<TGene, SMut>,
-    TC: Crossover<TGene, SCross>,
-    TT: TerminationStrategy<STerm>,
-    TE: Evaluator<TGene, SEval>,
-    TCS: CrossoverSelector<SCrossSel>,
-    TNGS: NextGenerationSelector<TGene, SNextSel>,
-    TPI: PopulationInitializer<TGene, SInit>
+    TBehaviour: EvolverBehaviourTrait,
 {
-    _pd: PhantomData<(TGene, SMut, SCross, STerm, SEval, SCrossSel, SNextSel, SInit)>,
-    mutator: TM,
-    crossover: TC,
-    termination: TT,
-    evaluator: TE,
-    crossover_selector: TCS,
-    next_gen_selector: TNGS,
-    population_initializer: TPI
+    mutator: TBehaviour::TMutator,
+    crossover: TBehaviour::TCrossover,
+    termination: TBehaviour::TTermination,
+    evaluator: TBehaviour::TEvaluator,
+    crossover_selector: TBehaviour::TCrossoverSelector,
+    next_gen_selector: TBehaviour::TNextGenSelector,
+    population_initializer: TBehaviour::TPopulationInitializer,
 }
 
 // implementation for parallel structures
-impl<TM, TC, TT, TE, TCS, TNGS, TPI, TGene, SMut, SCross, STerm, SEval, SCrossSel, SNextSel, SInit>
-Evolver<TM, TC, TT, TE, TCS, TNGS, TPI, TGene, SMut, SCross, STerm, SEval, SCrossSel, SNextSel, SInit>
+impl<TBehaviour> Evolver<TBehaviour>
 where
-    TM: Mutator<TGene, SMut> + Sync,
-    TC: Crossover<TGene, SCross> + Sync,
-    TT: TerminationStrategy<STerm> + Sync,
-    TE: Evaluator<TGene, SEval> + Sync,
-    TCS: CrossoverSelector<SCrossSel> + Sync,
-    TNGS: NextGenerationSelector<TGene, SNextSel> + Sync,
-    TPI: PopulationInitializer<TGene, SInit> + Sync,
-    TGene: Sync + Send, SMut: Sync, SCross: Sync, STerm: Sync, SEval: Sync, SCrossSel: Sync, SNextSel: Sync, SInit: Sync
+    TBehaviour: EvolverBehaviourTrait,
+    TBehaviour::TGene: Send + Sync,
+    TBehaviour::TMutator: Sync,
+    TBehaviour::TCrossover: Sync,
+    TBehaviour::TTermination: Sync,
+    TBehaviour::TEvaluator: Sync,
+    TBehaviour::TCrossoverSelector: Sync,
+    TBehaviour::TNextGenSelector: Sync,
+    TBehaviour::TPopulationInitializer: Sync,
 {
     pub fn new(
-        mutation_settings: &SMut,
-        crossover_settings: &SCross,
-        termination_settings: &STerm,
-        evaluation_settings: &SEval,
-        crossover_selection_settings: &SCrossSel,
-        next_generation_settings: &SNextSel,
-        population_initializer_settings: &SInit,
-        mut rand: Random
+        mutation_settings: &TBehaviour::SMut,
+        crossover_settings: &TBehaviour::SCross,
+        termination_settings: &TBehaviour::STerm,
+        evaluation_settings: &TBehaviour::SEval,
+        crossover_selection_settings: &TBehaviour::SCrossSel,
+        next_generation_settings: &TBehaviour::SNextSel,
+        population_initializer_settings: &TBehaviour::SInit,
+        rand: Random,
     ) -> Self {
         Self {
-            _pd: PhantomData::default(),
-            mutator: TM::new(mutation_settings, rand.seeded_copy()),
-            crossover: TC::new(crossover_settings, rand.seeded_copy()),
-            termination: TT::new(termination_settings),
-            evaluator: TE::new(evaluation_settings),
-            crossover_selector: TCS::new(crossover_selection_settings, rand.seeded_copy()),
-            next_gen_selector: TNGS::new(next_generation_settings, rand.seeded_copy()),
-            population_initializer: TPI::new(population_initializer_settings, rand.seeded_copy())
+            mutator: TBehaviour::TMutator::new(mutation_settings, rand.seeded_copy()),
+            crossover: TBehaviour::TCrossover::new(crossover_settings, rand.seeded_copy()),
+            termination: TBehaviour::TTermination::new(termination_settings),
+            evaluator: TBehaviour::TEvaluator::new(evaluation_settings),
+            crossover_selector: TBehaviour::TCrossoverSelector::new(
+                crossover_selection_settings,
+                rand.seeded_copy(),
+            ),
+            next_gen_selector: TBehaviour::TNextGenSelector::new(
+                next_generation_settings,
+                rand.seeded_copy(),
+            ),
+            population_initializer: TBehaviour::TPopulationInitializer::new(
+                population_initializer_settings,
+                rand.seeded_copy(),
+            ),
         }
     }
 
-    pub fn run(&self) -> Option<TGene> {
-
-        let best = |x: &[Cost]| {
-            x
-                .iter()
-                .copied()
-                .min()
-                .unwrap_or(Cost::MAX)
-        };
+    pub fn run(&self) -> Option<TBehaviour::TGene> {
+        let best = |x: &[Cost]| x.iter().copied().min().unwrap_or(Cost::MAX);
 
         let initial_count = self.population_initializer.get_initial_individuals();
         let mut current_gen: Vec<_> = (0..initial_count)
             .map(|_| self.population_initializer.get_random_individual())
             .collect();
-        
+
         let mut current_gen_costs = current_gen
             .par_iter()
             .map(|y| self.evaluator.evaluate(y))
             .collect::<Vec<Cost>>();
 
         while !self.termination.should_terminate(best(&current_gen_costs)) {
-
             let n = self.next_gen_selector.num_offspring_to_generate();
             let (next_gen, next_gen_costs): (Vec<_>, Vec<_>) = self
                 .crossover_selector
@@ -102,20 +116,19 @@ where
             std::mem::swap(&mut last_gen, &mut current_gen);
             std::mem::swap(&mut last_gen_costs, &mut current_gen_costs);
 
-            (current_gen, current_gen_costs) = self.next_gen_selector.next_generation(last_gen, last_gen_costs, next_gen, next_gen_costs);
+            (current_gen, current_gen_costs) = self.next_gen_selector.next_generation(
+                last_gen,
+                last_gen_costs,
+                next_gen,
+                next_gen_costs,
+            );
         }
 
         current_gen
             .into_iter()
             .zip(current_gen_costs.iter())
-            .min_by(|a,b| {
-                a.1.partial_cmp(b.1)
-                   .unwrap_or(std::cmp::Ordering::Less)
-            })
-            .map_or(
-                self.population_initializer.get_random_individual(),
-                |x| x.0
-            )
+            .min_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Less))
+            .map_or(self.population_initializer.get_random_individual(), |x| x.0)
             .into()
     }
 }

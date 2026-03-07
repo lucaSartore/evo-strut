@@ -6,8 +6,7 @@ use anyhow::Result;
 use crate::{
     models::Settings,
     stages::{
-        OrientationBasedCriticalityDetector, OrientationBasedCriticalityEvaluator, Pipeline,
-        PipelineBehaviour, StartedState, criticality_grouping::DistanceBasedCriticalityGrouper,
+        OrientationBasedCriticalityDetector, OrientationBasedCriticalityEvaluator, Pipeline, PipelineBehaviour, StartedState, contact_point_optimization::SimpleContactPointOptimizer, criticality_grouping::DistanceBasedCriticalityGrouper
     },
 };
 
@@ -16,7 +15,8 @@ fn main() -> Result<()> {
     type Behaviour = PipelineBehaviour<
         OrientationBasedCriticalityDetector,
         OrientationBasedCriticalityEvaluator,
-        DistanceBasedCriticalityGrouper
+        DistanceBasedCriticalityGrouper,
+        SimpleContactPointOptimizer
     >;
     Pipeline::<StartedState, Behaviour>::run(settings)?;
     Ok(())

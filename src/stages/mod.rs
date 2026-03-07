@@ -13,39 +13,45 @@ pub use criticality_evaluation::{CriticalityEvaluator, CriticalityEvaluationStag
 use rerun::external::image::imageops::FilterType::Triangle;
 use stl_io::IndexedMesh;
 
-use crate::{models::{Settings, SurfaceGraph, TriangleId}, stages::{criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, loading::LoadingStage}};
+use crate::{models::{Settings, SurfaceGraph, TriangleId}, stages::{contact_point_optimization::{ContactPointOptimizationStage, ContactPointOptimizer, ContactPointsGene}, criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, loading::LoadingStage}};
 use visualization::{VisualizationStage, Visualizer};
 
 pub trait PipelineBehaviourTrait {
     type TCriticalityDetection: CriticalityDetector;
     type TCriticalityEvaluation: CriticalityEvaluator;
     type TCriticalityGrouping: CriticalityGrouper;
+    type TContactPointOptimizer: ContactPointOptimizer;
 }
 
 pub struct PipelineBehaviour<
     TD: CriticalityDetector,
     TE: CriticalityEvaluator,
-    TG: CriticalityGrouper
+    TG: CriticalityGrouper,
+    TCPO: ContactPointOptimizer
 > {
     _t: PhantomData<(
         TD,
         TE,
-        TG
+        TG,
+        TCPO
     )>
 }
 
 impl<
     TCriticalityDetection: CriticalityDetector,
     TCriticalityEvaluation: CriticalityEvaluator,
-    TCriticalityGrouping: CriticalityGrouper
+    TCriticalityGrouping: CriticalityGrouper,
+    TContactPointOptimizer: ContactPointOptimizer
 > PipelineBehaviourTrait for PipelineBehaviour<
     TCriticalityDetection,
     TCriticalityEvaluation,
-    TCriticalityGrouping
+    TCriticalityGrouping,
+    TContactPointOptimizer
 > {
     type TCriticalityDetection = TCriticalityDetection;
     type TCriticalityEvaluation = TCriticalityEvaluation;
     type TCriticalityGrouping = TCriticalityGrouping;
+    type TContactPointOptimizer = TContactPointOptimizer;
 }
 
 pub trait PipelineState {}
@@ -78,6 +84,14 @@ pub struct CriticalityGroupedState {
     pub critical: Vec<Vec<TriangleId>>
 }
 impl  PipelineState for CriticalityGroupedState { }
+
+/// we have grouped the criticality into areas
+pub struct ContactPointsDecidedState {
+    pub settings: Settings,
+    pub graph: SurfaceGraph,
+    pub connection_points: ContactPointsGene
+}
+impl  PipelineState for ContactPointsDecidedState { }
 
 pub struct Pipeline<TS, TB> 
 where 
@@ -119,6 +133,7 @@ where
         VisualizationStage::visualize(&p)?;
         let p = CriticalityGroupingStage::<TB>::execute(p);
         VisualizationStage::visualize(&p)?;
+        let p = ContactPointOptimizationStage::<TB>::execute(p);
         Ok(())
     }
 }
