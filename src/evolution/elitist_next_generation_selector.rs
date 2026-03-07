@@ -8,6 +8,12 @@ pub struct ElitistNextGenSelectorSettings {
     num_novel_individual: usize
 }
 
+impl Default for ElitistNextGenSelectorSettings {
+    fn default() -> Self {
+        Self { num_elite_individual: 10, num_novel_individual: 90 }
+    }
+}
+
 pub struct ElitistNextGenSelector {
     settings: ElitistNextGenSelectorSettings,
     rand: Random

@@ -132,3 +132,52 @@ where
             .into()
     }
 }
+
+pub struct EvolverBehaviour<
+    TMutator, TCrossover, TTermination, TEvaluator, TCrossoverSelector, 
+    TNextGenSelector, TPopulationInitializer, TGene, SMut, SCross, 
+    STerm, SEval, SCrossSel, SNextSel, SInit
+> {
+    _marker: PhantomData<(
+        TMutator, TCrossover, TTermination, TEvaluator, TCrossoverSelector, 
+        TNextGenSelector, TPopulationInitializer, TGene, SMut, SCross, 
+        STerm, SEval, SCrossSel, SNextSel, SInit
+    )>,
+}
+
+impl<
+    TMutator, TCrossover, TTermination, TEvaluator, TCrossoverSelector, 
+    TNextGenSelector, TPopulationInitializer, TGene, SMut, SCross, 
+    STerm, SEval, SCrossSel, SNextSel, SInit
+> EvolverBehaviourTrait for EvolverBehaviour<
+    TMutator, TCrossover, TTermination, TEvaluator, TCrossoverSelector, 
+    TNextGenSelector, TPopulationInitializer, TGene, SMut, SCross, 
+    STerm, SEval, SCrossSel, SNextSel, SInit
+> 
+where
+    TMutator: Mutator<TGene, SMut>,
+    TCrossover: Crossover<TGene, SCross>,
+    TTermination: TerminationStrategy<STerm>,
+    TEvaluator: Evaluator<TGene, SEval>,
+    TCrossoverSelector: CrossoverSelector<SCrossSel>,
+    TNextGenSelector: NextGenerationSelector<TGene, SNextSel>,
+    TPopulationInitializer: PopulationInitializer<TGene, SInit>,
+{
+    type TMutator = TMutator;
+    type TCrossover = TCrossover;
+    type TTermination = TTermination;
+    type TEvaluator = TEvaluator;
+    type TCrossoverSelector = TCrossoverSelector;
+    type TNextGenSelector = TNextGenSelector;
+    type TPopulationInitializer = TPopulationInitializer;
+    
+    type TGene = TGene;
+    
+    type SMut = SMut;
+    type SCross = SCross;
+    type STerm = STerm;
+    type SEval = SEval;
+    type SCrossSel = SCrossSel;
+    type SNextSel = SNextSel;
+    type SInit = SInit;
+}

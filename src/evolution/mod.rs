@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 mod evolver;
-pub use evolver::{Evolver, EvolverBehaviourTrait};
+pub use evolver::{Evolver, EvolverBehaviourTrait, EvolverBehaviour};
 use rand::Rng;
 use rerun::external::glam::usize;
 
@@ -9,10 +9,13 @@ mod score;
 pub use score::Cost;
 
 mod tournament_based_crossover_selection;
-pub use tournament_based_crossover_selection::TournamentBasedCrossoverSelection;
+pub use tournament_based_crossover_selection::{TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings};
 
 mod elitist_next_generation_selector;
-pub use elitist_next_generation_selector::ElitistNextGenSelector;
+pub use elitist_next_generation_selector::{ElitistNextGenSelector, ElitistNextGenSelectorSettings};
+
+mod patience_based_termination_strategy;
+pub use patience_based_termination_strategy::{PatienceBasedTerminationStrategySettings, PatienceBasedTerminationStrategy};
 
 mod random;
 pub use random::Random;

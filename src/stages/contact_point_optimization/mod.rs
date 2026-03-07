@@ -1,5 +1,5 @@
 use crate::{
-    evolution::EvolverBehaviourTrait, models::{Settings, SurfaceGraph, TriangleId}, stages::{ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait}
+    evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, EvolverBehaviourTrait, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, models::{Settings, SurfaceGraph, TriangleId}, stages::{ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait}
 };
 use std::marker::PhantomData;
 
@@ -59,6 +59,34 @@ pub struct SimpleContactPointOptimizer {
 
 impl ContactPointOptimizer for SimpleContactPointOptimizer {
     fn optimize(graph: &SurfaceGraph, settings: &Settings, critical: &[TriangleId]) -> Option<ContactPointsGene> {
-        todo!()
+        type Behaviour = EvolverBehaviour<
+            ContactPointMutator,
+            ContactPointCrossover,
+            PatienceBasedTerminationStrategy,
+            ContactPointEvaluator,
+            TournamentBasedCrossoverSelection,
+            ElitistNextGenSelector,
+            ContactPointInitializer,
+            ContactPointsGene,
+            Settings,
+            Settings,
+            PatienceBasedTerminationStrategySettings,
+            Settings,
+            TournamentBasedCrossoverSelectionSettings,
+            ElitistNextGenSelectorSettings,
+            Settings
+        >;
+        let evolver = Evolver::<Behaviour>::new(
+            settings,
+            settings,
+            &PatienceBasedTerminationStrategySettings::default(),
+            settings,
+            &TournamentBasedCrossoverSelectionSettings::default(),
+            &ElitistNextGenSelectorSettings::default(),
+            settings,
+            Random::UnSeededRandom
+        );
+
+        evolver.run()
     }
 }
