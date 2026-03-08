@@ -4,11 +4,13 @@ use std::f32::consts::PI;
 pub struct Settings {
     /// input output parameters
     pub io_settings: IoSettings,
-    /// parameters that decide what constitute a valid bridge
-    pub bridge_settings: BridgeSettings,
     /// parameters that define what constitute a "critical" surface
     /// (i.e. a surface that needs supports)
     pub criticality_settings: CriticalitySettings,
+    /// parameters that control the optimization of the
+    /// contact points. This include cost functions weights as well as 
+    /// optimization hyper-parameters
+    pub contact_points_optimization_settings: ContactPointsOptimizationSettings,
 }
 
 #[derive(Debug, Clone)]
@@ -26,7 +28,6 @@ pub  struct CriticalitySettings {
     /// in order to merge many small and grouped critical surfaces
     /// measured in mm
     pub criticality_expansion_rate: f32
-    
 }
 
 impl Default for CriticalitySettings {
@@ -35,21 +36,6 @@ impl Default for CriticalitySettings {
             support_overhanging_angle: 60.,
             max_detachment_from_z_plane: 0.1,
             criticality_expansion_rate: 10.
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct BridgeSettings {
-    pub max_bridge_length: f32,
-    pub valid_bridge_angles: Vec<f32>
-}
-
-impl Default for BridgeSettings {
-    fn default() -> Self {
-        Self {
-            max_bridge_length: 30.0,
-            valid_bridge_angles: vec![PI/2., PI/4., 0., -PI/4.]
         }
     }
 }
@@ -69,4 +55,28 @@ impl Default for IoSettings {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct ContactPointsOptimizationSettings {
+    /// cost associated with not supporting a certain
+    /// area with an angle that is steeper than the threshold by a few degrees
+    /// unit of measure: [cost/(mm^2 * deg)]
+    pub non_supported_cost: f32,
+    /// cost associated with placing one support point
+    /// unit of measure: [cost]
+    pub support_point_cost: f32,
+    /// cost associated with placing one support line 
+    /// with a specific length
+    /// unit of measure [cost/mm]
+    pub support_line_cost: f32
+}
+
+impl Default for ContactPointsOptimizationSettings {
+    fn default() -> Self {
+        Self {
+            non_supported_cost: 0.1,
+            support_point_cost: 1.0,
+            support_line_cost: 0.5
+        }
+    }
+}
 

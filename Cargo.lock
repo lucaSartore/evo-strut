@@ -2905,6 +2905,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a1c3cc8e57274ec99de65301228b537f1e4eedc1b8e0f9411c6caac8ae7308f"
 dependencies = [
  "log",
+ "regex",
 ]
 
 [[package]]
@@ -3003,6 +3004,7 @@ name = "evo-strut"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "env_logger",
  "itertools 0.14.0",
  "log",
  "rand 0.10.0",

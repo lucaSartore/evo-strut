@@ -2,6 +2,8 @@ mod models;
 mod stages;
 mod evolution;
 use anyhow::Result;
+use env_logger::Builder;
+use log::LevelFilter;
 
 use crate::{
     models::Settings,
@@ -11,6 +13,11 @@ use crate::{
 };
 
 fn main() -> Result<()> {
+
+    Builder::new()
+        .filter_level(LevelFilter::Info)
+        .init();
+
     let settings = Settings::default();
     type Behaviour = PipelineBehaviour<
         OrientationBasedCriticalityDetector,

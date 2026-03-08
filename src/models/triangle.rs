@@ -44,22 +44,55 @@ impl Triangle<'_> {
         self.graph.mesh.faces[self.index.0]
     }
 
-    pub  fn get_height_difference(&self, other: &Triangle<'_>) -> f32 {
+    pub fn get_height_difference(&self, other: &Triangle<'_>) -> f32 {
         let distance = self.center() - other.center();
         distance.z
     }
 
-    pub  fn is_lower_than(&self, other: &Triangle<'_>) -> bool {
+    pub fn is_lower_than(&self, other: &Triangle<'_>) -> bool {
         self.get_height_difference(other) < 0.
     }
-    pub  fn is_lower_or_equal_than(&self, other: &Triangle<'_>) -> bool {
+    pub fn is_lower_or_equal_than(&self, other: &Triangle<'_>) -> bool {
         self.get_height_difference(other) <= 0.
     }
-    pub  fn is_higher_than(&self, other: &Triangle<'_>) -> bool {
+    pub fn is_higher_than(&self, other: &Triangle<'_>) -> bool {
         self.get_height_difference(other) > 0.
     }
-    pub  fn is_higher_or_equal_than(&self, other: &Triangle<'_>) -> bool {
+    pub fn is_higher_or_equal_than(&self, other: &Triangle<'_>) -> bool {
         self.get_height_difference(other) >= 0.
+    }
+
+    /// calculate the area of the triangle using the cross product
+    pub fn area(&self) -> f32 {
+        let [v1, v2, v3] = self.vertexes();
+
+        let a = v2 - v1;
+        let b = v3 - v1;
+
+        let c = Point::cross(a,b);
+
+        c.abs() / 2.0
+    }
+
+    // find out if a point is inside the footprint (i.e. the projection
+    // on the x/y plane) of the triangle
+    pub fn is_point_inside_footprint(&self, point: Point) -> bool {
+        let [v1, v2, v3] = self.vertexes();
+        // 2D cross product of vectors
+        let sign = |p1: Point, p2: Point, p3: Point| -> f32 {
+            (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y)
+        };
+
+        let d1 = sign(point, v1, v2);
+        let d2 = sign(point, v2, v3);
+        let d3 = sign(point, v3, v1);
+
+        let has_neg = (d1 < 0.0) || (d2 < 0.0) || (d3 < 0.0);
+        let has_pos = (d1 > 0.0) || (d2 > 0.0) || (d3 > 0.0);
+
+        // The point is inside if all cross products have the same sign
+        // (i.e., it's not "outside" any of the three edges).
+        !(has_neg && has_pos)
     }
 }
 

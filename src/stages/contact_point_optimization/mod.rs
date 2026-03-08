@@ -58,12 +58,12 @@ pub struct SimpleContactPointOptimizer {
 }
 
 impl ContactPointOptimizer for SimpleContactPointOptimizer {
-    fn optimize(graph: &SurfaceGraph, settings: &Settings, critical: &[TriangleId]) -> Option<ContactPointsGene> {
-        type Behaviour = EvolverBehaviour<
+    fn optimize<'a>(graph: &'a SurfaceGraph, settings: &'a Settings, critical: &'a [TriangleId]) -> Option<ContactPointsGene> {
+        type Behaviour<'a> = EvolverBehaviour<
             ContactPointMutator,
             ContactPointCrossover,
             PatienceBasedTerminationStrategy,
-            ContactPointEvaluator,
+            ContactPointEvaluator<'a>,
             TournamentBasedCrossoverSelection,
             ElitistNextGenSelector,
             ContactPointInitializer,
@@ -71,16 +71,16 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
             Settings,
             Settings,
             PatienceBasedTerminationStrategySettings,
-            Settings,
+            (&'a SurfaceGraph, &'a Settings, &'a[TriangleId]),
             TournamentBasedCrossoverSelectionSettings,
             ElitistNextGenSelectorSettings,
             Settings
         >;
-        let evolver = Evolver::<Behaviour>::new(
+        let evolver = Evolver::<Behaviour<'a>>::new(
             settings,
             settings,
             &PatienceBasedTerminationStrategySettings::default(),
-            settings,
+            &(graph, settings, critical),
             &TournamentBasedCrossoverSelectionSettings::default(),
             &ElitistNextGenSelectorSettings::default(),
             settings,

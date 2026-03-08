@@ -48,10 +48,19 @@ impl Point {
         let norm = self.abs();
         self.to_scaled(1./norm)
     }
+
     pub fn dot(a: Point, b: Point) -> f32 {
         (a.x * b.x) +
         (a.y * b.y) +
         (a.z * b.z)
+    }
+
+    pub fn cross(a: Point, b: Point) -> Point {
+        Point {
+            x: (a.y * b.z) - (a.z * b.y),
+            y: (a.z * b.x) - (a.x * b.z),
+            z: (a.x * b.y) - (a.y * b.x),
+        }
     }
 
     /// return the angle between two versors (in radiants)
@@ -74,6 +83,21 @@ impl Point {
         new.scale(factor);
         new
     }
+
+    pub fn interpolate(start: Point, end: Point, max_distance: f32) -> Vec<Point> {
+        let distance = (end - start).abs();
+        let versor = (end - start).as_versor();
+        let n_points = (distance / max_distance).ceil() as u32 + 1;
+
+        let mut to_return = vec![];
+        for i in 0..n_points {
+            let scale = i as f32 / (n_points - 1) as f32;
+            let p = start + versor.to_scaled(scale);
+            to_return.push(p);
+        }
+        to_return
+    }
+
 }
 
 impl From<Vector<f32>> for Point {

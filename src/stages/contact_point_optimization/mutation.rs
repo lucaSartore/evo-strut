@@ -3,11 +3,16 @@ use super::models::ContactPointsGene;
 
 
 pub struct ContactPointMutator {
+    settings: Settings,
+    rand: Random
 }
 
 impl Mutator<ContactPointsGene, Settings> for ContactPointMutator {
     fn new(settings: &Settings, rand: Random) -> Self {
-        todo!()
+        Self {
+            settings: settings.clone(),
+            rand
+        }
     }
 
     fn mutate(&self, gene: ContactPointsGene) -> ContactPointsGene {

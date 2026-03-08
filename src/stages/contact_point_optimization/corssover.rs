@@ -4,11 +4,16 @@ use super::models::ContactPointsGene;
 use rand::Rng;
 
 pub struct ContactPointCrossover{
+    settings: Settings,
+    rand: Random
 }
 
 impl Crossover<ContactPointsGene, Settings> for ContactPointCrossover {
     fn new(settings: &Settings, rand: Random) -> Self {
-        todo!()
+        Self {
+            settings: settings.clone(),
+            rand
+        }
     }
 
     fn crossover(&self, a: &ContactPointsGene, b: &ContactPointsGene) -> ContactPointsGene {

@@ -14,6 +14,9 @@ pub use triangle::Triangle;
 pub mod ids;
 pub use ids::{PointId, TriangleId};
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug, Clone)]
 pub struct SurfaceNode {
     pub triangle: TriangleId,
