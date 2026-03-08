@@ -17,6 +17,7 @@ impl Crossover<ContactPointsGene, Settings> for ContactPointCrossover {
     }
 
     fn crossover(&self, a: &ContactPointsGene, b: &ContactPointsGene) -> ContactPointsGene {
-        todo!()
+        // todo: implement crossover
+        return a.clone()
     }
 }

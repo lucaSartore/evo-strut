@@ -91,12 +91,21 @@ impl SurfaceGrid {
                 (1, y-1),
             ];
             for adj in adjacent {
-                if let Some(p) = self.points.get_mut(&adj) {
-                    p.neighbors.push(GridNeighbor{
+                let mut neighbor = None;
+                if let Some(p) = self.points.get(&adj) {
+                    neighbor = GridNeighbor{
                         id: adj,
                         is_lower: p.point.z < height_this,
                         is_critical: critical.contains(&p.id)
-                    });
+                    }.into();
+                }
+                if let Some(n) = neighbor {
+                    self
+                        .points
+                        .get_mut(&id)
+                        .expect("id shall always be present")
+                        .neighbors
+                        .push(n);
                 }
             }
         }

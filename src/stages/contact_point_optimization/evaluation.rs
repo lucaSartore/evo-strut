@@ -42,6 +42,7 @@ fn find_approximated_identifier(discretization_size: f32, point: Point) -> (i32,
     (x,y)
 }
 
+#[derive(Debug)]
 pub struct SinglePointEvaluator {
     /// id of the element we are evaluating
     pub id: (i32, i32),
@@ -62,7 +63,10 @@ impl SinglePointEvaluator {
             return Cost::ZERO
         }
 
-        let base_cost = self.critical_lower_neighbors.iter().map(|x| costs[x]).min();
+        let base_cost = self.critical_lower_neighbors
+            .iter()
+            .map(|x| costs[x])
+            .min();
         
         let base_cost = match base_cost {
             Some(c) => c.min(self.base_cost),

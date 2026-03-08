@@ -16,6 +16,7 @@ impl Mutator<ContactPointsGene, Settings> for ContactPointMutator {
     }
 
     fn mutate(&self, gene: ContactPointsGene) -> ContactPointsGene {
-        todo!()
+        // todo: implement realistic mutation
+        return gene
     }
 }

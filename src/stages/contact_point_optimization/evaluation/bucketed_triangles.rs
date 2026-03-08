@@ -55,6 +55,11 @@ impl BucketedTriangles {
                         });
                     (y_min..y_max).map(move |y| (x,y))
                 })
+                .filter(|c| {
+                    // verify that the generated point is actually inside teh triangle
+                    let point = identifier_to_zero_point(discretization_size, *c);
+                    triangle.is_point_inside_footprint(point)
+                })
                 .collect();
 
             // inserting the elements in the dict

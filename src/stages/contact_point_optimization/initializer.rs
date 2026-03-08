@@ -15,11 +15,9 @@ impl PopulationInitializer<ContactPointsGene, Settings> for ContactPointInitiali
 
     fn get_initial_individuals(&self) -> usize {
         return 10;
-        todo!()
     }
 
     fn get_random_individual(&self) -> ContactPointsGene {
         return ContactPointsGene::default();
-        todo!()
     }
 }
