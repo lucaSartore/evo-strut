@@ -51,7 +51,7 @@ impl Visualizer<CriticalityGroupedState> for VisualizationStage {
 
         let mut colors = vec![Color::White; graph.count_vertices()];
 
-        let critical_group = &pipeline.state.critical;
+        let critical_group = &pipeline.state.grouped_areas;
 
         for (i, group) in critical_group.iter().enumerate() {
             let hue = i as f32 * 360. / critical_group.len() as f32;

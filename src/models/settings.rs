@@ -58,8 +58,8 @@ impl Default for IoSettings {
 #[derive(Debug, Clone)]
 pub struct ContactPointsOptimizationSettings {
     /// cost associated with not supporting a certain
-    /// area with an angle that is steeper than the threshold by a few degrees
-    /// unit of measure: [cost/(mm^2 * deg)]
+    /// area with an angle that is steeper than the threshold
+    /// unit of measure: [cost/mm^2]
     pub non_supported_cost: f32,
     /// cost associated with placing one support point
     /// unit of measure: [cost]
@@ -67,7 +67,20 @@ pub struct ContactPointsOptimizationSettings {
     /// cost associated with placing one support line 
     /// with a specific length
     /// unit of measure [cost/mm]
-    pub support_line_cost: f32
+    pub support_line_cost: f32,
+    /// the resolution that is used when evaluating the criticality level
+    /// smaller values makes the simulation take longer, but they also make it more precise.
+    /// the default value is 1mm
+    /// unit of measure3 [mm]
+    pub discretization_size: f32,
+    /// cost associated with not supporting a "min point"
+    /// (i.e. a point that is not touching the flor, and is the
+    /// lower among all of his neighbors)
+    /// it goes without saying that this should be set to something
+    /// sufficiently high
+    /// unit of measure: [cost]
+    pub cost_of_unsupported_min_point: f32
+
 }
 
 impl Default for ContactPointsOptimizationSettings {
@@ -75,7 +88,9 @@ impl Default for ContactPointsOptimizationSettings {
         Self {
             non_supported_cost: 0.1,
             support_point_cost: 1.0,
-            support_line_cost: 0.5
+            support_line_cost: 0.5,
+            discretization_size: 1.0,
+            cost_of_unsupported_min_point: 100.0
         }
     }
 }

@@ -3010,6 +3010,7 @@ dependencies = [
  "rand 0.10.0",
  "rayon",
  "rerun",
+ "smallvec",
  "stl_io 0.10.0",
 ]
 

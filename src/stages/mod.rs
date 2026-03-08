@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, process::exit};
+use std::{collections::HashSet, marker::PhantomData, process::exit};
 use anyhow::Result;
 
 pub mod loading;
@@ -81,7 +81,8 @@ impl  PipelineState for CriticalityDetectedState { }
 pub struct CriticalityGroupedState {
     pub settings: Settings,
     pub graph: SurfaceGraph,
-    pub critical: Vec<Vec<TriangleId>>
+    pub critical: HashSet<TriangleId>,
+    pub grouped_areas: Vec<Vec<TriangleId>>
 }
 impl  PipelineState for CriticalityGroupedState { }
 

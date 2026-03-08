@@ -1,6 +1,6 @@
 use std::{collections::HashMap, rc::Rc, sync::Arc, vec};
-use rerun::external::{crossbeam::epoch::Pointable, glam::usize};
 use stl_io::{IndexedMesh, IndexedTriangle};
+use smallvec::{self, SmallVec};
 
 mod settings;
 pub use settings::{Settings, CriticalitySettings};
@@ -11,8 +11,9 @@ pub use point::Point;
 mod triangle;
 pub use triangle::Triangle;
 
-pub mod ids;
+mod ids;
 pub use ids::{PointId, TriangleId};
+
 
 #[cfg(test)]
 mod tests;
@@ -20,14 +21,15 @@ mod tests;
 #[derive(Debug, Clone)]
 pub struct SurfaceNode {
     pub triangle: TriangleId,
-    pub adjacent: Vec<TriangleId>
+    pub neighbors: SmallVec<[TriangleId; 3]>
 }
+
 
 impl SurfaceNode {
     pub fn new(triangle: TriangleId) -> Self {
         Self {
             triangle,
-            adjacent: Vec::new()
+            neighbors: SmallVec::new()
         }
     }
 }
@@ -84,7 +86,7 @@ impl SurfaceGraph {
 
     pub fn iter_adjacent<'a>(&'a self, node: TriangleId) -> impl Iterator<Item=Triangle<'a>>{
         self.nodes[node.0]
-            .adjacent
+            .neighbors
             .iter()
             .map(|x| {
                 self.get_triangle(*x)
@@ -141,7 +143,7 @@ impl SurfaceGraph {
 
         for (_, adj) in adj_map.iter() {
             for i in 0..adj.len() {
-                for j in i..adj.len() {
+                for j in i+1..adj.len() {
                     self.mark_adjacent(adj[i], adj[j]);
                 }
             }
@@ -149,8 +151,24 @@ impl SurfaceGraph {
     }
 
     fn mark_adjacent(&mut self, a: TriangleId, b: TriangleId) {
-        self.nodes[a.0].adjacent.push(b);
-        self.nodes[b.0].adjacent.push(a);
+        self.nodes[a.0].neighbors.push(b);
+        self.nodes[b.0].neighbors.push(a);
+    }
+
+    pub fn neighbors(&self, t: TriangleId) -> SmallVec<[TriangleId; 3]> {
+        self.get_node(t).neighbors.clone()
+    }
+
+    pub fn lower_neighbors(&self, t: TriangleId) -> SmallVec<[TriangleId; 3]> {
+        let triangle = self.get_triangle(t);
+        self.get_node(t)
+            .neighbors
+            .iter()
+            .copied()
+            .filter(|n| {
+                self.get_triangle(*n).is_lower_than(&triangle)
+            })
+            .collect()
     }
 }
 

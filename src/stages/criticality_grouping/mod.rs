@@ -25,11 +25,12 @@ where
         let graph = &input.state.graph;
         let settings = &input.state.settings;
         let critical = &input.state.critical;
-        let critical = TB::TCriticalityGrouping::group_criticality(graph, settings, critical);
+        let grouped_areas = TB::TCriticalityGrouping::group_criticality(graph, settings, critical);
         Pipeline::from_state(CriticalityGroupedState {
             settings: input.state.settings,
             graph: input.state.graph,
-            critical,
+            grouped_areas,
+            critical: critical.iter().copied().collect()
         })
     }
 }

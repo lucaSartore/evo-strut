@@ -1,5 +1,5 @@
 use crate::{
-    evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, EvolverBehaviourTrait, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, models::{Settings, SurfaceGraph, TriangleId}, stages::{ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait}
+    evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, EvolverBehaviourTrait, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, models::{Settings, SurfaceGraph, TriangleId}, stages::{ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait, contact_point_optimization::evaluation::ContactPointEvaluatorSettings}
 };
 use std::marker::PhantomData;
 
@@ -29,13 +29,10 @@ where
         input: Pipeline<CriticalityGroupedState, TB>,
     ) -> Option<Pipeline<ContactPointsDecidedState, TB>> {
 
-        let results: Option<Vec<_>> = input
-            .state
-            .critical
-            .iter()
-            .map(|x| {
+        let results: Option<Vec<_>> = (0..input.state.grouped_areas.len())
+            .map(|i| {
                 // todo: process elements so that the Z field is filled up
-                TB::TContactPointOptimizer::optimize(&input.state.graph, &input.state.settings, x)
+                TB::TContactPointOptimizer::optimize(&input.state, i)
             })
             .collect();
 
@@ -50,7 +47,7 @@ where
 }
 
 pub trait ContactPointOptimizer {
-    fn optimize(graph: &SurfaceGraph, settings: &Settings, critical: &[TriangleId]) -> Option<ContactPointsGene>;
+    fn optimize(status: &CriticalityGroupedState, area_id: usize) -> Option<ContactPointsGene>;
 }
 
 pub struct SimpleContactPointOptimizer {
@@ -58,7 +55,11 @@ pub struct SimpleContactPointOptimizer {
 }
 
 impl ContactPointOptimizer for SimpleContactPointOptimizer {
-    fn optimize<'a>(graph: &'a SurfaceGraph, settings: &'a Settings, critical: &'a [TriangleId]) -> Option<ContactPointsGene> {
+    fn optimize<'a>(status: &'a CriticalityGroupedState, area_id: usize) -> Option<ContactPointsGene> {
+        let area = &status.grouped_areas[area_id];
+        let settings = &status.settings;
+        let graph = &status.graph;
+        let critical = & status.critical;
         type Behaviour<'a> = EvolverBehaviour<
             ContactPointMutator,
             ContactPointCrossover,
@@ -71,7 +72,7 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
             Settings,
             Settings,
             PatienceBasedTerminationStrategySettings,
-            (&'a SurfaceGraph, &'a Settings, &'a[TriangleId]),
+            ContactPointEvaluatorSettings<'a>,
             TournamentBasedCrossoverSelectionSettings,
             ElitistNextGenSelectorSettings,
             Settings
@@ -80,7 +81,7 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
             settings,
             settings,
             &PatienceBasedTerminationStrategySettings::default(),
-            &(graph, settings, critical),
+            &ContactPointEvaluatorSettings::new(graph, settings, area, critical),
             &TournamentBasedCrossoverSelectionSettings::default(),
             &ElitistNextGenSelectorSettings::default(),
             settings,

@@ -1,3 +1,4 @@
+use log::warn;
 use rerun::TriangleIndices;
 use stl_io::IndexedTriangle;
 use crate::models::TriangleId;
@@ -93,6 +94,29 @@ impl Triangle<'_> {
         // The point is inside if all cross products have the same sign
         // (i.e., it's not "outside" any of the three edges).
         !(has_neg && has_pos)
+    }
+
+    pub fn find_z(&self, x: f32, y: f32) -> f32 {
+
+        let [v1, v2, v3] = self.vertexes();
+
+        // two vectors on the triangle's plane
+        let a = v2 - v1;
+        let b = v3 - v1;
+
+        // normal vector (identify a plane)
+        let n = Point::cross(a, b);
+
+        // The triangle is vertical; the line X=x, Y=y might not intersect 
+        if n.z.abs() < f32::EPSILON {
+            warn!("trying to find the z coordinate of a vertical rectangle");
+            // fallback value
+            return v1.z;
+        }
+
+        // intersection between the line X=x, Y=y with the plane identified
+        // by the current triangle
+        v1.z - (n.x * (x - v1.x) + n.y * (y - v1.y)) / n.z
     }
 }
 
