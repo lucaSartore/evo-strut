@@ -35,7 +35,7 @@ impl Default for CriticalitySettings {
         Self { 
             support_overhanging_angle: 60.,
             max_detachment_from_z_plane: 0.1,
-            criticality_expansion_rate: 10.
+            criticality_expansion_rate: 1.
         }
     }
 }

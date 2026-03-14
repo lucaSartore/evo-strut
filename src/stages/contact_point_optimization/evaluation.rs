@@ -1,7 +1,8 @@
-use std::collections::{HashMap, HashSet};
-use crate::{evolution::{Cost, Evaluator}, models::{ Point, Settings, SurfaceGraph, TriangleId}, stages::contact_point_optimization::models::ContactPointsGene};
+use std::{any, collections::{HashMap, HashSet}};
+use crate::{evolution::{Cost, Evaluator}, models::{ Point, Settings, SurfaceGraph, TriangleId}, stages::{contact_point_optimization::models::ContactPointsGene, visualization::Color}};
 use itertools::Itertools;
-use log::info;
+use log::{debug, info};
+use anyhow::{Result, anyhow};
 
 mod bucketed_triangles;
 use bucketed_triangles::BucketedTriangles;
@@ -90,20 +91,27 @@ pub struct ContactPointEvaluator<'a> {
 }
 
 impl<'a> ContactPointEvaluator<'a> {
-    
     fn fill_evaluation_order(&mut self) {
+
+        debug!(
+            "got {} discretization points in surface",
+            self.surface_grid.bucketed_triangles.iter_coordinates().count()
+        );
+
         let mut eo: Vec<SinglePointEvaluator> = self.surface_grid
             .bucketed_triangles
             .iter_coordinates()
             .flat_map(|x| self.try_build_single_point_evaluator(*x))
             .collect();
 
+        debug!("built {} single point evaluators", eo.len());
+
         eo.sort_by_key(|x| {
             let point = identifier_to_zero_point(self.surface_grid.discretization_size, x.id);
             let triangle_id = self
                 .surface_grid
                 .bucketed_triangles
-                .find_triangle_that_includes(self.graph, point)
+                .find_triangle_that_includes_approximated(self.graph, point)
                 .expect("triangle should be always present");
             
             let triangle = self.graph.get_triangle(triangle_id);
@@ -147,10 +155,82 @@ impl<'a> ContactPointEvaluator<'a> {
             unit_cost: Cost::new(unit_cost)
         }.into()
     }
+
+    fn visualize(&self, costs: HashMap<(i32, i32), Cost>) -> Result<()> {
+
+        let min = costs
+            .values()
+            .min()
+            .ok_or(anyhow!("visualization_error: cost vector is empty"))?
+            .as_f32();
+
+        let max = costs
+            .values()
+            .max()
+            .ok_or(anyhow!("visualization_error: cost vector is empty"))?
+            .as_f32();
+
+        let to_visualize_set: HashSet<_> = self.area_to_evaluate.iter().copied().collect();
+
+        let rec = rerun::RecordingStreamBuilder::new("critical_mesh").spawn()?;
+
+        let mut colors = vec![Color::Green; self.graph.count_vertices()];
+
+        let normals = self.graph.vertex_normals(Some(&to_visualize_set));
+        let triangles: Vec<_> = self.graph.iter_triangles(Some(&to_visualize_set)).collect();
+
+
+        for triangle in &triangles {
+            let points = triangle.vertexes();
+            let indexes = triangle.vertexes_index();
+            for (p,i) in points.iter().zip(indexes.iter()) {
+                let identifier = find_approximated_identifier(
+                    self.surface_grid.discretization_size,
+                    *p
+                );
+                let Some(cost) = costs.get(&identifier) else {
+                    continue;
+                };
+                // 1 if max cost, 0 otherwise
+                let normalized = (cost.as_f32() - min) / (max + min);
+                let normalized_u8 = (normalized * 255.0) as u8;
+
+                colors[i.0] = Color::Rgb(normalized_u8, 255 - normalized_u8, 0);
+            }
+        }
+
+        let avg = self.graph.iter_triangles(Some(&to_visualize_set)).fold(
+            Point{x: 0., y:0., z: 0.},
+            |a,b| a+b.center()
+        ).to_scaled(1.0 / to_visualize_set.len() as f32);
+
+
+        let points = self
+            .graph
+            .iter_vertices()
+            .map(|x| x - avg);
+
+
+        rec.log(
+            "critical_mesh",
+            &rerun::Mesh3D::new(points)
+                .with_vertex_normals(normals)
+                .with_vertex_colors(colors)
+                .with_triangle_indices(triangles),
+        )?;
+
+        Ok(())
+    }
 }
 
 impl<'a> Evaluator<ContactPointsGene, ContactPointEvaluatorSettings<'a>> for ContactPointEvaluator<'a> {
     fn new(settings: &ContactPointEvaluatorSettings<'a>) -> Self {
+        debug!(
+            "area has {} elements, of which {} are critical",
+            settings.area.len(),
+            settings.area.iter().filter(|x| settings.critical.contains(x)).count(),
+        );
+
         let mut s = Self {
             graph: settings.graph,
             settings: settings.settings.clone(),
@@ -178,5 +258,16 @@ impl<'a> Evaluator<ContactPointsGene, ContactPointEvaluatorSettings<'a>> for Con
             cost = cost + new_cost;
         }
         cost
+    }
+    
+    fn visualize(&self, gene: &ContactPointsGene) -> Result<()> {
+        let supported = HashSet::new();
+        let mut costs = HashMap::new();
+        let mut cost = Cost::ZERO;
+        for e in self.evaluation_order.iter() {
+            let new_cost = e.evaluate(&mut costs, &supported);
+            cost = cost + new_cost;
+        }
+        self.visualize(costs)
     }
 }

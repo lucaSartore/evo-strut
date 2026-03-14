@@ -1,6 +1,7 @@
 use super::*;
 use rayon::prelude::*;
 use std::cmp::PartialOrd;
+use anyhow::{Result, anyhow};
 
 pub trait EvolverBehaviourTrait {
     // behaviour of the various components of teh GA
@@ -79,7 +80,7 @@ where
         }
     }
 
-    pub fn run(&self) -> Option<TBehaviour::TGene> {
+    pub fn run(&self) -> Result<TBehaviour::TGene> {
         let best = |x: &[Cost]| x.iter().copied().min().unwrap_or(Cost::MAX);
 
         let initial_count = self.population_initializer.get_initial_individuals();
@@ -88,7 +89,8 @@ where
             .collect();
 
         let mut current_gen_costs = current_gen
-            .par_iter()
+            // .par_iter()
+            .iter()
             .map(|y| self.evaluator.evaluate(y))
             .collect::<Vec<Cost>>();
 
@@ -96,8 +98,10 @@ where
             let n = self.next_gen_selector.num_offspring_to_generate();
             let (next_gen, next_gen_costs): (Vec<_>, Vec<_>) = self
                 .crossover_selector
-                .select_for_crossover(&current_gen_costs, n)?
-                .par_iter()
+                .select_for_crossover(&current_gen_costs, n)
+                .ok_or(anyhow!("Crossover selection failed to return any element"))?
+                // .par_iter()
+                .iter()
                 .map(|(ai, bi)| {
                     let a = &current_gen[*ai];
                     let b = &current_gen[*bi];
@@ -122,14 +126,22 @@ where
                 next_gen,
                 next_gen_costs,
             );
+
+            let best = current_gen
+                .iter()
+                .zip(current_gen_costs.iter())
+                .min_by_key(|(_,c)| **c)
+                .ok_or(anyhow!("Unable to find best individual for evaluation"))?.0;
+
+            self.evaluator.visualize(best)?;
         }
 
-        current_gen
+        let x = current_gen
             .into_iter()
             .zip(current_gen_costs.iter())
-            .min_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Less))
-            .map_or(self.population_initializer.get_random_individual(), |x| x.0)
-            .into()
+            .min_by_key(|(_,c)| **c)
+            .ok_or(anyhow!("Unable to find best individual, the list was empty"))?;
+        Ok(x.0)
     }
 }
 

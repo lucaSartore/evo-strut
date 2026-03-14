@@ -1,7 +1,7 @@
 use log::warn;
 use rerun::TriangleIndices;
 use stl_io::IndexedTriangle;
-use crate::models::TriangleId;
+use crate::models::{PointId, TriangleId};
 
 use super::{Point, SurfaceGraph};
 
@@ -23,6 +23,14 @@ impl Triangle<'_> {
             self.graph.get_point(t.vertices[0].into()),
             self.graph.get_point(t.vertices[1].into()),
             self.graph.get_point(t.vertices[2].into())
+        ]
+    }
+    pub fn vertexes_index(&self) -> [PointId;3]{
+        let t = self.as_raw_indexed();
+        [
+            t.vertices[0].into(),
+            t.vertices[1].into(),
+            t.vertices[2].into(),
         ]
     }
     pub fn vertex_a(&self) -> Point{

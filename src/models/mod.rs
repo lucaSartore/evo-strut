@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Rc, sync::Arc, vec};
+use std::{collections::{HashMap, HashSet}, rc::Rc, sync::Arc, vec};
 use stl_io::{IndexedMesh, IndexedTriangle};
 use smallvec::{self, SmallVec};
 
@@ -97,14 +97,22 @@ impl SurfaceGraph {
             .map(|x| {self.get_point(x.into())})
     }
 
-    pub fn iter_triangles<'a>(&'a self) -> impl Iterator<Item=Triangle<'a>>{
-        (0..self.count_triangles())
+    pub fn iter_triangles<'a>(&'a self, filter: Option<&HashSet<TriangleId>>) -> impl Iterator<Item=Triangle<'a>>{
+        let mut v: Vec<_> = (0..self.count_triangles())
             .map(|x| {self.get_triangle(x.into())})
+            .collect();
+
+        if let Some(set) = filter {
+            v.retain(|x| set.contains(&x.index));
+        }
+
+        v.into_iter()
     }
 
-    pub fn vertex_normals(&self) -> Vec<Point> {
+    pub fn vertex_normals(&self, filter: Option<&HashSet<TriangleId>>) -> Vec<Point> {
+        let triangles = self.iter_triangles(filter);
         let mut normals = vec![Point::default(); self.count_vertices()];
-        self.iter_triangles()
+        self.iter_triangles(filter)
             .for_each(|x| {
                 let raw = x.as_raw_indexed();
                 for v in x.as_raw_indexed().vertices {
@@ -170,6 +178,7 @@ impl SurfaceGraph {
             })
             .collect()
     }
+    
 }
 
 

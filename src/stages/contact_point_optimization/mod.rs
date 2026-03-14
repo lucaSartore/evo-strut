@@ -1,6 +1,8 @@
 use crate::{
     evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, EvolverBehaviourTrait, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, models::{Settings, SurfaceGraph, TriangleId}, stages::{ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait, contact_point_optimization::evaluation::ContactPointEvaluatorSettings}
 };
+use anyhow::{Result, anyhow};
+use log::debug;
 use std::marker::PhantomData;
 
 mod corssover;
@@ -27,27 +29,29 @@ where
 {
     pub fn execute(
         input: Pipeline<CriticalityGroupedState, TB>,
-    ) -> Option<Pipeline<ContactPointsDecidedState, TB>> {
+    ) -> Result<Pipeline<ContactPointsDecidedState, TB>> {
 
-        let results: Option<Vec<_>> = (0..input.state.grouped_areas.len())
+        // let merged = TB::TContactPointOptimizer::optimize(&input.state, 0)?;
+        println!("num grouped areas: {}", input.state.grouped_areas.len());
+        let results: Result<Vec<_>> = (0..input.state.grouped_areas.len())
             .map(|i| {
                 // todo: process elements so that the Z field is filled up
                 TB::TContactPointOptimizer::optimize(&input.state, i)
             })
             .collect();
+        let merged = ContactPointsGene::merge_many(results?)
+            .ok_or(anyhow!("merging of multiple genes failed"))?;
 
-        let merged = ContactPointsGene::merge_many(results?)?;
-        
-        Pipeline::from_state(ContactPointsDecidedState{
+        Ok(Pipeline::from_state(ContactPointsDecidedState{
             settings: input.state.settings,
             graph: input.state.graph,
             connection_points: merged
-        }).into()
+        }))
     }
 }
 
 pub trait ContactPointOptimizer {
-    fn optimize(status: &CriticalityGroupedState, area_id: usize) -> Option<ContactPointsGene>;
+    fn optimize(status: &CriticalityGroupedState, area_id: usize) -> Result<ContactPointsGene>;
 }
 
 pub struct SimpleContactPointOptimizer {
@@ -55,7 +59,8 @@ pub struct SimpleContactPointOptimizer {
 }
 
 impl ContactPointOptimizer for SimpleContactPointOptimizer {
-    fn optimize<'a>(status: &'a CriticalityGroupedState, area_id: usize) -> Option<ContactPointsGene> {
+    fn optimize<'a>(status: &'a CriticalityGroupedState, area_id: usize) -> Result<ContactPointsGene> {
+        debug!("starting optimization for area {area_id}");
         let area = &status.grouped_areas[area_id];
         let settings = &status.settings;
         let graph = &status.graph;

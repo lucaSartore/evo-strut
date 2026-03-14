@@ -62,7 +62,9 @@ impl SurfaceGrid {
     fn generate_points(&mut self, graph: &SurfaceGraph) {
         for c in self.bucketed_triangles.iter_coordinates() {
             let mut point = identifier_to_zero_point(self.discretization_size, *c);
-            let t_id = self.bucketed_triangles.find_triangle_that_includes(graph, point).expect("triangle shall always be found");
+            let t_id = self.bucketed_triangles.find_triangle_that_includes_approximated(graph, point)
+                .expect("triangle should always be found here");
+
             let t = graph.get_triangle(t_id);
             point.z = t.find_z(point.x, point.y);
 

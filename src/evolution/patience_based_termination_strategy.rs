@@ -10,7 +10,7 @@ pub struct  PatienceBasedTerminationStrategySettings {
 
 impl Default for PatienceBasedTerminationStrategySettings {
     fn default() -> Self {
-        Self { max_generations: 300, patience: 30 }
+        Self { max_generations: 1, patience: 1 }
     }
 }
 

@@ -18,6 +18,9 @@ impl Cost {
 
    pub const MAX: Cost = Cost {cost: f32::MAX};
    pub const ZERO: Cost = Cost {cost: 0.};
+   pub fn as_f32(&self) -> f32 {
+       self.cost
+   }
 }
 
 impl Eq for Cost { }

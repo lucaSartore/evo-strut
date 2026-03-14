@@ -3,7 +3,9 @@ mod stages;
 mod evolution;
 use anyhow::Result;
 use env_logger::Builder;
-use log::LevelFilter;
+use log::{LevelFilter, error};
+use rand::distr::uniform::Error;
+use rerun::TextLogLevel;
 
 use crate::{
     models::Settings,
@@ -12,10 +14,11 @@ use crate::{
     },
 };
 
-fn main() -> Result<()> {
+fn main() {
 
     Builder::new()
-        .filter_level(LevelFilter::Info)
+        .filter_level(LevelFilter::Error)
+        .filter_module("evo_strut", LevelFilter::Debug)
         .init();
 
     let settings = Settings::default();
@@ -25,6 +28,9 @@ fn main() -> Result<()> {
         DistanceBasedCriticalityGrouper,
         SimpleContactPointOptimizer
     >;
-    Pipeline::<StartedState, Behaviour>::run(settings)?;
-    Ok(())
+    let value = Pipeline::<StartedState, Behaviour>::run(settings);
+
+    if let Err(e) = value {
+        error!("{e:?}");
+    }
 }

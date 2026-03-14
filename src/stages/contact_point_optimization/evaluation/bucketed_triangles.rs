@@ -55,18 +55,13 @@ impl BucketedTriangles {
                         });
                     (y_min..y_max).map(move |y| (x,y))
                 })
-                .filter(|c| {
-                    // verify that the generated point is actually inside teh triangle
-                    let point = identifier_to_zero_point(discretization_size, *c);
-                    triangle.is_point_inside_footprint(point)
-                })
                 .collect();
 
             // inserting the elements in the dict
             for e in full_elements {
                 let e = map
                     .entry(e)
-                    .or_insert(vec![]);
+                    .or_default();
                 e.push(*t);
             }
         }
@@ -74,10 +69,26 @@ impl BucketedTriangles {
         Self {discrete_position_to_triangles: map, discretization_size}
     }
 
-    pub fn iter_coordinates<'a> (&'a self) -> impl Iterator<Item = &'a (i32, i32)> {
-        self.discrete_position_to_triangles.keys().into_iter()
+    pub fn iter_coordinates (& self) -> impl Iterator<Item = &(i32, i32)> {
+        self.discrete_position_to_triangles.keys()
     }
 
+    /// same as `find_triangle_that_includes` but try to return an approximated
+    /// solution if a main one is not found
+    pub fn find_triangle_that_includes_approximated(&self, graph: &SurfaceGraph, point: Point) -> Option<TriangleId> {
+        let bucket = find_approximated_identifier(self.discretization_size, point);
+        let options = self.discrete_position_to_triangles.get(&bucket)?;
+        let not_approximated = options.iter().copied().find(|id| {
+            let t = graph.get_triangle(*id);
+            t.is_point_inside_footprint(point)
+        });
+        if not_approximated.is_some() {
+            return not_approximated;
+        }
+        let e = options.iter().next()?;
+        Some(*e)
+    }
+    
     /// fin the triangle that include a certain point (considering only x and y coordinate)
     pub fn find_triangle_that_includes(&self, graph: &SurfaceGraph, point: Point) -> Option<TriangleId> {
         let bucket = find_approximated_identifier(self.discretization_size, point);

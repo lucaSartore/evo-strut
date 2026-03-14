@@ -134,7 +134,7 @@ where
         VisualizationStage::visualize(&p)?;
         let p = CriticalityGroupingStage::<TB>::execute(p);
         VisualizationStage::visualize(&p)?;
-        let p = ContactPointOptimizationStage::<TB>::execute(p);
+        let p = ContactPointOptimizationStage::<TB>::execute(p)?;
         Ok(())
     }
 }

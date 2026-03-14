@@ -79,9 +79,9 @@ fn visualize_mesh(graph: &SurfaceGraph, name: &str, colors: Option<Vec<Color>>) 
     rec.log(
         name,
         &rerun::Mesh3D::new(graph.iter_vertices())
-            .with_vertex_normals(graph.vertex_normals())
+            .with_vertex_normals(graph.vertex_normals(None))
             .with_vertex_colors(colors)
-            .with_triangle_indices(graph.iter_triangles()),
+            .with_triangle_indices(graph.iter_triangles(None)),
     )?;
 
     Ok(())

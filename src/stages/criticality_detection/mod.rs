@@ -47,7 +47,7 @@ fn is_triangle_close_to_the_ground(triangle: &Triangle<'_>, settings: &Settings)
 impl CriticalityDetector for OrientationBasedCriticalityDetector {
     fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<TriangleId> {
         let mut to_return = vec![];
-        for t in graph.iter_triangles() {
+        for t in graph.iter_triangles(None) {
             if is_triangle_close_to_the_ground(&t, settings) {
                 continue;
             }

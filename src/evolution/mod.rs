@@ -1,4 +1,5 @@
 use std::marker::PhantomData;
+use anyhow::Result;
 
 mod evolver;
 pub use evolver::{Evolver, EvolverBehaviourTrait, EvolverBehaviour};
@@ -21,7 +22,6 @@ mod random;
 pub use random::Random;
 
 
-
 pub trait Mutator<T,S>{
     fn new(settings: &S, rand: Random) -> Self;
     fn mutate(&self, gene: T) -> T;
@@ -40,6 +40,7 @@ pub trait TerminationStrategy<S>{
 pub trait Evaluator<T,S> {
     fn new(settings: &S) -> Self;
     fn evaluate(&self, gene: &T) -> Cost;
+    fn visualize(&self, gene: &T) -> Result<()>;
 }
 
 pub trait CrossoverSelector<S> {

@@ -73,9 +73,9 @@ impl Point {
     }
 
     pub fn scale(&mut self, factor: f32) {
-        self.x /= factor;
-        self.y /= factor;
-        self.z /= factor;
+        self.x *= factor;
+        self.y *= factor;
+        self.z *= factor;
     }
 
     pub fn to_scaled(&self, factor: f32) -> Point {
