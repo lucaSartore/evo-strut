@@ -6,6 +6,7 @@ use anyhow::{Result, anyhow};
 
 
 mod surface_grid;
+use rerun::coordinates;
 use surface_grid::*;
 
 use smallvec::SmallVec;
@@ -29,17 +30,6 @@ impl<'a> ContactPointEvaluatorSettings<'a> {
             graph, settings, area, critical
         }
     }
-}
-
-fn identifier_to_zero_point(discretization_size: f32, identifier: (i32, i32)) -> Point {
-    let x = identifier.0 as f32 * discretization_size;
-    let y = identifier.1 as f32 * discretization_size;
-    Point{ x, y, z: 0. }
-}
-fn find_approximated_identifier(discretization_size: f32, point: Point) -> (i32, i32) {
-    let x = (point.x / discretization_size).round() as i32;
-    let y = (point.y / discretization_size).round() as i32;
-    (x,y)
 }
 
 #[derive(Debug)]
@@ -146,6 +136,75 @@ impl<'a> ContactPointEvaluator<'a> {
         }
         (costs, cost)
     }
+
+    fn visualize(&self, costs: HashMap<(i32, i32), Cost>) -> Result<()> {
+
+        let min = costs
+            .values()
+            .min()
+            .ok_or(anyhow!("visualization_error: cost vector is empty"))?
+            .as_f32();
+
+        let max = costs
+            .values()
+            .max()
+            .ok_or(anyhow!("visualization_error: cost vector is empty"))?
+            .as_f32();
+
+        let to_visualize_set: HashSet<_> = self.area_to_evaluate.iter().copied().collect();
+
+        let rec = rerun::RecordingStreamBuilder::new("critical_mesh").spawn()?;
+
+        let mut colors = vec![Color::Green; self.graph.count_vertices()];
+
+        let normals = self.graph.vertex_normals(Some(&to_visualize_set));
+        let triangles: Vec<_> = self.graph.iter_triangles(Some(&to_visualize_set)).collect();
+
+
+        // add colors
+        for triangle in &triangles {
+
+            // only critical triangles are colored
+            if !self.critical.contains(&triangle.index) {
+                continue;
+            }
+
+            let points = triangle.vertexes();
+            let indexes = triangle.vertexes_index();
+            for (p,i) in points.iter().zip(indexes.iter()) {
+                let coordinates = self.surface_grid.point_to_discretized(*p);
+                let cost = *costs.get(&coordinates).expect("triangle should always be found");
+
+                // 1 if max cost, 0 otherwise
+                let normalized = (cost.as_f32() - min) / (max + min);
+                let normalized_u8 = (normalized * 255.0) as u8;
+
+                colors[i.0] = Color::Rgb(normalized_u8, 255 - normalized_u8, 0);
+            }
+        }
+
+        let avg = self.graph.iter_triangles(Some(&to_visualize_set)).fold(
+            Point{x: 0., y:0., z: 0.},
+            |a,b| a+b.center()
+        ).to_scaled(1.0 / to_visualize_set.len() as f32);
+
+
+        let points = self
+            .graph
+            .iter_vertices()
+            .map(|x| x - avg);
+
+
+        rec.log(
+            "critical_mesh",
+            &rerun::Mesh3D::new(points)
+                .with_vertex_normals(normals)
+                .with_vertex_colors(colors)
+                .with_triangle_indices(triangles),
+        )?;
+
+        Ok(())
+    }
 }
 
 impl<'a> Evaluator<ContactPointsGene, ContactPointEvaluatorSettings<'a>> for ContactPointEvaluator<'a> {
@@ -178,7 +237,7 @@ impl<'a> Evaluator<ContactPointsGene, ContactPointEvaluatorSettings<'a>> for Con
     }
     
     fn visualize(&self, gene: &ContactPointsGene) -> Result<()> {
-        let map = self.evaluate_internal(gene).0;
-        Ok(())
+        let costs = self.evaluate_internal(gene).0;
+        self.visualize(costs)
     }
 }
