@@ -1,5 +1,7 @@
 use std::marker::PhantomData;
 
+use log::debug;
+
 use crate::{models::{Point, Settings, SurfaceGraph, Triangle, TriangleId}, stages::{CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait}};
 
 
@@ -36,12 +38,7 @@ pub trait CriticalityDetector {
 pub struct OrientationBasedCriticalityDetector {}
 
 fn is_triangle_close_to_the_ground(triangle: &Triangle<'_>, settings: &Settings) -> bool {
-    for v in triangle.vertexes() {
-        if v.z <= settings.criticality_settings.max_detachment_from_z_plane {
-            return true;
-        }
-    }
-    false
+    triangle.center().z <= settings.criticality_settings.max_detachment_from_z_plane
 }
 
 impl CriticalityDetector for OrientationBasedCriticalityDetector {
