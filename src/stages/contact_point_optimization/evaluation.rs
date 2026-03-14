@@ -5,6 +5,9 @@ use log::{debug, info};
 use anyhow::{Result, anyhow};
 
 
+mod surface_grid;
+use surface_grid::*;
+
 use smallvec::SmallVec;
 
 
@@ -42,7 +45,7 @@ fn find_approximated_identifier(discretization_size: f32, point: Point) -> (i32,
 #[derive(Debug)]
 pub struct SinglePointEvaluator {
     /// id of the element we are evaluating
-    pub id: (i32, i32),
+    pub coordinates: Coordinates,
     /// cost of the current unit (dependent on his area, and his angle
     pub unit_cost: Cost,
     /// basic cost independent of all the neighbors (can be 0 if we have a lower
@@ -50,13 +53,45 @@ pub struct SinglePointEvaluator {
     pub base_cost: Cost,
     /// set of neighbors that we can inherit the cost from
     /// i.e. those are the critical neighbors that are below me
-    pub critical_lower_neighbors: SmallVec<[(i32, i32); 4]>
+    pub critical_lower_neighbors: SmallVec<[Coordinates; 4]>
 }
 
 impl SinglePointEvaluator {
-    pub fn evaluate(&self, costs: &mut HashMap<(i32, i32), Cost>, supported: &HashSet<(i32, i32)>) -> Cost {
+    pub fn new(coordinates: Coordinates, evaluator: &ContactPointEvaluator<'_>) -> Self {
+        let s = &evaluator.settings.contact_points_optimization_settings;
+
+        let this = &evaluator.surface_grid.points[&coordinates];
+
+        let has_lower_non_critical_neighbor = this
+            .neighbors
+            .iter()
+            .any(|n_id| {
+                let n = &evaluator.surface_grid.points[n_id];
+                !n.critical && n.point.z < this.point.z
+            });
+
+        let base_cost = if has_lower_non_critical_neighbor { 0. } else { s.non_supported_base_cost };
+        let unit_cost = s.non_supported_unit_cost * s.discretization_size.powi(2);
+        let critical_lower_neighbors = this
+            .neighbors
+            .iter()
+            .copied()
+            .filter(|n_id| {
+                let n = &evaluator.surface_grid.points[n_id];
+                n.critical && n.point.z < this.point.z
+            }).collect();
         
-        if supported.contains(&self.id) {
+        Self {
+            coordinates,
+            unit_cost: Cost::new(unit_cost),
+            base_cost: Cost::new(base_cost),
+            critical_lower_neighbors
+        }
+    }
+
+    pub fn evaluate(&self, costs: &mut HashMap<Coordinates, Cost>, supported: &HashSet<Coordinates>) -> Cost {
+        
+        if supported.contains(&self.coordinates) {
             return Cost::ZERO
         }
 
@@ -71,23 +106,46 @@ impl SinglePointEvaluator {
         };
 
         let cost = base_cost + self.unit_cost;
-        costs.insert(self.id, cost);
+        costs.insert(self.coordinates, cost);
         
         cost
     }
 }
 
 pub struct ContactPointEvaluator<'a> {
-    graph: &'a SurfaceGraph,
-    settings: Settings,
-    area_to_evaluate: &'a [TriangleId],
-    critical: &'a HashSet<TriangleId>,
-    // surface_grid: SurfaceGrid,
-    evaluation_order: Vec<SinglePointEvaluator>
+    pub graph: &'a SurfaceGraph,
+    pub settings: Settings,
+    pub area_to_evaluate: &'a [TriangleId],
+    pub critical: &'a HashSet<TriangleId>,
+    pub surface_grid: SurfaceGrid,
+    pub evaluation_order: Vec<SinglePointEvaluator>
 }
 
 impl<'a> ContactPointEvaluator<'a> {
+
+    fn fill_evaluation_order(&mut self) {
+        self.evaluation_order = self
+            .surface_grid
+            .points
+            .iter()
+            .sorted_by_key(|x| Cost::new(x.1.point.z))
+            .map(|x| SinglePointEvaluator::new(*x.0, self))
+            .collect()
+    }
     
+
+    fn evaluate_internal(&self, gene: &ContactPointsGene) -> (HashMap<Coordinates, Cost>, Cost) {
+        let mut costs = HashMap::new();
+
+        // todo: fill this up
+        let mut supported = HashSet::new();
+
+        let mut cost = Cost::ZERO;
+        for e in self.evaluation_order.iter() {
+            cost = cost + e.evaluate(&mut costs, &mut supported);
+        }
+        (costs, cost)
+    }
 }
 
 impl<'a> Evaluator<ContactPointsGene, ContactPointEvaluatorSettings<'a>> for ContactPointEvaluator<'a> {
@@ -98,29 +156,29 @@ impl<'a> Evaluator<ContactPointsGene, ContactPointEvaluatorSettings<'a>> for Con
             settings.area.iter().filter(|x| settings.critical.contains(x)).count(),
         );
 
-        todo!();
-        // let mut s = Self {
-        //     graph: settings.graph,
-        //     settings: settings.settings.clone(),
-        //     area_to_evaluate: settings.area,
-        //     critical: settings.critical,
-        //     surface_grid: SurfaceGrid::new(
-        //         settings.graph,
-        //         settings.area,
-        //         settings.critical,
-        //         settings.settings.contact_points_optimization_settings.discretization_size
-        //     ),
-        //     evaluation_order: vec![]
-        // };
-        // s.fill_evaluation_order();
-        // s
+        let mut s = Self {
+            graph: settings.graph,
+            settings: settings.settings.clone(),
+            area_to_evaluate: settings.area,
+            critical: settings.critical,
+            surface_grid: SurfaceGrid::new(
+                settings.graph,
+                settings.critical,
+                settings.area,
+                settings.settings.contact_points_optimization_settings.discretization_size
+            ),
+            evaluation_order: vec![]
+        };
+        s.fill_evaluation_order();
+        s
     }
 
     fn evaluate(&self, gene: &ContactPointsGene) -> Cost {
-        todo!();
+        self.evaluate_internal(gene).1
     }
     
     fn visualize(&self, gene: &ContactPointsGene) -> Result<()> {
-        todo!();
+        let map = self.evaluate_internal(gene).0;
+        Ok(())
     }
 }

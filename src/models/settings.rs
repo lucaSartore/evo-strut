@@ -60,7 +60,7 @@ pub struct ContactPointsOptimizationSettings {
     /// cost associated with not supporting a certain
     /// area with an angle that is steeper than the threshold
     /// unit of measure: [cost/mm^2]
-    pub non_supported_cost: f32,
+    pub non_supported_unit_cost: f32,
     /// cost associated with placing one support point
     /// unit of measure: [cost]
     pub support_point_cost: f32,
@@ -73,24 +73,24 @@ pub struct ContactPointsOptimizationSettings {
     /// the default value is 1mm
     /// unit of measure3 [mm]
     pub discretization_size: f32,
-    /// cost associated with not supporting a "min point"
+    /// cost associated with an element that has no support at all 
     /// (i.e. a point that is not touching the flor, and is the
     /// lower among all of his neighbors)
     /// it goes without saying that this should be set to something
     /// sufficiently high
     /// unit of measure: [cost]
-    pub cost_of_unsupported_min_point: f32
+    pub non_supported_base_cost: f32
 
 }
 
 impl Default for ContactPointsOptimizationSettings {
     fn default() -> Self {
         Self {
-            non_supported_cost: 0.1,
+            non_supported_unit_cost: 0.1,
             support_point_cost: 1.0,
             support_line_cost: 0.5,
             discretization_size: 1.0,
-            cost_of_unsupported_min_point: 100.0
+            non_supported_base_cost: 100.0
         }
     }
 }
