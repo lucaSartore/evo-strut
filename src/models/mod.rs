@@ -1,5 +1,4 @@
 use std::{collections::{HashMap, HashSet}, rc::Rc, sync::Arc, vec};
-use stl_io::{IndexedMesh, IndexedTriangle};
 use smallvec::{self, SmallVec};
 
 mod settings;
@@ -12,7 +11,14 @@ mod triangle;
 pub use triangle::Triangle;
 
 mod ids;
-pub use ids::{PointId, TriangleId};
+pub use ids::{PointId, FaceId, MeshId};
+
+mod mesh;
+pub use mesh::{Mesh, Face};
+
+mod mesh_vector;
+pub use mesh_vector::MeshVector;
+
 
 
 #[cfg(test)]
@@ -20,34 +26,34 @@ mod tests;
 
 #[derive(Debug, Clone)]
 pub struct SurfaceNode {
-    pub triangle: TriangleId,
-    pub neighbors: SmallVec<[TriangleId; 3]>
+    pub face: FaceId,
+    pub neighbors: SmallVec<[FaceId; 3]>
 }
 
 
 impl SurfaceNode {
-    pub fn new(triangle: TriangleId) -> Self {
+    pub fn new(face: FaceId) -> Self {
         Self {
-            triangle,
+            face,
             neighbors: SmallVec::new()
         }
     }
 }
 
 impl SurfaceNode {
-    pub fn get_face(&self, graph: &SurfaceGraph) -> IndexedTriangle {
-        graph.mesh.faces[self.triangle.0]
+    pub fn get_face(&self, graph: &SurfaceGraph) -> Face {
+        graph.mesh.faces[self.face]
     }
 }
 
 pub struct SurfaceGraph {
-    pub mesh: Arc<IndexedMesh>,
-    pub nodes: Vec<SurfaceNode>
+    pub mesh: Arc<Mesh>,
+    pub nodes: MeshVector<FaceId, SurfaceNode>
 }
 
 
 impl SurfaceGraph {
-    pub fn new(mesh: &Arc<IndexedMesh>) -> Self {
+    pub fn new(mesh: &Arc<Mesh>) -> Self {
         let mut to_return = Self {
             mesh: mesh.clone(),
             nodes: mesh
@@ -62,18 +68,18 @@ impl SurfaceGraph {
     }
 
     pub fn get_point(&self, point: PointId) -> Point {
-        self.mesh.vertices[point.0].into()
+        self.mesh.points[point]
     }
 
-    pub fn get_node(& self, node: TriangleId) -> &SurfaceNode {
-        &self.nodes[node.0]
+    pub fn get_node(& self, node: FaceId) -> &SurfaceNode {
+        &self.nodes[node]
     }
 
-    pub fn get_triangle<'a>(&'a self, node: TriangleId) -> Triangle<'a> {
-        let t_index = self.nodes[node.0].triangle;
+    pub fn get_triangle<'a>(&'a self, node: FaceId) -> Triangle<'a> {
+        let f_index = self.nodes[node].face;
         Triangle {
             graph: self,
-            index: t_index,
+            index: f_index,
         }
     }
 
@@ -81,11 +87,11 @@ impl SurfaceGraph {
         self.mesh.faces.len()
     }
     pub fn count_vertices(&self) -> usize {
-        self.mesh.vertices.len()
+        self.mesh.points.len()
     }
 
-    pub fn iter_adjacent<'a>(&'a self, node: TriangleId) -> impl Iterator<Item=Triangle<'a>>{
-        self.nodes[node.0]
+    pub fn iter_adjacent<'a>(&'a self, node: FaceId) -> impl Iterator<Item=Triangle<'a>>{
+        self.nodes[node]
             .neighbors
             .iter()
             .map(|x| {
@@ -97,7 +103,7 @@ impl SurfaceGraph {
             .map(|x| {self.get_point(x.into())})
     }
 
-    pub fn iter_triangles<'a>(&'a self, filter: Option<&HashSet<TriangleId>>) -> impl Iterator<Item=Triangle<'a>>{
+    pub fn iter_triangles<'a>(&'a self, filter: Option<&HashSet<FaceId>>) -> impl Iterator<Item=Triangle<'a>>{
         let mut v: Vec<_> = (0..self.count_triangles())
             .map(|x| {self.get_triangle(x.into())})
             .collect();
@@ -109,14 +115,14 @@ impl SurfaceGraph {
         v.into_iter()
     }
 
-    pub fn vertex_normals(&self, filter: Option<&HashSet<TriangleId>>) -> Vec<Point> {
+    pub fn vertex_normals(&self, filter: Option<&HashSet<FaceId>>) -> Vec<Point> {
         let triangles = self.iter_triangles(filter);
         let mut normals = vec![Point::default(); self.count_vertices()];
         self.iter_triangles(filter)
             .for_each(|x| {
                 let raw = x.as_raw_indexed();
-                for v in x.as_raw_indexed().vertices {
-                    normals[v] = raw.normal.into();
+                for v in x.as_raw_indexed().vertexes {
+                    normals[v.0 as usize] = raw.normal.into();
                 }
             });
         normals
@@ -126,15 +132,15 @@ impl SurfaceGraph {
     fn fill_adjacent(&mut self) {
         // for each couple of connected points
         // we map a list of the triangles that are inside
-        let mut adj_map = HashMap::<(PointId, PointId), Vec<TriangleId>>::new();
+        let mut adj_map = HashMap::<(PointId, PointId), Vec<FaceId>>::new();
         self.nodes
             .iter()
             .enumerate()
             .for_each(|(i,n)| {
                 for edge in 0..3 {
-                    let triangle = &self.mesh.faces[n.triangle.0];
-                    let side_1 = triangle.vertices[edge];
-                    let side_2 = triangle.vertices[(edge+1)%3];
+                    let triangle = &self.mesh.faces[n.face];
+                    let side_1 = triangle.vertexes[edge];
+                    let side_2 = triangle.vertexes[(edge+1)%3];
                     let side_identifier: (PointId, PointId) = if side_1 < side_2 {
                         (side_1.into(), side_2.into())
                     } else {
@@ -158,16 +164,16 @@ impl SurfaceGraph {
         }
     }
 
-    fn mark_adjacent(&mut self, a: TriangleId, b: TriangleId) {
-        self.nodes[a.0].neighbors.push(b);
-        self.nodes[b.0].neighbors.push(a);
+    fn mark_adjacent(&mut self, a: FaceId, b: FaceId) {
+        self.nodes[a].neighbors.push(b);
+        self.nodes[b].neighbors.push(a);
     }
 
-    pub fn neighbors(&self, t: TriangleId) -> SmallVec<[TriangleId; 3]> {
+    pub fn neighbors(&self, t: FaceId) -> SmallVec<[FaceId; 3]> {
         self.get_node(t).neighbors.clone()
     }
 
-    pub fn lower_neighbors(&self, t: TriangleId) -> SmallVec<[TriangleId; 3]> {
+    pub fn lower_neighbors(&self, t: FaceId) -> SmallVec<[FaceId; 3]> {
         let triangle = self.get_triangle(t);
         self.get_node(t)
             .neighbors
@@ -179,12 +185,4 @@ impl SurfaceGraph {
             .collect()
     }
     
-}
-
-
-impl From<&Arc<IndexedMesh>> for SurfaceGraph {
-
-    fn from(value: &Arc<IndexedMesh>) -> Self {
-        SurfaceGraph::new(value)
-    }
 }

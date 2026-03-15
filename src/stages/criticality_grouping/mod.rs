@@ -4,7 +4,7 @@ use rerun::external::log::max_level;
 use itertools::Itertools;
 
 use crate::{
-    models::{Point, Settings, SurfaceGraph, TriangleId},
+    models::{Point, Settings, SurfaceGraph, FaceId},
     stages::{CriticalityDetectedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait},
 };
 
@@ -40,8 +40,8 @@ pub trait CriticalityGrouper {
     fn group_criticality(
         graph: &SurfaceGraph,
         settings: &Settings,
-        critical: &[TriangleId],
-    ) -> Vec<Vec<TriangleId>>;
+        critical: &[FaceId],
+    ) -> Vec<Vec<FaceId>>;
 }
 
 pub struct DistanceBasedCriticalityGrouper {}
@@ -49,8 +49,8 @@ impl DistanceBasedCriticalityGrouper {
     fn expand_critical(
         graph: &SurfaceGraph,
         max_distance: f32,
-        critical: &[TriangleId],
-    ) -> Vec<TriangleId>{
+        critical: &[FaceId],
+    ) -> Vec<FaceId>{
         let critical_set: HashSet<_> = critical.iter().copied().collect();
         let critical_in_border = Self::find_critical_border(graph, critical);
 
@@ -113,8 +113,8 @@ impl DistanceBasedCriticalityGrouper {
     /// of the border
     fn find_critical_border(
         graph: &SurfaceGraph,
-        critical: &[TriangleId],
-    ) -> Vec<TriangleId> {
+        critical: &[FaceId],
+    ) -> Vec<FaceId> {
         let critical_set: HashSet<_> = critical.iter().copied().collect();
 
         let mut critical_in_border = vec![];
@@ -133,8 +133,8 @@ impl DistanceBasedCriticalityGrouper {
     /// all the triangles are adjacent
     fn group_by_connected(
         graph: &SurfaceGraph,
-        critical: &Vec<TriangleId>,
-    ) -> Vec<Vec<TriangleId>> {
+        critical: &Vec<FaceId>,
+    ) -> Vec<Vec<FaceId>> {
         let mut to_return = vec![];
         let critical_set: HashSet<_> = critical.iter().copied().collect();
 
@@ -168,8 +168,8 @@ impl CriticalityGrouper for DistanceBasedCriticalityGrouper {
     fn group_criticality(
         graph: &SurfaceGraph,
         settings: &Settings,
-        critical: &[TriangleId],
-    ) -> Vec<Vec<TriangleId>> {
+        critical: &[FaceId],
+    ) -> Vec<Vec<FaceId>> {
 
         let expanded = Self::expand_critical(graph, settings.criticality_settings.criticality_expansion_rate, critical);
         Self::group_by_connected(graph, &expanded) 

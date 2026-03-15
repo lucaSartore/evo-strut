@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use log::debug;
 
-use crate::{models::{Point, Settings, SurfaceGraph, Triangle, TriangleId}, stages::{CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait}};
+use crate::{models::{Point, Settings, SurfaceGraph, Triangle, FaceId}, stages::{CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait}};
 
 
 pub struct CriticalityDetectionStage<TB>
@@ -32,7 +32,7 @@ where
 
 /// trait that given a particular mesh detect which polygons are "critical"
 pub trait CriticalityDetector {
-    fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<TriangleId>;
+    fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<FaceId>;
 }
 
 pub struct OrientationBasedCriticalityDetector {}
@@ -42,7 +42,7 @@ fn is_triangle_close_to_the_ground(triangle: &Triangle<'_>, settings: &Settings)
 }
 
 impl CriticalityDetector for OrientationBasedCriticalityDetector {
-    fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<TriangleId> {
+    fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<FaceId> {
         let mut to_return = vec![];
         for t in graph.iter_triangles(None) {
             if is_triangle_close_to_the_ground(&t, settings) {

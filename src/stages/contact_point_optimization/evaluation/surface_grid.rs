@@ -54,7 +54,7 @@ impl SurfaceGrid {
         let y = (point.y / self.discretization_size).round() as i32;
         (x,y)
     }
-    pub fn new(graph: &SurfaceGraph, critical: &HashSet<TriangleId>, area: &[TriangleId], discretization_size: f32) -> Self {
+    pub fn new(graph: &SurfaceGraph, critical: &HashSet<FaceId>, area: &[FaceId], discretization_size: f32) -> Self {
         let mut to_return = Self{
             discretization_size,
             points: HashMap::default()

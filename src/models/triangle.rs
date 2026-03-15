@@ -1,13 +1,11 @@
 use log::warn;
 use rerun::TriangleIndices;
-use stl_io::IndexedTriangle;
-use crate::models::{PointId, TriangleId};
-
-use super::{Point, SurfaceGraph};
+use crate::models::{PointId, FaceId};
+use super::*;
 
 pub struct Triangle<'a> {
     pub graph: &'a SurfaceGraph,
-    pub index: TriangleId
+    pub index: FaceId
 }
 
 impl Triangle<'_> {
@@ -20,37 +18,37 @@ impl Triangle<'_> {
     pub fn vertexes(&self) -> [Point;3]{
         let t = self.as_raw_indexed();
         [
-            self.graph.get_point(t.vertices[0].into()),
-            self.graph.get_point(t.vertices[1].into()),
-            self.graph.get_point(t.vertices[2].into())
+            self.graph.get_point(t.vertexes[0].into()),
+            self.graph.get_point(t.vertexes[1].into()),
+            self.graph.get_point(t.vertexes[2].into())
         ]
     }
     pub fn vertexes_index(&self) -> [PointId;3]{
         let t = self.as_raw_indexed();
         [
-            t.vertices[0].into(),
-            t.vertices[1].into(),
-            t.vertices[2].into(),
+            t.vertexes[0].into(),
+            t.vertexes[1].into(),
+            t.vertexes[2].into(),
         ]
     }
     pub fn vertex_a(&self) -> Point{
         let t = self.as_raw_indexed();
-        self.graph.get_point(t.vertices[0].into())
+        self.graph.get_point(t.vertexes[0].into())
     }
     pub fn vertex_b(&self) -> Point{
         let t = self.as_raw_indexed();
-        self.graph.get_point(t.vertices[0].into())
+        self.graph.get_point(t.vertexes[1].into())
     }
     pub fn vertex_c(&self) -> Point{
         let t = self.as_raw_indexed();
-        self.graph.get_point(t.vertices[0].into())
+        self.graph.get_point(t.vertexes[2].into())
     }
     pub fn normal(&self) -> Point{
         let t = self.as_raw_indexed();
         t.normal.into()
     }
-    pub fn as_raw_indexed(&self) -> IndexedTriangle{
-        self.graph.mesh.faces[self.index.0]
+    pub fn as_raw_indexed(&self) -> Face{
+        self.graph.mesh.faces[self.index]
     }
 
     pub fn get_height_difference(&self, other: &Triangle<'_>) -> f32 {
@@ -131,11 +129,11 @@ impl Triangle<'_> {
 
 impl<'a> From<Triangle<'a>> for TriangleIndices {
     fn from(value: Triangle) -> Self {
-        let v = value.graph.mesh.faces[value.index.0].vertices;
+        let v = value.graph.mesh.faces[value.index].vertexes;
         [
-            v[0] as u32,
-            v[1] as u32,
-            v[2] as u32
+            v[0].0,
+            v[1].0,
+            v[2].0
         ].into()
     }
 }

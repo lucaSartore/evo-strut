@@ -1,4 +1,4 @@
-use std::{collections::HashSet, marker::PhantomData, process::exit};
+use std::{collections::HashSet, marker::PhantomData};
 use anyhow::Result;
 
 pub mod loading;
@@ -9,11 +9,9 @@ pub mod criticality_grouping;
 pub mod contact_point_optimization;
 
 pub use criticality_detection::{CriticalityDetector, CriticalityDetectionStage, OrientationBasedCriticalityDetector};
-pub use criticality_evaluation::{CriticalityEvaluator, CriticalityEvaluationStage, OrientationBasedCriticalityEvaluator};
-use rerun::external::image::imageops::FilterType::Triangle;
-use stl_io::IndexedMesh;
+pub use criticality_evaluation::{CriticalityEvaluator, OrientationBasedCriticalityEvaluator};
 
-use crate::{models::{Settings, SurfaceGraph, TriangleId}, stages::{contact_point_optimization::{ContactPointOptimizationStage, ContactPointOptimizer, ContactPointsGene}, criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, loading::LoadingStage}};
+use crate::{models::{Settings, SurfaceGraph, FaceId}, stages::{contact_point_optimization::{ContactPointOptimizationStage, ContactPointOptimizer, ContactPointsGene}, criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, loading::LoadingStage}};
 use visualization::{VisualizationStage, Visualizer};
 
 pub trait PipelineBehaviourTrait {
@@ -73,7 +71,7 @@ impl PipelineState for LoadedState { }
 pub struct CriticalityDetectedState {
     pub settings: Settings,
     pub graph: SurfaceGraph,
-    pub critical: Vec<TriangleId>
+    pub critical: Vec<FaceId>
 }
 impl  PipelineState for CriticalityDetectedState { }
 
@@ -81,8 +79,8 @@ impl  PipelineState for CriticalityDetectedState { }
 pub struct CriticalityGroupedState {
     pub settings: Settings,
     pub graph: SurfaceGraph,
-    pub critical: HashSet<TriangleId>,
-    pub grouped_areas: Vec<Vec<TriangleId>>
+    pub critical: HashSet<FaceId>,
+    pub grouped_areas: Vec<Vec<FaceId>>
 }
 impl  PipelineState for CriticalityGroupedState { }
 

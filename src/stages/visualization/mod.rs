@@ -35,8 +35,8 @@ impl Visualizer<CriticalityDetectedState> for VisualizationStage {
 
         critical_surfaces.iter().for_each(|x| {
             let t = graph.get_triangle(*x).as_raw_indexed();
-            for v in t.vertices {
-                colors[v] = Color::Red;
+            for v in t.vertexes {
+                colors[v.0 as usize] = Color::Red;
             }
         });
 
@@ -58,8 +58,8 @@ impl Visualizer<CriticalityGroupedState> for VisualizationStage {
             let color = Color::Hsv(hue, 1.0, 1.0);
             for triangle_id in group {
                 let t = graph.get_triangle(*triangle_id).as_raw_indexed();
-                for v in t.vertices {
-                    colors[v] = color;
+                for v in t.vertexes {
+                    colors[v.0 as usize] = color;
                 }
             }
         }

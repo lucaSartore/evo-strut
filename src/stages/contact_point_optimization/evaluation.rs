@@ -1,5 +1,5 @@
 use std::{any, collections::{HashMap, HashSet}};
-use crate::{evolution::{Cost, Evaluator}, models::{ Point, Settings, SurfaceGraph, TriangleId}, stages::{contact_point_optimization::models::ContactPointsGene, visualization::Color}};
+use crate::{evolution::{Cost, Evaluator}, models::{ Point, Settings, SurfaceGraph, FaceId}, stages::{contact_point_optimization::models::ContactPointsGene, visualization::Color}};
 use itertools::Itertools;
 use log::{debug, info};
 use anyhow::{Result, anyhow};
@@ -15,16 +15,16 @@ use smallvec::SmallVec;
 pub struct ContactPointEvaluatorSettings<'a> {
     pub graph: &'a SurfaceGraph,
     pub settings: &'a Settings,
-    pub area: &'a [TriangleId],
-    pub critical: &'a HashSet<TriangleId>
+    pub area: &'a [FaceId],
+    pub critical: &'a HashSet<FaceId>
     
 }
 impl<'a> ContactPointEvaluatorSettings<'a> {
     pub fn new(
         graph: &'a SurfaceGraph,
         settings: &'a Settings,
-        area: &'a [TriangleId],
-        critical: &'a HashSet<TriangleId>
+        area: &'a [FaceId],
+        critical: &'a HashSet<FaceId>
     ) -> Self {
         Self {
             graph, settings, area, critical
@@ -105,8 +105,8 @@ impl SinglePointEvaluator {
 pub struct ContactPointEvaluator<'a> {
     pub graph: &'a SurfaceGraph,
     pub settings: Settings,
-    pub area_to_evaluate: &'a [TriangleId],
-    pub critical: &'a HashSet<TriangleId>,
+    pub area_to_evaluate: &'a [FaceId],
+    pub critical: &'a HashSet<FaceId>,
     pub surface_grid: SurfaceGrid,
     pub evaluation_order: Vec<SinglePointEvaluator>
 }
@@ -179,7 +179,7 @@ impl<'a> ContactPointEvaluator<'a> {
                 let normalized = (cost.as_f32() - min) / (max + min);
                 let normalized_u8 = (normalized * 255.0) as u8;
 
-                colors[i.0] = Color::Rgb(normalized_u8, 255 - normalized_u8, 0);
+                colors[i.0 as usize] = Color::Rgb(normalized_u8, 255 - normalized_u8, 0);
             }
         }
 

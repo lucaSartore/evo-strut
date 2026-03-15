@@ -21,7 +21,7 @@ fn test_is_point_inside() {
     };
 
     let g = SurfaceGraph::new(&Arc::new(mesh));
-    let triangle = g.get_triangle(TriangleId(0));
+    let triangle = g.get_triangle(FaceId(0));
 
     // 1. Point clearly inside
     assert!(triangle.is_point_inside_footprint(Point { x: 1.0, y: 1.0, z: 0. }));

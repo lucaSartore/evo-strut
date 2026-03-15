@@ -1,12 +1,28 @@
-use stl_io::Vector;
-use std::ops::{Add, Sub};
+use std::{hash::{Hash, Hasher}, ops::{Add, Sub}};
 use rerun::{Position3D, Vector3D};
+use nalgebra::{ArrayStorage, Const, Matrix};
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Point{
     pub x: f32,
     pub y: f32,
     pub z: f32
+}
+
+impl Eq for Point { }
+impl Hash for Point {
+    fn hash<H>(&self, state: &mut H)
+       where H: Hasher {
+        fn hash_f32<H: Hasher>(val: f32, state: &mut H) {
+            // Treat -0.0 and 0.0 as the same by forcing them to 0.0
+            let val = if val == 0.0 { 0.0 } else { val };
+            val.to_bits().hash(state);
+        }
+
+        hash_f32(self.x, state);
+        hash_f32(self.y, state);
+        hash_f32(self.z, state);
+    }
 }
 
 impl Add for Point {
@@ -100,21 +116,18 @@ impl Point {
 
 }
 
-impl From<Vector<f32>> for Point {
-    fn from(value: Vector<f32>) -> Self {
-        Point {
-            x: value.0[0],
-            y: value.0[1],
-            z: value.0[2]
-        }
+impl Into<[f32;3]> for Point {
+    fn into(self) -> [f32;3] {
+        return [self.x, self.y, self.z]
     }
 }
-impl From<&Vector<f32>> for Point {
-    fn from(value: &Vector<f32>) -> Self {
+
+impl From<Matrix<f32, Const<3>, Const<1>, ArrayStorage<f32, 3, 1>>> for Point {
+    fn from(value: Matrix<f32, Const<3>, Const<1>, ArrayStorage<f32, 3, 1>>) -> Self {
         Point {
-            x: value.0[0],
-            y: value.0[1],
-            z: value.0[2]
+            x: value[0],
+            y: value[1],
+            z: value[2]
         }
     }
 }

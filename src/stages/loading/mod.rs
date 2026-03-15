@@ -1,15 +1,18 @@
 use std::{fs::OpenOptions, rc::Rc, sync::Arc};
-use stl_io::IndexedMesh;
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use super::*;
-use crate::models::SurfaceGraph;
+use crate::models::{Mesh, SurfaceGraph};
+use baby_shark::{
+    io::read_from_file, 
+    mesh::corner_table::CornerTableF
+};
+use std::path::Path;
 
-pub fn read(name: &str) -> Result<IndexedMesh> {
-    let mut file = OpenOptions::new()
-        .read(true)
-        .open(name)
-        .unwrap();
-    Ok(stl_io::read_stl(&mut file)?)
+pub fn read(name: &str) -> Result<Mesh> {
+    let Ok(mesh) = read_from_file::<CornerTableF>(Path::new(name)) else {
+        return Err(anyhow!("foo"));
+    };
+    return Ok(mesh.into());
 }
 
 pub struct LoadingStage<TB> 
