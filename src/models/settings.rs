@@ -42,14 +42,21 @@ impl Default for CriticalitySettings {
 #[derive(Debug, Clone)]
 pub struct IoSettings {
     pub input_file_path: String,
-    pub output_file_path: String
+    pub output_file_path: String,
+    /// used to re-mesh the input when loading it
+    /// smaller voxel size make the process more precise
+    /// but also slower
+    /// unit of measure: mm
+    pub voxel_size: f32
 }
 
 impl Default for IoSettings {
     fn default() -> Self {
         Self {
-            input_file_path: "test_meshes/dragon.stl".into(),
-            output_file_path: "output.stl".into()
+            input_file_path: "test_meshes/inclination_test.stl".into(),
+            // input_file_path: "test_meshes/dragon.stl".into(),
+            output_file_path: "output.stl".into(),
+            voxel_size: 2.5
         }
     }
 }

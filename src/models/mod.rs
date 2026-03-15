@@ -2,7 +2,7 @@ use std::{collections::{HashMap, HashSet}, sync::Arc, vec};
 use smallvec::{self, SmallVec};
 
 mod settings;
-pub use settings::{Settings, CriticalitySettings};
+pub use settings::{Settings, CriticalitySettings, IoSettings};
 
 mod point;
 pub use point::Point;

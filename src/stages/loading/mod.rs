@@ -1,18 +1,20 @@
 use std::sync::Arc;
 use anyhow::{Result, anyhow};
 use super::*;
-use crate::models::{Mesh, SurfaceGraph};
+use crate::models::{IoSettings, Mesh, SurfaceGraph};
 use baby_shark::{
     io::read_from_file, 
-    mesh::corner_table::CornerTableF
+    mesh::corner_table::CornerTableF, remeshing::{self, voxel::VoxelRemesher}
 };
 use std::path::Path;
 
-pub fn read(name: &str) -> Result<Mesh> {
-    let Ok(mesh) = read_from_file::<CornerTableF>(Path::new(name)) else {
-        return Err(anyhow!("error while loading file \"{}\"", name));
+pub fn read(name: &str) -> Result<CornerTableF> {
+    let r = read_from_file::<CornerTableF>(Path::new(name));
+    let mesh = match r {
+        Ok(m) => m,
+        Err(e) =>  return Err(anyhow!("error while loading file \"{}\"\n{:?}", name, e))
     };
-    return Ok(mesh.into());
+    Ok(mesh)
 }
 
 pub struct LoadingStage<TB> 
@@ -22,6 +24,24 @@ where
     _b: PhantomData<TB>
 }
 
+impl<TB> LoadingStage<TB> 
+where
+    TB: PipelineBehaviourTrait,
+{
+    fn remesh(mesh: CornerTableF, settings: &IoSettings) -> Result<CornerTableF> {
+        let mut remesher = VoxelRemesher::default()
+            .with_voxel_size(settings.voxel_size);
+        let mesh = match remesher.remesh(&mesh) {
+            Some(m) => m,
+            None => return Err(anyhow!("fail to execute re-meshing"))
+        };
+        Ok(mesh)
+    }
+    
+}
+
+
+
 impl<TB> LoadingStage<TB>
 where 
     TB: PipelineBehaviourTrait,
@@ -29,8 +49,11 @@ where
     pub fn execute(
         input: Pipeline<StartedState, TB>
     ) -> Result<Pipeline<LoadedState, TB>> {
-        let mesh = read(&input.state.settings.io_settings.input_file_path)?;
-        let mesh_rc = Arc::new(mesh);
+        let settings = &input.state.settings.io_settings;
+        let mesh = read(&settings.input_file_path)?;
+        let mesh = Self::remesh(mesh, settings)?;
+        let mesh_rc = Arc::new(mesh.into());
+
         let graph = SurfaceGraph::new(&mesh_rc);
         let state = LoadedState {
             settings: input.state.settings,
