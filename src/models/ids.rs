@@ -45,7 +45,7 @@ impl From<FaceId> for usize {
 }
 
 pub trait MeshId {
-    fn id(&self) -> u32
+    fn id(&self) -> u32;
     fn index(&self) -> usize {
         self.id() as usize
     }

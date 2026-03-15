@@ -1,13 +1,9 @@
-use crate::{models::{Point, Settings, SurfaceGraph}, stages::{CriticalityDetectedState, CriticalityGroupedState, LoadedState, Pipeline, PipelineBehaviourTrait, PipelineState, criticality_detection::{CriticalityDetector, OrientationBasedCriticalityDetector}}};
+use crate::{models::SurfaceGraph, stages::{CriticalityDetectedState, CriticalityGroupedState, LoadedState, Pipeline, PipelineBehaviourTrait, PipelineState}};
 use anyhow::Result;
 
 mod color;
 pub use color::Color;
 
-use rerun::{
-    TriangleIndices,
-    components::Color as RerunColor
-};
 
 pub trait Visualizer<TS>
 where 

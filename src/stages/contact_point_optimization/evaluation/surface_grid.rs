@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use rerun::{coordinates, external::re_sdk_types::blueprint::components::Corner2D};
 use smallvec::smallvec;
 
 use crate::models::Triangle;

@@ -1,7 +1,6 @@
 use crate::models::Settings;
 use crate::evolution::*;
 use super::models::ContactPointsGene;
-use rand::Rng;
 
 pub struct ContactPointCrossover{
     settings: Settings,

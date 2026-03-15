@@ -1,4 +1,4 @@
-use crate::{evolution::{Evaluator, PopulationInitializer, Random}, models::{Settings, SurfaceGraph, FaceId}, stages::contact_point_optimization::models::ContactPointsGene};
+use crate::{evolution::{PopulationInitializer, Random}, models::Settings, stages::contact_point_optimization::models::ContactPointsGene};
 
 pub struct  ContactPointInitializer {
     settings: Settings,

@@ -1,6 +1,5 @@
-use std::{collections::HashSet, fmt::Display, marker::PhantomData};
+use std::{collections::HashSet, marker::PhantomData};
 use rayon::prelude::*;
-use rerun::external::log::max_level;
 use itertools::Itertools;
 
 use crate::{

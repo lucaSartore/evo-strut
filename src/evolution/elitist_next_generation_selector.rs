@@ -15,8 +15,7 @@ impl Default for ElitistNextGenSelectorSettings {
 }
 
 pub struct ElitistNextGenSelector {
-    settings: ElitistNextGenSelectorSettings,
-    rand: Random
+    settings: ElitistNextGenSelectorSettings
 }
 
 impl ElitistNextGenSelector {
@@ -45,8 +44,7 @@ impl ElitistNextGenSelector {
 impl<T> NextGenerationSelector<T, ElitistNextGenSelectorSettings> for ElitistNextGenSelector  {
     fn new(settings: &ElitistNextGenSelectorSettings, rand: Random) -> Self {
         Self{
-            settings: *settings,
-            rand
+            settings: *settings
         }
     }
 

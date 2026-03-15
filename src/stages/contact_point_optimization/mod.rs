@@ -1,5 +1,5 @@
 use crate::{
-    evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, EvolverBehaviourTrait, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, models::{Settings, SurfaceGraph, FaceId}, stages::{ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait, contact_point_optimization::evaluation::ContactPointEvaluatorSettings}
+    evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, models::Settings, stages::{ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait, contact_point_optimization::evaluation::ContactPointEvaluatorSettings}
 };
 use anyhow::{Result, anyhow};
 use log::debug;

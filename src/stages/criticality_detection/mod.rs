@@ -1,7 +1,4 @@
 use std::marker::PhantomData;
-
-use log::debug;
-
 use crate::{models::{Point, Settings, SurfaceGraph, Triangle, FaceId}, stages::{CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait}};
 
 

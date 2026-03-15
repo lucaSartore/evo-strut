@@ -1,4 +1,4 @@
-use std::{fs::OpenOptions, rc::Rc, sync::Arc};
+use std::sync::Arc;
 use anyhow::{Result, anyhow};
 use super::*;
 use crate::models::{Mesh, SurfaceGraph};
@@ -10,7 +10,7 @@ use std::path::Path;
 
 pub fn read(name: &str) -> Result<Mesh> {
     let Ok(mesh) = read_from_file::<CornerTableF>(Path::new(name)) else {
-        return Err(anyhow!("foo"));
+        return Err(anyhow!("error while loading file \"{}\"", name));
     };
     return Ok(mesh.into());
 }

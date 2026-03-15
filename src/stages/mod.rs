@@ -3,33 +3,28 @@ use anyhow::Result;
 
 pub mod loading;
 pub mod visualization;
-pub mod criticality_evaluation;
 pub mod criticality_detection;
 pub mod criticality_grouping;
 pub mod contact_point_optimization;
 
 pub use criticality_detection::{CriticalityDetector, CriticalityDetectionStage, OrientationBasedCriticalityDetector};
-pub use criticality_evaluation::{CriticalityEvaluator, OrientationBasedCriticalityEvaluator};
 
 use crate::{models::{Settings, SurfaceGraph, FaceId}, stages::{contact_point_optimization::{ContactPointOptimizationStage, ContactPointOptimizer, ContactPointsGene}, criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, loading::LoadingStage}};
 use visualization::{VisualizationStage, Visualizer};
 
 pub trait PipelineBehaviourTrait {
     type TCriticalityDetection: CriticalityDetector;
-    type TCriticalityEvaluation: CriticalityEvaluator;
     type TCriticalityGrouping: CriticalityGrouper;
     type TContactPointOptimizer: ContactPointOptimizer;
 }
 
 pub struct PipelineBehaviour<
     TD: CriticalityDetector,
-    TE: CriticalityEvaluator,
     TG: CriticalityGrouper,
     TCPO: ContactPointOptimizer
 > {
     _t: PhantomData<(
         TD,
-        TE,
         TG,
         TCPO
     )>
@@ -37,17 +32,14 @@ pub struct PipelineBehaviour<
 
 impl<
     TCriticalityDetection: CriticalityDetector,
-    TCriticalityEvaluation: CriticalityEvaluator,
     TCriticalityGrouping: CriticalityGrouper,
     TContactPointOptimizer: ContactPointOptimizer
 > PipelineBehaviourTrait for PipelineBehaviour<
     TCriticalityDetection,
-    TCriticalityEvaluation,
     TCriticalityGrouping,
     TContactPointOptimizer
 > {
     type TCriticalityDetection = TCriticalityDetection;
-    type TCriticalityEvaluation = TCriticalityEvaluation;
     type TCriticalityGrouping = TCriticalityGrouping;
     type TContactPointOptimizer = TContactPointOptimizer;
 }

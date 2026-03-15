@@ -1,18 +1,10 @@
 use std::{convert::Infallible, ops::DerefMut, sync::Mutex};
-
-use rand::{TryRng, prelude::*, rng};
-use rerun::{TextDocument, external::glam::usize};
-
-pub trait Foo<T: Send + Sync>{}
-
-pub struct Bar{}
-
-impl Foo<Random> for Bar { }
+use rand::{TryRng, prelude::*};
 
 pub enum Random {
     // is slower due to mutex, but allow for more reproducibility
     // (better for testing)
-    SeededRandom(Mutex<StdRng>),
+    SeededRandom(Box<Mutex<StdRng>>),
     // is faster, but not reproducible
     // (better for actual runs)
     UnSeededRandom
@@ -21,14 +13,14 @@ pub enum Random {
 impl Random {
     pub fn new(seed: Option<u64>) -> Self {
         match seed {
-            Some(s) => Random::SeededRandom(Mutex::new(StdRng::seed_from_u64(s))),
+            Some(s) => Random::SeededRandom(Mutex::new(StdRng::seed_from_u64(s)).into()),
             None => Random::UnSeededRandom
         }
     }
 }
 
 // marker trait to avoid verbosity
-trait R: TryRng<Error = Infallible> {}
+pub trait R: TryRng<Error = Infallible> {}
 impl<T: TryRng<Error = Infallible>> R for T {}
 
 
@@ -63,6 +55,7 @@ macro_rules! publish {
     }
 }
 
+#[allow(dead_code)]
 impl Random {
 
     /// create a copy of the current random

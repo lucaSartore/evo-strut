@@ -1,12 +1,12 @@
-use std::{any, collections::{HashMap, HashSet}};
+use std::collections::HashMap;
+use std::collections::HashSet;
 use crate::{evolution::{Cost, Evaluator}, models::{ Point, Settings, SurfaceGraph, FaceId}, stages::{contact_point_optimization::models::ContactPointsGene, visualization::Color}};
 use itertools::Itertools;
-use log::{debug, info};
+use log::debug;
 use anyhow::{Result, anyhow};
 
 
 mod surface_grid;
-use rerun::coordinates;
 use surface_grid::*;
 
 use smallvec::SmallVec;
