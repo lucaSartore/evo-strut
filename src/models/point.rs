@@ -114,6 +114,14 @@ impl Point {
         to_return
     }
 
+    /// return the angle formed by the vector start -> end
+    /// on the horizon line. in radiants
+    pub fn horizon_angle(start: Point, end: Point) -> f32 {
+        let v = end - start;
+        let v_horizon = Point{x: v.x, y: v.y, z: 0.};
+        Point::angle_between(&v, &v_horizon)
+    }
+
 }
 
 impl Into<[f32;3]> for Point {

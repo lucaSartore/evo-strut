@@ -3,7 +3,7 @@ use rayon::prelude::*;
 use itertools::Itertools;
 
 use crate::{
-    models::{Point, Settings, SurfaceGraph, FaceId},
+    models::{FaceId, MeshVector, Point, Settings, SurfaceGraph},
     stages::{CriticalityDetectedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait},
 };
 
@@ -23,13 +23,20 @@ where
     ) -> Pipeline<CriticalityGroupedState, TB> {
         let graph = &input.state.graph;
         let settings = &input.state.settings;
-        let critical = &input.state.critical;
-        let grouped_areas = TB::TCriticalityGrouping::group_criticality(graph, settings, critical);
+        let critical_ids = &input.state.critical;
+
+        let mut critical: MeshVector<FaceId, bool> = vec![false; graph.count_triangles()]
+            .into_iter()
+            .collect();
+        critical_ids.iter().for_each(|i| critical[*i] = true);
+
+        let grouped_areas = TB::TCriticalityGrouping::group_criticality(graph, settings, critical_ids);
+
         Pipeline::from_state(CriticalityGroupedState {
             settings: input.state.settings,
             graph: input.state.graph,
             grouped_areas,
-            critical: critical.iter().copied().collect()
+            critical
         })
     }
 }

@@ -9,7 +9,7 @@ pub mod contact_point_optimization;
 
 pub use criticality_detection::{CriticalityDetector, CriticalityDetectionStage, OrientationBasedCriticalityDetector};
 
-use crate::{models::{Settings, SurfaceGraph, FaceId}, stages::{contact_point_optimization::{ContactPointOptimizationStage, ContactPointOptimizer, ContactPointsGene}, criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, loading::LoadingStage}};
+use crate::{models::{FaceId, MeshVector, Settings, SurfaceGraph}, stages::{contact_point_optimization::{ContactPointOptimizationStage, ContactPointOptimizer, ContactPointsGene}, criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, loading::LoadingStage}};
 use visualization::{VisualizationStage, Visualizer};
 
 pub trait PipelineBehaviourTrait {
@@ -71,7 +71,7 @@ impl  PipelineState for CriticalityDetectedState { }
 pub struct CriticalityGroupedState {
     pub settings: Settings,
     pub graph: SurfaceGraph,
-    pub critical: HashSet<FaceId>,
+    pub critical: MeshVector<FaceId, bool>,
     pub grouped_areas: Vec<Vec<FaceId>>
 }
 impl  PipelineState for CriticalityGroupedState { }

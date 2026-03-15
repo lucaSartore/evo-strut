@@ -2,7 +2,7 @@ use std::{collections::{HashMap, HashSet}, sync::Arc, vec};
 use smallvec::{self, SmallVec};
 
 mod settings;
-pub use settings::{Settings, CriticalitySettings, IoSettings};
+pub use settings::{Settings, CriticalitySettings, IoSettings, ContactPointsOptimizationSettings};
 
 mod point;
 pub use point::Point;
@@ -19,10 +19,6 @@ pub use mesh::{Mesh, Face};
 mod mesh_vector;
 pub use mesh_vector::MeshVector;
 
-
-
-#[cfg(test)]
-mod tests;
 
 #[derive(Debug, Clone)]
 pub struct SurfaceNode {

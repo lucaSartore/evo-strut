@@ -2,7 +2,7 @@ use std::ops::Add;
 
 use log::{self, warn};
 
-#[derive(PartialEq, PartialOrd, Debug, Clone, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub struct  Cost {
     cost: f32
 }
@@ -24,6 +24,11 @@ impl Cost {
 }
 
 impl Eq for Cost { }
+impl PartialOrd for Cost {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.cost.partial_cmp(&other.cost)
+    }
+}
 impl Ord for Cost {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.partial_cmp(other).expect("Cost should never be built with NaN")

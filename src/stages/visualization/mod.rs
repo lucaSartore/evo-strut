@@ -67,10 +67,17 @@ impl Visualizer<CriticalityGroupedState> for VisualizationStage {
 fn visualize_mesh(graph: &SurfaceGraph, name: &str, colors: Option<Vec<Color>>) -> Result<()> {
     let rec = rerun::RecordingStreamBuilder::new(name).spawn()?;
 
-    let colors = match colors {
+    let mut colors = match colors {
         Some(e) => e,
         None => vec![Color::Green; graph.count_vertices()]
     };
+
+
+
+    rec.log(
+        "vertexes", 
+        &rerun::Points3D::new(graph.iter_vertices())
+    )?;
 
     rec.log(
         name,

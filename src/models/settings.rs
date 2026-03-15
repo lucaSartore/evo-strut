@@ -56,17 +56,26 @@ impl Default for IoSettings {
             input_file_path: "test_meshes/inclination_test.stl".into(),
             // input_file_path: "test_meshes/dragon.stl".into(),
             output_file_path: "output.stl".into(),
-            voxel_size: 2.5
+            voxel_size: 1.
         }
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct ContactPointsOptimizationSettings {
-    /// cost associated with not supporting a certain
-    /// area with an angle that is steeper than the threshold
-    /// unit of measure: [cost/mm^2]
-    pub non_supported_unit_cost: f32,
+    /// tell how the cost propagate from one critical surface to the next
+    /// example:
+    ///  - point A and B are connected by a 2mm gap
+    ///  - the vector A->B have a 30 degrees steepness
+    ///  - A is below B and has a criticality score of 100
+    ///  - cost_surplus_propagation_factor is 1.0 [cost/(mm*deg)]
+    /// then the cost associated with B will be:
+    /// ```
+    ///  C(b) = C(a) + cost_surplus_propagation_factor * distance * (90 - angle)
+    ///       = 100 + 1.0 * 2.0 * (90.0 - 30.0) = 220
+    /// ```
+    /// unit of measure: [cost/(mm*deg)]
+    pub cost_surplus_propagation_factor: f32,
     /// cost associated with placing one support point
     /// unit of measure: [cost]
     pub support_point_cost: f32,
@@ -74,29 +83,30 @@ pub struct ContactPointsOptimizationSettings {
     /// with a specific length
     /// unit of measure [cost/mm]
     pub support_line_cost: f32,
-    /// the resolution that is used when evaluating the criticality level
-    /// smaller values makes the simulation take longer, but they also make it more precise.
-    /// the default value is 1mm
-    /// unit of measure3 [mm]
-    pub discretization_size: f32,
     /// cost associated with an element that has no support at all 
     /// (i.e. a point that is not touching the flor, and is the
     /// lower among all of his neighbors)
     /// it goes without saying that this should be set to something
     /// sufficiently high
     /// unit of measure: [cost]
-    pub non_supported_base_cost: f32
+    pub non_supported_base_cost: f32,
+    /// layer height used to propagate criticality
+    /// when optimizing the contact points.
+    /// note: this has nothing to do with the layer height of your printed.
+    /// It should usually be set in the range 1-3 times voxel_size.
+    /// unit of measure: [mm]
+    pub layer_height: f32
 
 }
 
 impl Default for ContactPointsOptimizationSettings {
     fn default() -> Self {
         Self {
-            non_supported_unit_cost: 0.1,
+            cost_surplus_propagation_factor: 0.02,
             support_point_cost: 1.0,
             support_line_cost: 0.5,
-            discretization_size: 1.0,
-            non_supported_base_cost: 100.0
+            non_supported_base_cost: 100.0,
+            layer_height: 1.0
         }
     }
 }
