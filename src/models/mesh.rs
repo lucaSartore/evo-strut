@@ -1,4 +1,3 @@
-use std::marker::PhantomData;
 use baby_shark::{mesh::{corner_table::CornerTableF, traits::{TriangleMesh, Triangles}}};
 use baby_shark::io::*;
 use itertools::Itertools;
@@ -51,24 +50,27 @@ impl From<CornerTableF> for Mesh {
             })
             .collect();
         
-        return Mesh { 
+        Mesh { 
             points,
             faces
         }
     }
 }
 
-impl Into<CornerTableF> for Mesh {
-    fn into(self) -> CornerTableF {
+
+impl From<Mesh> for CornerTableF {
+    fn from(val: Mesh) -> Self {
         let mut builder = CornerTableF::builder_soup();
-        builder.set_num_faces(self.faces.len());
-        for face in self.faces.iter() {
+        builder.set_num_faces(val.faces.len());
+        for face in val.faces.iter() {
             let [v1,v2,v3] = face.vertexes;
-            let p1: [f32;3] = self.points[v1].into();
-            let p2: [f32;3] = self.points[v2].into();
-            let p3: [f32;3] = self.points[v3].into();
-            builder.add_face(p1,p2,p3);
+            let p1: [f32;3] = val.points[v1].into();
+            let p2: [f32;3] = val.points[v2].into();
+            let p3: [f32;3] = val.points[v3].into();
+            builder.add_face(p1,p2,p3)
+                .expect("error in mesh creation");
         }
-        todo!()
+        builder.finish()
+            .expect("error in mesh creation")
     }
 }

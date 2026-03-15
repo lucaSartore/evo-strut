@@ -1,4 +1,3 @@
-use std::f32::consts::PI;
 
 #[derive(Default, Debug, Clone)]
 pub struct Settings {

@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, rc::Rc, sync::Arc, vec};
+use std::{collections::{HashMap, HashSet}, sync::Arc, vec};
 use smallvec::{self, SmallVec};
 
 mod settings;
@@ -116,13 +116,12 @@ impl SurfaceGraph {
     }
 
     pub fn vertex_normals(&self, filter: Option<&HashSet<FaceId>>) -> Vec<Point> {
-        let triangles = self.iter_triangles(filter);
         let mut normals = vec![Point::default(); self.count_vertices()];
         self.iter_triangles(filter)
             .for_each(|x| {
                 let raw = x.as_raw_indexed();
                 for v in x.as_raw_indexed().vertexes {
-                    normals[v.0 as usize] = raw.normal.into();
+                    normals[v.index()] = raw.normal;
                 }
             });
         normals

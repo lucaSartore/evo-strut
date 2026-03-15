@@ -1,3 +1,5 @@
+use rerun::external::glam::usize;
+
 
 
 
@@ -18,7 +20,6 @@ impl From<u32> for PointId  {
     }
 }
 
-
 impl From<usize> for FaceId {
     fn from(value: usize) -> Self {
         Self(value as u32)
@@ -31,8 +32,23 @@ impl From<usize> for PointId  {
     }
 }
 
+impl From<PointId> for usize {
+    fn from(value: PointId) -> Self {
+        value.0 as usize
+    }
+}
+
+impl From<FaceId> for usize {
+    fn from(value: FaceId) -> Self {
+        value.0 as usize
+    }
+}
+
 pub trait MeshId {
-    fn id(&self) -> u32;
+    fn id(&self) -> u32
+    fn index(&self) -> usize {
+        self.id() as usize
+    }
 }
 impl MeshId for PointId {
     fn id(&self) -> u32 {

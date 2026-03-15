@@ -94,7 +94,7 @@ where
 {
     fn from_iter<I: IntoIterator<Item = V>>(iter: I) -> Self {
         Self {
-            _d: PhantomData::default(),
+            _d: Default::default(),
             data: iter.into_iter().collect()
         }
     }
