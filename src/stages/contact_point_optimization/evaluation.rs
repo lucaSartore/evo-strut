@@ -1,19 +1,13 @@
 use std::collections::BinaryHeap;
 use std::collections::HashMap;
 use std::collections::HashSet;
-use crate::models::ContactPointsOptimizationSettings;
 use crate::models::MeshId;
 use crate::models::MeshVector;
-use crate::stages::criticality_grouping;
 use crate::{evolution::{Cost, Evaluator}, models::{ Point, Settings, SurfaceGraph, FaceId}, stages::{contact_point_optimization::models::ContactPointsGene, visualization::Color}};
-use baby_shark::geometry::primitives::triangle2;
 use itertools::Itertools;
-use log::debug;
 use anyhow::{Result, anyhow};
-use nalgebra::distance;
 use rerun::external::glam::usize;
 use smallvec::SmallVec;
-use smallvec::smallvec;
 
 
 
@@ -22,9 +16,13 @@ struct QueuedElement {
     pub id: FaceId,
     pub cost: Cost
 }
+
+#[allow(clippy::non_canonical_partial_ord_impl)]
 impl PartialOrd for QueuedElement {
+    // order is inverted in order to use the std "max-heap" (instead of haveing
+    // to create a custom min-heap)
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.cost.partial_cmp(&other.cost)
+        other.cost.partial_cmp(&self.cost)
     }
 }
 impl Ord for QueuedElement {
@@ -40,6 +38,7 @@ impl QueuedElement {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Neighbor {
     /// id of the neighbor
     id: FaceId,
@@ -105,8 +104,8 @@ impl EvaluatedLayer {
     /// surfaces with center in p1 and p2)
     fn evaluate_cost_surplus(from: Point, to: Point, settings: &Settings) -> Cost {
         let distance = (from - to).abs();
-        let angle = if to.z < from.z {
-            90.
+        let angle = if to.z <= from.z {
+            0.
         } else {
             Point::horizon_angle(from, to).to_degrees()
         }.clamp(0., 90.);
@@ -118,14 +117,15 @@ impl EvaluatedLayer {
 
     fn fill_base_cost(&mut self, graph: &SurfaceGraph, critical: &MeshVector<FaceId, bool>, settings: &Settings) {
         for (_,t) in self.triangles.iter_mut() {
-            let center_this = graph.get_triangle(t.id).center();
+            let this = graph.get_triangle(t.id);
+            let this_layer = layer_of(this.center(), settings);
             t.base_cost = graph
-                .iter_adjacent(t.id)
-                .filter(|adj| !critical[adj.index])
-                .filter(|adj| adj.center().z < center_this.z)
+                .iter_adjacent(this.index)
+                .filter(|x| !critical[x.index])
+                .filter(|x| layer_of(x.center(), settings) <= this_layer)
                 .map(|adj| {
-                    let center_neighbor = adj.center();
-                    Self::evaluate_cost_surplus(center_this, center_neighbor, settings)
+                    let adj_center = adj.center();
+                    Self::evaluate_cost_surplus(this.center(), adj_center, settings)
                 })
                 .min()
                 .unwrap_or(Cost::new(settings.contact_points_optimization_settings.non_supported_base_cost));
@@ -210,6 +210,8 @@ impl EvaluatedLayer {
             }
         }
     }
+
+    
 }
 
 pub struct ContactPointEvaluatorSettings<'a> {
@@ -233,6 +235,11 @@ impl<'a> ContactPointEvaluatorSettings<'a> {
     
 }
 
+fn layer_of(p: Point, s: &Settings) -> usize {
+    let layer_height = s.contact_points_optimization_settings.layer_height;
+    (p.z / layer_height).ceil() as usize
+}
+
 
 pub struct ContactPointEvaluator<'a> {
     graph: &'a SurfaceGraph,
@@ -244,21 +251,20 @@ pub struct ContactPointEvaluator<'a> {
 
 impl<'a> ContactPointEvaluator<'a> {
     fn fill_evaluation_layers(&mut self) {
-        let layer_height = self.settings.contact_points_optimization_settings.layer_height;
         let layers = self.area
             .iter()
             .filter(|x| self.critical[**x])
             .copied()
             .map(|x| {
                 let p = self.graph.get_triangle(x).center();
-                let layer = (p.z / layer_height).ceil() as usize;
+                let layer = layer_of(p, self.settings);
                 (layer, x)
             })
             .into_group_map();
 
         let mut in_below_layers = HashSet::new();
 
-        for (_,layer) in layers {
+        for (_, layer) in layers.iter().sorted_by_key(|x| x.0) {
             let el = EvaluatedLayer::new(
                 self.graph,
                 self.critical,
@@ -272,6 +278,119 @@ impl<'a> ContactPointEvaluator<'a> {
                 in_below_layers.insert(*e);
             });
         }
+    }
+
+    fn visualize(&self, costs: HashMap<FaceId, Cost>) -> Result<()> {
+
+        let min = costs
+            .values()
+            .min()
+            .ok_or(anyhow!("visualization_error: cost vector is empty"))?
+            .as_f32();
+
+        let max = costs
+            .values()
+            .max()
+            .ok_or(anyhow!("visualization_error: cost vector is empty"))?
+            .as_f32();
+
+        let to_visualize_set: HashSet<_> = self.area.iter().copied().collect();
+
+        let rec = rerun::RecordingStreamBuilder::new("critical_mesh").spawn()?;
+
+        let mut colors = vec![Color::Green; self.graph.count_vertices()];
+
+        let normals = self.graph.vertex_normals(Some(&to_visualize_set));
+        let triangles: Vec<_> = self.graph.iter_triangles(Some(&to_visualize_set)).collect();
+
+        let mut points_3d = vec![];
+        let mut points_3d_labels = vec![];
+        let mut triangle_lines = vec![];
+        let mut connections_arrow_vectors = vec![];
+        let mut connections_arrow_origin = vec![];
+
+
+        // add colors
+        for triangle in &triangles {
+
+            // only critical triangles are colored
+            if !self.critical[triangle.index] {
+                continue;
+            }
+
+            let points = triangle.vertexes();
+            let indexes = triangle.vertexes_index();
+
+
+            let cost = *costs.get(&triangle.index).expect("triangle should always be found");
+
+            points_3d.push(triangle.center());
+            triangle_lines.push([
+                triangle.vertex_a(),
+                triangle.vertex_b(),
+                triangle.vertex_c(),
+                triangle.vertex_a(),
+            ]);
+
+            for n in self.graph.iter_adjacent(triangle.index) {
+                connections_arrow_origin.push(triangle.center());
+                connections_arrow_vectors.push(n.center() - triangle.center());
+            }
+
+            points_3d_labels.push(
+                format!("id: {}, cost: {}, layer: {}",
+                triangle.index.0,
+                cost.as_f32(),
+                layer_of(triangle.center(), self.settings)
+            ));
+
+            for (_,i) in points.iter().zip(indexes.iter()) {
+
+                // 1 if max cost, 0 otherwise
+                let normalized = (cost.as_f32() - min) / (max + min);
+                let normalized_u8 = (normalized * 255.0) as u8;
+
+                colors[i.index()] = Color::Rgb(normalized_u8, 255 - normalized_u8, 0);
+            }
+        }
+
+        let avg = self.graph.iter_triangles(Some(&to_visualize_set)).fold(
+            Point{x: 0., y:0., z: 0.},
+            |a,b| a+b.center()
+        ).to_scaled(1.0 / to_visualize_set.len() as f32);
+
+
+        let points = self
+            .graph
+            .iter_vertices()
+            .map(|x| x - avg);
+
+
+        rec.log(
+            "critical_mesh",
+            &rerun::Mesh3D::new(points)
+                .with_vertex_normals(normals)
+                .with_vertex_colors(colors)
+                .with_triangle_indices(triangles),
+        )?;
+
+        rec.log(
+            "critical_mesh_scores",
+            &rerun::Points3D::new(points_3d)
+                .with_labels(points_3d_labels)
+        )?;
+        // rec.log(
+        //     "critical_mesh_triangles",
+        //     &rerun::LineStrips3D::new(triangle_lines)
+        // )?;
+        // rec.log(
+        //     "connections",
+        //     &rerun::Arrows3D::from_vectors(connections_arrow_vectors)
+        //         .with_colors(vec![Color::Blue;connections_arrow_origin.len()])
+        //         .with_origins(connections_arrow_origin)
+        // )?;
+
+        Ok(())
     }
 }
 
@@ -297,7 +416,11 @@ impl<'a> Evaluator<ContactPointsGene, ContactPointEvaluatorSettings<'a>> for Con
     }
     
     fn visualize(&self, gene: &ContactPointsGene) -> Result<()> {
-        // todo!();
-        Ok(())
+        let mut costs = HashMap::new();
+        for l in &self.layers {
+            l.evaluate(&mut costs);
+        }
+        costs.iter().fold(Cost::ZERO, |acc, e| acc + *e.1);
+        self.visualize(costs)
     }
 }
