@@ -304,11 +304,6 @@ impl<'a> ContactPointEvaluator<'a> {
         let triangles: Vec<_> = self.graph.iter_triangles(Some(&to_visualize_set)).collect();
 
         let mut points_3d = vec![];
-        let mut points_3d_labels = vec![];
-        let mut triangle_lines = vec![];
-        let mut connections_arrow_vectors = vec![];
-        let mut connections_arrow_origin = vec![];
-
 
         // add colors
         for triangle in &triangles {
@@ -325,24 +320,6 @@ impl<'a> ContactPointEvaluator<'a> {
             let cost = *costs.get(&triangle.index).expect("triangle should always be found");
 
             points_3d.push(triangle.center());
-            triangle_lines.push([
-                triangle.vertex_a(),
-                triangle.vertex_b(),
-                triangle.vertex_c(),
-                triangle.vertex_a(),
-            ]);
-
-            for n in self.graph.iter_adjacent(triangle.index) {
-                connections_arrow_origin.push(triangle.center());
-                connections_arrow_vectors.push(n.center() - triangle.center());
-            }
-
-            points_3d_labels.push(
-                format!("id: {}, cost: {}, layer: {}",
-                triangle.index.0,
-                cost.as_f32(),
-                layer_of(triangle.center(), self.settings)
-            ));
 
             for (_,i) in points.iter().zip(indexes.iter()) {
 
@@ -374,23 +351,15 @@ impl<'a> ContactPointEvaluator<'a> {
                 .with_triangle_indices(triangles),
         )?;
 
-        rec.log(
-            "critical_mesh_scores",
-            &rerun::Points3D::new(points_3d)
-                .with_labels(points_3d_labels)
-        )?;
-        // rec.log(
-        //     "critical_mesh_triangles",
-        //     &rerun::LineStrips3D::new(triangle_lines)
-        // )?;
-        // rec.log(
-        //     "connections",
-        //     &rerun::Arrows3D::from_vectors(connections_arrow_vectors)
-        //         .with_colors(vec![Color::Blue;connections_arrow_origin.len()])
-        //         .with_origins(connections_arrow_origin)
-        // )?;
-
         Ok(())
+    }
+
+    fn evaluate(&self, gene: &ContactPointsGene) -> HashMap<FaceId, Cost> {
+        let mut costs = HashMap::new();
+        for l in &self.layers {
+            l.evaluate(&mut costs);
+        }
+        costs
     }
 }
 
@@ -408,19 +377,12 @@ impl<'a> Evaluator<ContactPointsGene, ContactPointEvaluatorSettings<'a>> for Con
     }
 
     fn evaluate(&self, gene: &ContactPointsGene) -> Cost {
-        let mut costs = HashMap::new();
-        for l in &self.layers {
-            l.evaluate(&mut costs);
-        }
+        let costs = self.evaluate(gene);
         costs.iter().fold(Cost::ZERO, |acc, e| acc + *e.1)
     }
     
     fn visualize(&self, gene: &ContactPointsGene) -> Result<()> {
-        let mut costs = HashMap::new();
-        for l in &self.layers {
-            l.evaluate(&mut costs);
-        }
-        costs.iter().fold(Cost::ZERO, |acc, e| acc + *e.1);
+        let costs = self.evaluate(gene);
         self.visualize(costs)
     }
 }
