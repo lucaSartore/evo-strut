@@ -1,5 +1,5 @@
 use std::{hash::{Hash, Hasher}, ops::{Add, Sub}};
-use rerun::{Position3D, Vector3D};
+use rerun::{Position3D, Vector3D, external::glam::Vec3};
 use nalgebra::{ArrayStorage, Const, Matrix};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
@@ -140,14 +140,8 @@ impl From<Matrix<f32, Const<3>, Const<1>, ArrayStorage<f32, 3, 1>>> for Point {
     }
 }
 
-impl From<Point> for Position3D {
+impl From<Point> for rerun::Vec3D {
     fn from(value: Point) -> Self {
-        Position3D::new(value.x,value.y,value.z)
-    }
-}
-
-impl From<Point> for Vector3D {
-    fn from(value: Point) -> Self {
-        [value.x,value.y,value.z].into()
+        rerun::Vec3D::new(value.x,value.y,value.z)
     }
 }

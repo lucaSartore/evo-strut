@@ -93,7 +93,7 @@ pub struct ContactPointsOptimizationSettings {
     /// layer height used to propagate criticality
     /// when optimizing the contact points.
     /// note: this has nothing to do with the layer height of your printed.
-    /// It should usually be set in the range 1-3 times voxel_size.
+    /// It should usually be set in the range 0.3-1 times voxel_size.
     /// unit of measure: [mm]
     pub layer_height: f32
 

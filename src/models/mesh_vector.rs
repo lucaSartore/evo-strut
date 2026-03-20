@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 use super::*;
 use std::ops::{Index, IndexMut};
 
+#[derive(Default, Debug, Clone)]
 pub struct MeshVector<K, V> 
 where 
     K: MeshId 

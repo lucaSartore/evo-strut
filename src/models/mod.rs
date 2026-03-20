@@ -168,16 +168,4 @@ impl SurfaceGraph {
         self.get_node(t).neighbors.clone()
     }
 
-    pub fn lower_neighbors(&self, t: FaceId) -> SmallVec<[FaceId; 3]> {
-        let triangle = self.get_triangle(t);
-        self.get_node(t)
-            .neighbors
-            .iter()
-            .copied()
-            .filter(|n| {
-                self.get_triangle(*n).is_lower_than(&triangle)
-            })
-            .collect()
-    }
-    
 }
