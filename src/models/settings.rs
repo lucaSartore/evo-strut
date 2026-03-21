@@ -1,3 +1,5 @@
+use crate::support::random_distribution::RandomDistribution;
+
 
 #[derive(Default, Debug, Clone)]
 pub struct Settings {
@@ -95,7 +97,16 @@ pub struct ContactPointsOptimizationSettings {
     /// note: this has nothing to do with the layer height of your printed.
     /// It should usually be set in the range 0.3-1 times voxel_size.
     /// unit of measure: [mm]
-    pub layer_height: f32
+    pub layer_height: f32,
+
+    /// the density of support initially used
+    /// unit of measure: 1/mm^2
+    /// if is set to 0.05 and the area optimized
+    /// has a size of 100mm^2 then 5 supports
+    /// will be generated
+    pub initialization_support_density: RandomDistribution,
+
+    pub population_size: usize
 
 }
 
@@ -106,7 +117,9 @@ impl Default for ContactPointsOptimizationSettings {
             support_point_cost: 1.0,
             support_line_cost: 0.5,
             non_supported_base_cost: 100.0,
-            layer_height: 1.0
+            layer_height: 1.0,
+            initialization_support_density: RandomDistribution::InRange { low: 0.01, high: 0.1 },
+            population_size: 100
         }
     }
 }

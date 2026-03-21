@@ -1,5 +1,5 @@
 use crate::{
-    evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, models::Settings, stages::{ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait, contact_point_optimization::evaluation::ContactPointEvaluatorSettings}
+    evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, models::Settings, stages::{ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait, contact_point_optimization::{evaluation::ContactPointEvaluatorSettings, initializer::ContactPointsInitializerSettings}}
 };
 use anyhow::{Result, anyhow};
 use log::debug;
@@ -72,7 +72,7 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
             ContactPointEvaluator<'a>,
             TournamentBasedCrossoverSelection,
             ElitistNextGenSelector,
-            ContactPointInitializer,
+            ContactPointInitializer<'a>,
             ContactPointsGene,
             Settings,
             Settings,
@@ -80,7 +80,7 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
             ContactPointEvaluatorSettings<'a>,
             TournamentBasedCrossoverSelectionSettings,
             ElitistNextGenSelectorSettings,
-            Settings
+            ContactPointsInitializerSettings<'a>
         >;
         let evolver = Evolver::<Behaviour<'a>>::new(
             settings,
@@ -89,7 +89,7 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
             &ContactPointEvaluatorSettings::new(graph, settings, area, critical),
             &TournamentBasedCrossoverSelectionSettings::default(),
             &ElitistNextGenSelectorSettings::default(),
-            settings,
+            &ContactPointsInitializerSettings::new(settings, graph, area),
             Random::UnSeededRandom
         );
 

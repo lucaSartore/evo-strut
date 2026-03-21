@@ -1,5 +1,8 @@
 use std::{convert::Infallible, ops::DerefMut, sync::Mutex};
 use rand::{TryRng, prelude::*};
+use rand_distr::{Distribution, Normal, SkewNormal, Uniform};
+
+use crate::support::random_distribution::RandomDistribution;
 
 pub enum Random {
     // is slower due to mutex, but allow for more reproducibility
@@ -95,5 +98,32 @@ impl Random {
     publish!(next_u64 = _next_u64() -> u64);
     fn _next_u64(&self, r: &mut impl R) -> u64 {
         r.next_u64()
+    }
+
+    // generate a random number starting from a distribution
+    publish!(next_distribution = _next_distribution(d: &RandomDistribution) -> f32);
+    fn _next_distribution(&self, d: &RandomDistribution, r: &mut impl R) -> f32 {
+        self._next_distribution_many(d, 1, r)[0]
+    }
+
+    // generate many random numbers starting from a distribution
+    publish!(next_distribution_many = _next_distribution_many(d: &RandomDistribution, n: usize) -> Vec<f32>);
+    fn _next_distribution_many(&self, d: &RandomDistribution, n: usize, r: &mut impl R) -> Vec<f32> {
+        match d {
+            RandomDistribution::InRange { low, high } => {
+                let dist = Uniform::new(low, high).expect("Invalid InRange distribution parameters");
+                dist.sample_iter(r).take(n).collect()
+            }
+            RandomDistribution::Normal { mean, std_dev } => {
+                let dist = Normal::new(*mean, *std_dev)
+                    .expect("Invalid Normal distribution parameters");
+                dist.sample_iter(r).take(n).collect()
+            }
+            RandomDistribution::SkewNormal { mean, std_dev, shape } => {
+                let dist = SkewNormal::new(*mean, *std_dev, *shape)
+                    .expect("Invalid SkewNormal distribution parameters");
+                dist.sample_iter(r).take(n).collect()
+            }
+        }
     }
 }

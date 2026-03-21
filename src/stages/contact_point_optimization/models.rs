@@ -22,4 +22,8 @@ impl ContactPointsGene {
             self.contact_points.insert(c);
         }
     }
+
+    pub fn add_contact_point(&mut self, s: FaceId) {
+        self.contact_points.insert(s);
+    }
 }
