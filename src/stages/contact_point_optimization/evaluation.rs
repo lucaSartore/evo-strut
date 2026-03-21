@@ -364,14 +364,28 @@ impl<'a> ContactPointEvaluator<'a> {
         Ok(())
     }
 
-    fn evaluate(&self, gene: &ContactPointsGene) -> HashMap<FaceId, Cost> {
+    fn evaluate_criticality_costs(&self, gene: &ContactPointsGene) -> HashMap<FaceId, Cost> {
         let mut costs = HashMap::new();
         for l in &self.layers {
             l.evaluate(&mut costs, gene);
         }
         costs
     }
-}
+
+    pub fn evaluate_support_costs(&self, gene: &ContactPointsGene) -> Cost {
+        let support_costs = gene.num_contacts() as f32 * self.settings.contact_points_optimization_settings.support_point_cost;
+        let links_costs = gene
+            .iter_links()
+            .map(|(x,y)| {
+                let cx = self.graph.get_triangle(x).center();
+                let cy = self.graph.get_triangle(y).center();
+                let d = (cx - cy).abs();
+                self.settings.contact_points_optimization_settings.support_line_cost * d
+            })
+            .fold(0., |acc, x| acc + x);
+        Cost::new(support_costs + links_costs)
+    }
+} 
 
 impl<'a> Evaluator<ContactPointsGene, ContactPointEvaluatorSettings<'a>> for ContactPointEvaluator<'a> {
     fn new(settings: &ContactPointEvaluatorSettings<'a>) -> Self {
@@ -387,12 +401,14 @@ impl<'a> Evaluator<ContactPointsGene, ContactPointEvaluatorSettings<'a>> for Con
     }
 
     fn evaluate(&self, gene: &ContactPointsGene) -> Cost {
-        let costs = self.evaluate(gene);
-        costs.iter().fold(Cost::ZERO, |acc, e| acc + *e.1)
+        let costs = self.evaluate_criticality_costs(gene);
+        let criticality_costs = costs.iter().fold(Cost::ZERO, |acc, e| acc + *e.1);
+        let support_costs = self.evaluate_support_costs(gene);
+        criticality_costs + support_costs
     }
     
     fn visualize(&self, gene: &ContactPointsGene) -> Result<()> {
-        let costs = self.evaluate(gene);
+        let costs = self.evaluate_criticality_costs(gene);
         self.visualize(costs, gene)
     }
 }

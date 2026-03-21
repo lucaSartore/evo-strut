@@ -34,4 +34,12 @@ impl ContactPointsGene {
     pub fn iter_contacts(&self) -> impl Iterator<Item = &FaceId> {
         self.contact_points.iter()
     }
+
+    pub fn num_contacts(&self) -> usize {
+        self.contact_points.len()
+    }
+
+    pub fn iter_links(&self) -> impl Iterator<Item = (FaceId, FaceId)> {
+        self.links.all_links()
+    }
 }
