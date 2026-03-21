@@ -3,7 +3,7 @@ use crate::{
 };
 use anyhow::{Result, anyhow};
 use log::debug;
-use std::marker::PhantomData;
+use std::{hash::Hash, marker::PhantomData};
 
 mod corssover;
 pub use corssover::ContactPointCrossover;
@@ -62,11 +62,12 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
     fn optimize<'a>(status: &'a CriticalityGroupedState, area_id: usize) -> Result<ContactPointsGene> {
         debug!("starting optimization for area {area_id}");
         let area = &status.grouped_areas[area_id];
+        let area_hash = &status.grouped_areas_hashes[area_id];
         let settings = &status.settings;
         let graph = &status.graph;
         let critical = & status.critical;
         type Behaviour<'a> = EvolverBehaviour<
-            ContactPointMutator,
+            ContactPointMutator<'a>,
             ContactPointCrossover,
             PatienceBasedTerminationStrategy,
             ContactPointEvaluator<'a>,
@@ -74,7 +75,7 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
             ElitistNextGenSelector,
             ContactPointInitializer<'a>,
             ContactPointsGene,
-            Settings,
+            ContactPointsInitializerSettings<'a>,
             Settings,
             PatienceBasedTerminationStrategySettings,
             ContactPointEvaluatorSettings<'a>,
@@ -83,13 +84,13 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
             ContactPointsInitializerSettings<'a>
         >;
         let evolver = Evolver::<Behaviour<'a>>::new(
-            settings,
+            &ContactPointsInitializerSettings::new(settings, graph, area, area_hash),
             settings,
             &PatienceBasedTerminationStrategySettings::default(),
             &ContactPointEvaluatorSettings::new(graph, settings, area, critical),
             &TournamentBasedCrossoverSelectionSettings::default(),
             &ElitistNextGenSelectorSettings::default(),
-            &ContactPointsInitializerSettings::new(settings, graph, area),
+            &ContactPointsInitializerSettings::new(settings, graph, area, area_hash),
             Random::UnSeededRandom
         );
 

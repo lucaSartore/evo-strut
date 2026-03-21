@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::{fmt::Display, ops::Add};
 
 use log::{self, warn};
 
@@ -21,6 +21,12 @@ impl Cost {
    pub fn as_f32(&self) -> f32 {
        self.cost
    }
+}
+
+impl Display for Cost {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.cost.fmt(f)
+    }
 }
 
 impl Eq for Cost { }

@@ -3106,6 +3106,7 @@ dependencies = [
  "anyhow",
  "baby_shark",
  "env_logger",
+ "hashbrown 0.14.5",
  "itertools 0.14.0",
  "log",
  "nalgebra",

@@ -1,6 +1,6 @@
 use super::*;
+use log::{debug, info};
 use rayon::prelude::*;
-use std::cmp::PartialOrd;
 use anyhow::{Result, anyhow};
 
 pub trait EvolverBehaviourTrait {
@@ -13,7 +13,7 @@ pub trait EvolverBehaviourTrait {
     type TNextGenSelector: NextGenerationSelector<Self::TGene, Self::SNextSel>;
     type TPopulationInitializer: PopulationInitializer<Self::TGene, Self::SInit>;
     // type of the gene
-    type TGene;
+    type TGene: Clone;
     // settings for the various components
     type SMut;
     type SCross;
@@ -94,19 +94,20 @@ where
             .map(|y| self.evaluator.evaluate(y))
             .collect::<Vec<Cost>>();
 
+        let mut counter = 0;
         while !self.termination.should_terminate(best(&current_gen_costs)) {
             let n = self.next_gen_selector.num_offspring_to_generate();
             let (next_gen, next_gen_costs): (Vec<_>, Vec<_>) = self
                 .crossover_selector
                 .select_for_crossover(&current_gen_costs, n)
                 .ok_or(anyhow!("Crossover selection failed to return any element"))?
-                // .par_iter()
-                .iter()
+                .par_iter()
+                // .iter()
                 .map(|(ai, bi)| {
                     let a = &current_gen[*ai];
                     let b = &current_gen[*bi];
-                    let new_individual = self.crossover.crossover(a, b);
-                    let new_individual = self.mutator.mutate(new_individual);
+                    let mut new_individual = self.crossover.crossover(a, b);
+                    self.mutator.mutate(&mut new_individual);
                     let cost = self.evaluator.evaluate(&new_individual);
                     (new_individual, cost)
                 })
@@ -127,13 +128,18 @@ where
                 next_gen_costs,
             );
 
-            let best = current_gen
+            let (best, best_cost) = current_gen
                 .iter()
                 .zip(current_gen_costs.iter())
                 .min_by_key(|(_,c)| **c)
-                .ok_or(anyhow!("Unable to find best individual for evaluation"))?.0;
+                .ok_or(anyhow!("Unable to find best individual for evaluation"))?;
 
-            self.evaluator.visualize(best)?;
+            counter += 1;
+            info!("Generation {counter} best cost was {best_cost}");
+
+            if counter % 10 == 0 {
+                self.evaluator.visualize(best)?;
+            }
         }
 
         let x = current_gen
@@ -174,6 +180,7 @@ where
     TCrossoverSelector: CrossoverSelector<SCrossSel>,
     TNextGenSelector: NextGenerationSelector<TGene, SNextSel>,
     TPopulationInitializer: PopulationInitializer<TGene, SInit>,
+    TGene: Clone + 'static
 {
     type TMutator = TMutator;
     type TCrossover = TCrossover;

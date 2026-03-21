@@ -1,19 +1,23 @@
 use core::num;
 
+use hashbrown::HashSet;
+
 use crate::{evolution::{PopulationInitializer, Random}, models::{FaceId, Settings, SurfaceGraph}, stages::contact_point_optimization::models::ContactPointsGene};
 
 pub struct ContactPointsInitializerSettings<'a> {
-    settings: &'a Settings,
-    graph: &'a SurfaceGraph,
-    options: &'a [FaceId]
+    pub settings: &'a Settings,
+    pub graph: &'a SurfaceGraph,
+    pub options: &'a [FaceId],
+    pub options_hash: &'a HashSet<FaceId>
 }
 
 impl<'a> ContactPointsInitializerSettings<'a> {
-    pub fn new(settings: &'a Settings, graph: &'a SurfaceGraph, options: &'a [FaceId]) -> Self {
+    pub fn new(settings: &'a Settings, graph: &'a SurfaceGraph, options: &'a [FaceId], options_hash: &'a HashSet<FaceId>) -> Self {
         Self {
             settings,
             graph,
-            options
+            options,
+            options_hash
         }
     }
     

@@ -24,7 +24,7 @@ pub use random::Random;
 
 pub trait Mutator<T,S>{
     fn new(settings: &S, rand: Random) -> Self;
-    fn mutate(&self, gene: T) -> T;
+    fn mutate(&self, gene: &mut T);
 }
 
 pub trait Crossover<T,S>{

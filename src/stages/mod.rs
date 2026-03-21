@@ -1,4 +1,4 @@
-use std::{collections::HashSet, marker::PhantomData};
+use std::marker::PhantomData;
 use anyhow::Result;
 
 pub mod loading;
@@ -8,6 +8,7 @@ pub mod criticality_grouping;
 pub mod contact_point_optimization;
 
 pub use criticality_detection::{CriticalityDetector, CriticalityDetectionStage, OrientationBasedCriticalityDetector};
+use hashbrown::HashSet;
 
 use crate::{models::{FaceId, MeshVector, Settings, SurfaceGraph}, stages::{contact_point_optimization::{ContactPointOptimizationStage, ContactPointOptimizer, ContactPointsGene}, criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, loading::LoadingStage}};
 use visualization::{VisualizationStage, Visualizer};
@@ -72,7 +73,8 @@ pub struct CriticalityGroupedState {
     pub settings: Settings,
     pub graph: SurfaceGraph,
     pub critical: MeshVector<FaceId, bool>,
-    pub grouped_areas: Vec<Vec<FaceId>>
+    pub grouped_areas: Vec<Vec<FaceId>>,
+    pub grouped_areas_hashes: Vec<HashSet<FaceId>>
 }
 impl  PipelineState for CriticalityGroupedState { }
 

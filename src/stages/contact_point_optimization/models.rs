@@ -1,12 +1,12 @@
-use std::collections::HashSet;
 use crate::{models::FaceId, support::links::Links};
+use hashbrown::HashSet;
 
 
 
 #[derive(Debug, Clone, Default)]
 pub struct ContactPointsGene {
-    links: Links<FaceId, 3>,
-    contact_points: HashSet<FaceId>
+    pub links: Links<FaceId, 3>,
+    pub contact_points: HashSet<FaceId>
 }
 
 impl ContactPointsGene {

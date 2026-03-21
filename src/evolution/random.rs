@@ -72,9 +72,17 @@ impl Random {
 
     /// Returns a random element from the slice.
     /// Panics if the slice is empty.
-    fn choose_or_panic<'a, T>(&self, options: &'a [T]) -> &'a T {
+    pub fn choose_or_panic<'a, T>(&self, options: &'a [T]) -> &'a T {
         self.choose(options).expect("Cannot choose from an empty vector")
     }
+
+
+    /// Returns a random element from the slice.
+    /// Panics if the slice is empty.
+    pub fn next_in_range(&self, low: u64, high: u64) -> u64 {
+        self.next_u64() % (high - low) + low
+    }
+
 
     // Returns a random element from the slice.
     // Panics if the slice is empty.

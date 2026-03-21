@@ -31,11 +31,16 @@ where
         critical_ids.iter().for_each(|i| critical[*i] = true);
 
         let grouped_areas = TB::TCriticalityGrouping::group_criticality(graph, settings, critical_ids);
+        let grouped_areas_hashes = grouped_areas
+            .iter()
+            .map(|x| x.iter().copied().collect())
+            .collect();
 
         Pipeline::from_state(CriticalityGroupedState {
             settings: input.state.settings,
             graph: input.state.graph,
             grouped_areas,
+            grouped_areas_hashes,
             critical
         })
     }
