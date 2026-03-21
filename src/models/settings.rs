@@ -118,7 +118,7 @@ impl Default for ContactPointsOptimizationSettings {
             support_line_cost: 0.5,
             non_supported_base_cost: 100.0,
             layer_height: 1.0,
-            initialization_support_density: RandomDistribution::InRange { low: 0.01, high: 0.1 },
+            initialization_support_density: RandomDistribution::InRange { low: 0.001, high: 0.01 },
             population_size: 100
         }
     }

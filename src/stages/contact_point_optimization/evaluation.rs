@@ -171,18 +171,19 @@ impl EvaluatedLayer {
         }
     }
 
-    pub fn evaluate(&self, costs: &mut HashMap<FaceId, Cost>) {
+    pub fn evaluate(&self, costs: &mut HashMap<FaceId, Cost>, gene: &ContactPointsGene) {
         let mut to_evaluate = self.triangles.len();
         let mut queue = BinaryHeap::new();
         let mut id_to_current_cost = HashMap::new();
         for t in self.triangles.values() {
+            let base_cost = if gene.if_supported(t.id) { Cost::ZERO } else { t.base_cost };
             let cost = t
                 .lower_layers_neighbors
                 .iter()
                 .map(|x| costs[&x.id] + x.cost_surplus_backward)
                 .min()
                 .unwrap_or(t.base_cost)
-                .min(t.base_cost);
+                .min(base_cost);
 
             id_to_current_cost.insert(t.id, cost);
             queue.push(QueuedElement::new(t.id, cost));
@@ -280,7 +281,7 @@ impl<'a> ContactPointEvaluator<'a> {
         }
     }
 
-    fn visualize(&self, costs: HashMap<FaceId, Cost>) -> Result<()> {
+    fn visualize(&self, costs: HashMap<FaceId, Cost>, gene: &ContactPointsGene) -> Result<()> {
 
         let min = costs
             .values()
@@ -336,6 +337,9 @@ impl<'a> ContactPointEvaluator<'a> {
             |a,b| a+b.center()
         ).to_scaled(1.0 / to_visualize_set.len() as f32);
 
+        let contact_points = gene
+            .iter_contacts()
+            .map(|p| self.graph.get_triangle(*p).center() - avg);
 
         let points = self
             .graph
@@ -351,13 +355,19 @@ impl<'a> ContactPointEvaluator<'a> {
                 .with_triangle_indices(triangles),
         )?;
 
+
+        rec.log(
+            "contact_points",
+            &rerun::Points3D::new(contact_points)
+        )?;
+
         Ok(())
     }
 
     fn evaluate(&self, gene: &ContactPointsGene) -> HashMap<FaceId, Cost> {
         let mut costs = HashMap::new();
         for l in &self.layers {
-            l.evaluate(&mut costs);
+            l.evaluate(&mut costs, gene);
         }
         costs
     }
@@ -383,6 +393,6 @@ impl<'a> Evaluator<ContactPointsGene, ContactPointEvaluatorSettings<'a>> for Con
     
     fn visualize(&self, gene: &ContactPointsGene) -> Result<()> {
         let costs = self.evaluate(gene);
-        self.visualize(costs)
+        self.visualize(costs, gene)
     }
 }

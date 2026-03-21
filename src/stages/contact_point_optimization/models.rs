@@ -26,4 +26,12 @@ impl ContactPointsGene {
     pub fn add_contact_point(&mut self, s: FaceId) {
         self.contact_points.insert(s);
     }
+
+    pub fn if_supported(&self, id: FaceId) -> bool {
+        self.contact_points.contains(&id)
+    }
+
+    pub fn iter_contacts(&self) -> impl Iterator<Item = &FaceId> {
+        self.contact_points.iter()
+    }
 }
