@@ -87,7 +87,7 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
             &ContactPointsInitializerSettings::new(settings, graph, area, area_hash),
             settings,
             &PatienceBasedTerminationStrategySettings::default(),
-            &ContactPointEvaluatorSettings::new(graph, settings, area, critical),
+            &ContactPointEvaluatorSettings::new(graph, settings, area, critical, area_id),
             &TournamentBasedCrossoverSelectionSettings::default(),
             &ElitistNextGenSelectorSettings::default(),
             &ContactPointsInitializerSettings::new(settings, graph, area, area_hash),

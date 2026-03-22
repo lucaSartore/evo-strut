@@ -6,6 +6,7 @@ use crate::models::MeshVector;
 use crate::{evolution::{Cost, Evaluator}, models::{ Point, Settings, SurfaceGraph, FaceId}, stages::{contact_point_optimization::models::ContactPointsGene, visualization::Color}};
 use itertools::Itertools;
 use anyhow::{Result, anyhow};
+use rerun::RecordingStream;
 use rerun::external::glam::usize;
 use smallvec::SmallVec;
 
@@ -219,17 +220,19 @@ pub struct ContactPointEvaluatorSettings<'a> {
     pub graph: &'a SurfaceGraph,
     pub settings: &'a Settings,
     pub area: &'a [FaceId],
-    pub critical: &'a MeshVector<FaceId, bool>
+    pub critical: &'a MeshVector<FaceId, bool>,
+    pub area_index: usize
 }
 impl<'a> ContactPointEvaluatorSettings<'a> {
     pub fn new(
         graph: &'a SurfaceGraph,
         settings: &'a Settings,
         area: &'a [FaceId],
-        critical: &'a MeshVector<FaceId, bool>
+        critical: &'a MeshVector<FaceId, bool>,
+        area_index: usize
     ) -> Self {
         Self {
-            graph, settings, area, critical
+            graph, settings, area, critical, area_index
         }
     }
 
@@ -247,7 +250,9 @@ pub struct ContactPointEvaluator<'a> {
     settings: &'a Settings,
     area: &'a [FaceId],
     critical: &'a MeshVector<FaceId, bool>,
-    layers: Vec<EvaluatedLayer>
+    layers: Vec<EvaluatedLayer>,
+    stream: RecordingStream
+
 }
 
 impl<'a> ContactPointEvaluator<'a> {
@@ -297,8 +302,6 @@ impl<'a> ContactPointEvaluator<'a> {
 
         let to_visualize_set: HashSet<_> = self.area.iter().copied().collect();
 
-        let rec = rerun::RecordingStreamBuilder::new("critical_mesh").spawn()?;
-
         let mut colors = vec![Color::Green; self.graph.count_vertices()];
 
         let normals = self.graph.vertex_normals(Some(&to_visualize_set));
@@ -347,7 +350,7 @@ impl<'a> ContactPointEvaluator<'a> {
             .map(|x| x - avg);
 
 
-        rec.log(
+        self.stream.log(
             "critical_mesh",
             &rerun::Mesh3D::new(points)
                 .with_vertex_normals(normals)
@@ -355,8 +358,7 @@ impl<'a> ContactPointEvaluator<'a> {
                 .with_triangle_indices(triangles),
         )?;
 
-
-        rec.log(
+        self.stream.log(
             "contact_points",
             &rerun::Points3D::new(contact_points)
         )?;
@@ -389,12 +391,17 @@ impl<'a> ContactPointEvaluator<'a> {
 
 impl<'a> Evaluator<ContactPointsGene, ContactPointEvaluatorSettings<'a>> for ContactPointEvaluator<'a> {
     fn new(settings: &ContactPointEvaluatorSettings<'a>) -> Self {
+        let stream_name = format!("support of critical area {}", settings.area_index);
+        let stream = rerun::RecordingStreamBuilder::new(stream_name)
+            .spawn()
+            .expect("failed to build stream");
         let mut e = Self {
             graph: settings.graph,
             settings: settings.settings,
             area: settings.area,
             critical: settings.critical,
-            layers: vec![]
+            layers: vec![],
+            stream
         };
         e.fill_evaluation_layers();
         e
