@@ -133,11 +133,11 @@ impl EvaluatedLayer {
     fn fill_base_cost(&mut self, graph: &SurfaceGraph, critical: &MeshVector<FaceId, bool>, settings: &Settings) {
         for (_,t) in self.triangles.iter_mut() {
             let this = graph.get_triangle(t.id);
-            let this_layer = layer_of(this.center(), settings);
+            let this_layer = this.center().layer(settings);
             t.base_cost = graph
                 .iter_adjacent(this.index)
                 .filter(|x| !critical[x.index])
-                .filter(|x| layer_of(x.center(), settings) <= this_layer)
+                .filter(|x| x.center().layer(settings) <= this_layer)
                 .map(|adj| {
                     let adj_center = adj.center();
                     Self::evaluate_cost_surplus(this.center(), adj_center, settings)
@@ -197,7 +197,7 @@ impl EvaluatedLayer {
                 .iter()
                 .map(|x| costs[&x.id].unit_cost + x.cost_surplus_backward)
                 .min()
-                .unwrap_or(t.base_cost)
+                .unwrap_or(base_cost)
                 .min(base_cost);
 
             id_to_current_cost.insert(t.id, cost);
@@ -255,12 +255,6 @@ impl<'a> ContactPointEvaluatorSettings<'a> {
     
 }
 
-fn layer_of(p: Point, s: &Settings) -> usize {
-    let layer_height = s.contact_points_optimization_settings.layer_height;
-    (p.z / layer_height).ceil() as usize
-}
-
-
 pub struct ContactPointEvaluator<'a> {
     graph: &'a SurfaceGraph,
     settings: &'a Settings,
@@ -279,7 +273,7 @@ impl<'a> ContactPointEvaluator<'a> {
             .copied()
             .map(|x| {
                 let p = self.graph.get_triangle(x).center();
-                let layer = layer_of(p, self.settings);
+                let layer = p.layer(self.settings);
                 (layer, x)
             })
             .into_group_map();

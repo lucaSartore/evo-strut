@@ -2,6 +2,8 @@ use std::{hash::{Hash, Hasher}, ops::{Add, Sub}};
 use rerun::{Position3D, Vector3D, external::glam::Vec3};
 use nalgebra::{ArrayStorage, Const, Matrix};
 
+use crate::models::Settings;
+
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Point{
     pub x: f32,
@@ -120,6 +122,11 @@ impl Point {
         let v = end - start;
         let v_horizon = Point{x: v.x, y: v.y, z: 0.};
         Point::angle_between(&v, &v_horizon)
+    }
+
+    pub fn layer(&self, s: &Settings) -> usize {
+        let layer_height = s.contact_points_optimization_settings.layer_height;
+        (self.z / layer_height).ceil() as usize
     }
 
 }
