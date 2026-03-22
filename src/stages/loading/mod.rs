@@ -4,7 +4,7 @@ use super::*;
 use crate::models::{IoSettings, Mesh, SurfaceGraph};
 use baby_shark::{
     io::read_from_file, 
-    mesh::corner_table::CornerTableF, remeshing::{self, voxel::VoxelRemesher}
+    mesh::corner_table::CornerTableF, remeshing::{self, incremental::IncrementalRemesher, voxel::VoxelRemesher}
 };
 use std::path::Path;
 
@@ -28,14 +28,20 @@ impl<TB> LoadingStage<TB>
 where
     TB: PipelineBehaviourTrait,
 {
-    fn remesh(mesh: CornerTableF, settings: &IoSettings) -> Result<CornerTableF> {
-        let mut remesher = VoxelRemesher::default()
-            .with_voxel_size(settings.voxel_size);
-        let mesh = match remesher.remesh(&mesh) {
-            Some(m) => m,
-            None => return Err(anyhow!("fail to execute re-meshing"))
-        };
+    fn remesh(mut mesh: CornerTableF, settings: &IoSettings) -> Result<CornerTableF> {
+
+        let remesher = IncrementalRemesher::default();
+
+        remesher.remesh(&mut mesh, settings.voxel_size);
         Ok(mesh)
+        
+        // let mut remesher = VoxelRemesher::default()
+        //     .with_voxel_size(settings.voxel_size);
+        // let mesh = match remesher.remesh(&mesh) {
+        //     Some(m) => m,
+        //     None => return Err(anyhow!("fail to execute re-meshing"))
+        // };
+        // Ok(mesh)
     }
     
 }
