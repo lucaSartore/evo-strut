@@ -4,6 +4,7 @@ use std::collections::HashSet;
 use crate::models::MeshId;
 use crate::models::MeshVector;
 use crate::{evolution::{Cost, Evaluator}, models::{ Point, Settings, SurfaceGraph, FaceId}, stages::{contact_point_optimization::models::ContactPointsGene, visualization::Color}};
+use baby_shark::const_map_fn;
 use itertools::Itertools;
 use anyhow::{Result, anyhow};
 use rerun::RecordingStream;
@@ -16,6 +17,16 @@ use smallvec::SmallVec;
 struct QueuedElement {
     pub id: FaceId,
     pub cost: Cost
+}
+
+struct CostWithArea {
+    pub unit_cost: Cost,
+    area: f32
+}
+impl CostWithArea {
+    pub fn absolute_cost(&self) -> Cost {
+        self.unit_cost.times(self.area)
+    }
 }
 
 #[allow(clippy::non_canonical_partial_ord_impl)]
@@ -63,7 +74,9 @@ struct EvaluatedTriangle {
     /// of the neighbor have a low enough cost.
     /// can be an high constant if the surface is not supported,
     /// or a small value if the surface has a non critical neighbor
-    pub base_cost: Cost
+    pub base_cost: Cost,
+    // area of the triangle evaluated
+    pub area: f32
 }
 
 
@@ -90,7 +103,8 @@ impl EvaluatedLayer {
                         base_cost: Cost::MAX,
                         id: *x,
                         same_layer_neighbors: Default::default(),
-                        lower_layers_neighbors: Default::default()
+                        lower_layers_neighbors: Default::default(),
+                        area: graph.get_triangle(*x).area()
                     }
                 ))
                 .collect()
@@ -172,7 +186,7 @@ impl EvaluatedLayer {
         }
     }
 
-    pub fn evaluate(&self, costs: &mut HashMap<FaceId, Cost>, gene: &ContactPointsGene) {
+    pub fn evaluate(&self, costs: &mut HashMap<FaceId, CostWithArea>, gene: &ContactPointsGene) {
         let mut to_evaluate = self.triangles.len();
         let mut queue = BinaryHeap::new();
         let mut id_to_current_cost = HashMap::new();
@@ -181,7 +195,7 @@ impl EvaluatedLayer {
             let cost = t
                 .lower_layers_neighbors
                 .iter()
-                .map(|x| costs[&x.id] + x.cost_surplus_backward)
+                .map(|x| costs[&x.id].unit_cost + x.cost_surplus_backward)
                 .min()
                 .unwrap_or(t.base_cost)
                 .min(base_cost);
@@ -198,7 +212,9 @@ impl EvaluatedLayer {
             }
             // adding the point to the known costs
             to_evaluate -= 1;
-            _ = costs.insert(popped.id, popped.cost);
+            // _ = costs.insert(popped.id, popped.cost.times(self.triangles[&popped.id].area));
+            let cwa = CostWithArea { unit_cost: popped.cost, area: self.triangles[&popped.id].area };
+            _ = costs.insert(popped.id, cwa );
 
             // publishing recurrent cost for neighbor
             let triangle = self.triangles.get(&popped.id).expect("triangle should always be found");
@@ -286,16 +302,18 @@ impl<'a> ContactPointEvaluator<'a> {
         }
     }
 
-    fn visualize(&self, costs: HashMap<FaceId, Cost>, gene: &ContactPointsGene) -> Result<()> {
+    fn visualize(&self, costs: HashMap<FaceId, CostWithArea>, gene: &ContactPointsGene) -> Result<()> {
 
         let min = costs
             .values()
+            .map(|x| x.unit_cost)
             .min()
             .ok_or(anyhow!("visualization_error: cost vector is empty"))?
             .as_f32();
 
         let max = costs
             .values()
+            .map(|x| x.unit_cost)
             .max()
             .ok_or(anyhow!("visualization_error: cost vector is empty"))?
             .as_f32();
@@ -307,7 +325,8 @@ impl<'a> ContactPointEvaluator<'a> {
         let normals = self.graph.vertex_normals(Some(&to_visualize_set));
         let triangles: Vec<_> = self.graph.iter_triangles(Some(&to_visualize_set)).collect();
 
-        let mut points_3d = vec![];
+        let mut cost_points = vec![];
+        let mut cost_points_labels = vec![];
 
         // add colors
         for triangle in &triangles {
@@ -320,10 +339,10 @@ impl<'a> ContactPointEvaluator<'a> {
             let points = triangle.vertexes();
             let indexes = triangle.vertexes_index();
 
+            let cost = costs.get(&triangle.index).expect("triangle should always be found").unit_cost;
 
-            let cost = *costs.get(&triangle.index).expect("triangle should always be found");
-
-            points_3d.push(triangle.center());
+            cost_points.push(triangle.center());
+            cost_points_labels.push(format!("{}", cost));
 
             for (_,i) in points.iter().zip(indexes.iter()) {
 
@@ -349,6 +368,7 @@ impl<'a> ContactPointEvaluator<'a> {
             .iter_vertices()
             .map(|x| x - avg);
 
+        cost_points.iter_mut().for_each(|x| *x = *x - avg);
 
         self.stream.log(
             "critical_mesh",
@@ -363,10 +383,18 @@ impl<'a> ContactPointEvaluator<'a> {
             &rerun::Points3D::new(contact_points)
         )?;
 
+        let len = cost_points.len();
+        self.stream.log(
+            "triangle_costs",
+            &rerun::Points3D::new(cost_points)
+                .with_labels(cost_points_labels)
+                .with_colors(vec![Color::Red; len])
+        )?;
+
         Ok(())
     }
 
-    fn evaluate_criticality_costs(&self, gene: &ContactPointsGene) -> HashMap<FaceId, Cost> {
+    fn evaluate_criticality_costs(&self, gene: &ContactPointsGene) -> HashMap<FaceId, CostWithArea> {
         let mut costs = HashMap::new();
         for l in &self.layers {
             l.evaluate(&mut costs, gene);
@@ -409,7 +437,7 @@ impl<'a> Evaluator<ContactPointsGene, ContactPointEvaluatorSettings<'a>> for Con
 
     fn evaluate(&self, gene: &ContactPointsGene) -> Cost {
         let costs = self.evaluate_criticality_costs(gene);
-        let criticality_costs = costs.iter().fold(Cost::ZERO, |acc, e| acc + *e.1);
+        let criticality_costs = costs.iter().fold(Cost::ZERO, |acc, e| acc + e.1.absolute_cost());
         let support_costs = self.evaluate_support_costs(gene);
         criticality_costs + support_costs
     }

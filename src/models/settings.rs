@@ -113,12 +113,12 @@ pub struct ContactPointsOptimizationSettings {
 impl Default for ContactPointsOptimizationSettings {
     fn default() -> Self {
         Self {
-            cost_surplus_propagation_factor: 0.02,
-            support_point_cost: 50.0,
+            cost_surplus_propagation_factor: 0.002,
+            support_point_cost: 20.0,
             support_line_cost: 150.0,
             non_supported_base_cost: 100.0,
-            layer_height: 1.0,
-            initialization_support_density: RandomDistribution::InRange { low: 0.001, high: 0.01 },
+            layer_height: 0.2,
+            initialization_support_density: RandomDistribution::InRange { low: 0.0001, high: 0.001 },
             population_size: 100
         }
     }

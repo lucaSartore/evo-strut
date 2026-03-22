@@ -21,6 +21,14 @@ impl Cost {
    pub fn as_f32(&self) -> f32 {
        self.cost
    }
+   pub fn times(mut self, value: f32) -> Cost {
+       self.cost *= value;
+       if f32::is_nan(self.cost) {
+           warn!("trying to multiply a cost with NaN result. Defaulting to f32::MAX");
+           return Self::MAX;
+       }
+       self
+   }
 }
 
 impl Display for Cost {
