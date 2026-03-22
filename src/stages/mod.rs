@@ -82,6 +82,7 @@ impl  PipelineState for CriticalityGroupedState { }
 pub struct ContactPointsDecidedState {
     pub settings: Settings,
     pub graph: SurfaceGraph,
+    pub critical: MeshVector<FaceId, bool>,
     pub connection_points: ContactPointsGene
 }
 impl  PipelineState for ContactPointsDecidedState { }
@@ -127,6 +128,7 @@ where
         let p = CriticalityGroupingStage::<TB>::execute(p);
         VisualizationStage::visualize(&p)?;
         let p = ContactPointOptimizationStage::<TB>::execute(p)?;
+        VisualizationStage::visualize(&p)?;
         Ok(())
     }
 }

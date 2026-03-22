@@ -1,4 +1,4 @@
-use crate::{models::SurfaceGraph, stages::{CriticalityDetectedState, CriticalityGroupedState, LoadedState, Pipeline, PipelineBehaviourTrait, PipelineState}};
+use crate::{models::{FaceId, MeshId, SurfaceGraph}, stages::{ContactPointsDecidedState, CriticalityDetectedState, CriticalityGroupedState, LoadedState, Pipeline, PipelineBehaviourTrait, PipelineState}};
 use anyhow::Result;
 
 mod color;
@@ -64,6 +64,54 @@ impl Visualizer<CriticalityGroupedState> for VisualizationStage {
     }
 }
 
+
+impl Visualizer<ContactPointsDecidedState> for VisualizationStage {
+    fn visualize<TB: PipelineBehaviourTrait>(pipeline: &Pipeline<ContactPointsDecidedState, TB>) -> Result<()> {
+        let graph = &pipeline.state.graph;
+
+        let mut colors = vec![Color::Green; graph.count_vertices()];
+
+        pipeline
+            .state
+            .critical
+            .iter()
+            .enumerate()
+            .filter(|(_,x)| **x)
+            .for_each(|(id,_)| {
+                pipeline
+                    .state
+                    .graph
+                    .get_triangle(FaceId(id as u32))
+                    .vertexes_index()
+                    .iter()
+                    .for_each(|v| colors[v.index()] = Color::Red);
+            });
+
+        let rec = rerun::RecordingStreamBuilder::new("decided contact points").spawn()?;
+
+
+        rec.log(
+            "mesh",
+            &rerun::Mesh3D::new(graph.iter_vertices())
+                .with_vertex_normals(graph.vertex_normals(None))
+                .with_vertex_colors(colors)
+                .with_triangle_indices(graph.iter_triangles(None)),
+        )?;
+
+        let cp = pipeline
+            .state
+            .connection_points
+            .iter_contacts()
+            .map(|x| graph.get_triangle(*x).center());
+
+        rec.log(
+            "support_points", 
+            &rerun::Points3D::new(cp)
+        )?;
+
+        Ok(())
+    }
+}
 fn visualize_mesh(graph: &SurfaceGraph, name: &str, colors: Option<Vec<Color>>) -> Result<()> {
     let rec = rerun::RecordingStreamBuilder::new(name).spawn()?;
 
@@ -71,8 +119,6 @@ fn visualize_mesh(graph: &SurfaceGraph, name: &str, colors: Option<Vec<Color>>) 
         Some(e) => e,
         None => vec![Color::Green; graph.count_vertices()]
     };
-
-
 
     rec.log(
         "vertexes", 

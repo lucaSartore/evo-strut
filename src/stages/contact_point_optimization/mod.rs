@@ -45,7 +45,8 @@ where
         Ok(Pipeline::from_state(ContactPointsDecidedState{
             settings: input.state.settings,
             graph: input.state.graph,
-            connection_points: merged
+            connection_points: merged,
+            critical: input.state.critical
         }))
     }
 }
