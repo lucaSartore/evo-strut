@@ -9,7 +9,7 @@ use smallvec::SmallVec;
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct QueuedElement {
+pub struct QueuedElement {
     pub id: FaceId,
     pub cost: Cost
 }
@@ -81,17 +81,19 @@ struct EvaluatedLayer {
 }
 
 impl EvaluatedLayer {
-    pub fn new(
+    pub fn new<T> (
         graph: &SurfaceGraph,
-        known_costs: &HashMap<FaceId, Cost>,
+        known_costs: &T,
         current_layer: &[FaceId],
         in_below_layers: &HashSet<FaceId>,
         settings: &Settings
-    ) -> Self {
+    ) -> Self 
+        where T: KnownCosts
+    {
         let mut e = Self {
             triangles: current_layer
                 .iter()
-                .filter(|x| !known_costs.contains_key(*x))
+                .filter(|x| known_costs.cost_of(**x).is_none())
                 .map(|x| (
                     *x,
                     EvaluatedTriangle{
@@ -160,16 +162,18 @@ impl EvaluatedLayer {
     //     Cost::new(c)
     // }
 
-    fn fill_base_cost(&mut self, graph: &SurfaceGraph, known_costs: &HashMap<FaceId, Cost>, settings: &Settings) {
+    fn fill_base_cost<T>(&mut self, graph: &SurfaceGraph, known_costs: &T, settings: &Settings) 
+        where T: KnownCosts
+    {
         for (_,t) in self.triangles.iter_mut() {
             let this = graph.get_triangle(t.id);
             let this_layer = this.center().layer(settings);
-            t.base_cost = *graph
+            t.base_cost = graph
                 .iter_adjacent(this.index)
                 .filter(|x| x.center().layer(settings) <= this_layer)
-                .flat_map(|x| known_costs.get(&x.index))
+                .flat_map(|x| known_costs.cost_of(x.index))
                 .min()
-                .unwrap_or(&Cost::new(settings.contact_points_optimization_settings.non_supported_base_cost));
+                .unwrap_or(Cost::new(settings.contact_points_optimization_settings.non_supported_base_cost));
         }
     }
 
@@ -254,22 +258,29 @@ impl EvaluatedLayer {
     }
 }
 
+pub trait KnownCosts {
+    fn cost_of(&self, id: FaceId) -> Option<Cost>;
+}
 
-pub struct PropagationEvaluator<'a> {
+pub struct PropagationEvaluator<'a,T>
+where T: KnownCosts
+{
     graph: &'a SurfaceGraph,
     settings: &'a Settings,
-    area: &'a [FaceId],
-    known_costs: &'a HashMap<FaceId, Cost>,
+    pub area: &'a [FaceId],
+    pub known_costs: T,
     layers: Vec<EvaluatedLayer>
 }
 
-impl<'a> PropagationEvaluator<'a> {
+impl<'a, T> PropagationEvaluator<'a, T>
+where T: KnownCosts
+{
 
     pub fn new(
         graph: &'a SurfaceGraph,
         settings: &'a Settings,
         area: &'a [FaceId],
-        known_costs: &'a HashMap<FaceId, Cost>
+        known_costs: T
     ) -> Self {
         let mut to_return = Self {
             graph,
@@ -285,7 +296,7 @@ impl<'a> PropagationEvaluator<'a> {
     fn fill_evaluation_layers(&mut self) {
         let layers = self.area
             .iter()
-            .filter(|x| !self.known_costs.contains_key(*x))
+            .filter(|x| self.known_costs.cost_of(**x).is_none())
             .copied()
             .map(|x| {
                 let p = self.graph.get_triangle(x).center();
@@ -299,7 +310,7 @@ impl<'a> PropagationEvaluator<'a> {
         for (_, layer) in layers.iter().sorted_by_key(|x| x.0) {
             let el = EvaluatedLayer::new(
                 self.graph,
-                self.known_costs,
+                &self.known_costs,
                 layer.as_slice(),
                 &in_below_layers,
                 self.settings

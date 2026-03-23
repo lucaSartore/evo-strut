@@ -1,8 +1,10 @@
 use std::marker::PhantomData;
 use hashbrown::HashMap;
 
-use crate::{evolution::Cost, models::{FaceId, Point, Settings, SurfaceGraph, Triangle}, stages::{CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait, criticality_detection::propagation::PropagationEvaluator}, support};
-mod propagation;
+use crate::{evolution::Cost, models::{FaceId, Point, Settings, SurfaceGraph, Triangle}, stages::{CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait, criticality_detection::propagation::KnownCosts }};
+
+pub mod propagation;
+use propagation::PropagationEvaluator;
 
 
 pub struct CriticalityDetectionStage<TB>
@@ -86,6 +88,20 @@ impl CriticalityDetector for OrientationBasedCriticalityDetector {
 
 pub struct PropagationBasedCriticalityDetector {}
 
+struct HeightBasedKnownCost<'a> {
+    graph: &'a SurfaceGraph,
+    settings: &'a Settings
+}
+impl<'a> KnownCosts for HeightBasedKnownCost<'a> {
+    fn cost_of(&self, id: FaceId) -> Option<Cost> {
+        let t = self.graph.get_triangle(id);
+        if is_triangle_close_to_the_ground(&t, self.settings) {
+            return Some(Cost::ZERO);
+        }
+        None
+    }
+}
+
 impl CriticalityDetector for PropagationBasedCriticalityDetector {
     fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<FaceId> {
         let known_costs: HashMap<FaceId, Cost> = graph
@@ -99,11 +115,11 @@ impl CriticalityDetector for PropagationBasedCriticalityDetector {
             .filter(|x| !known_costs.contains_key(x))
             .collect();
 
-        let mut pm =  PropagationEvaluator::new(
+        let pm =  PropagationEvaluator::new(
             graph,
             settings,
             &area, 
-            &known_costs
+            HeightBasedKnownCost{ graph, settings }
         );
 
         let costs = pm.evaluate(&|_| false);

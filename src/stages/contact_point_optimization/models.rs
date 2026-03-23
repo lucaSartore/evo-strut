@@ -27,7 +27,7 @@ impl ContactPointsGene {
         self.contact_points.insert(s);
     }
 
-    pub fn if_supported(&self, id: FaceId) -> bool {
+    pub fn is_supported(&self, id: FaceId) -> bool {
         self.contact_points.contains(&id)
     }
 
