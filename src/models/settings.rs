@@ -122,7 +122,7 @@ impl Default for ContactPointsOptimizationSettings {
     fn default() -> Self {
         Self {
             cost_surplus_propagation_factor: 10.,
-            support_point_cost: 20.0,
+            support_point_cost: 100.0,
             support_line_cost: 150.0,
             non_supported_base_cost: 1000.0,
             layer_height: 1.,
