@@ -68,15 +68,18 @@ pub struct ContactPointsOptimizationSettings {
     /// tell how the cost propagate from one critical surface to the next
     /// example:
     ///  - point A and B are connected by a 2mm gap
-    ///  - the vector A->B have a 30 degrees steepness
+    ///  - the vector A->B is 30 degrees more less steep than what is considered a valid
+    ///  inclination (defined by support_overhanging_angle)
     ///  - A is below B and has a criticality score of 100
-    ///  - cost_surplus_propagation_factor is 1.0 [cost/(mm*deg)]
+    ///  - cost_surplus_propagation_factor is 0.1 [cost/(mm^3*deg)]
+    ///  - b represent a triangle that has an area of 4 mm^2
+    ///
     /// then the cost associated with B will be:
     /// ```
-    ///  C(b) = C(a) + cost_surplus_propagation_factor * distance * (90 - angle)
-    ///       = 100 + 1.0 * 2.0 * (90.0 - 30.0) = 220
+    ///  C(b) = C(a) + cost_surplus_propagation_factor * distance * angle * area
+    ///       = 100 + 0.1 * 2.0 * 30 * 4 = 124
     /// ```
-    /// unit of measure: [cost/(mm*deg)]
+    /// unit of measure: [cost/(mm^3*deg)]
     pub cost_surplus_propagation_factor: f32,
     /// cost associated with placing one support point
     /// unit of measure: [cost]

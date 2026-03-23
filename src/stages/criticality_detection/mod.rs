@@ -1,5 +1,8 @@
 use std::marker::PhantomData;
-use crate::{models::{Point, Settings, SurfaceGraph, Triangle, FaceId}, stages::{CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait}};
+use hashbrown::HashMap;
+
+use crate::{evolution::Cost, models::{FaceId, Point, Settings, SurfaceGraph, Triangle}, stages::{CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait, criticality_detection::propagation::PropagationEvaluator}, support};
+mod propagation;
 
 
 pub struct CriticalityDetectionStage<TB>
@@ -27,17 +30,17 @@ where
     }
 }
 
+
+
 /// trait that given a particular mesh detect which polygons are "critical"
 pub trait CriticalityDetector {
     fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<FaceId>;
 }
-
-pub struct OrientationBasedCriticalityDetector {}
-
 fn is_triangle_close_to_the_ground(triangle: &Triangle<'_>, settings: &Settings) -> bool {
     triangle.center().z <= settings.criticality_settings.max_detachment_from_z_plane
 }
 
+pub struct OrientationBasedCriticalityDetector {}
 impl CriticalityDetector for OrientationBasedCriticalityDetector {
     fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<FaceId> {
         let mut to_return = vec![];
@@ -79,3 +82,37 @@ impl CriticalityDetector for OrientationBasedCriticalityDetector {
         to_return
     }
 }
+
+
+pub struct PropagationBasedCriticalityDetector {}
+
+impl CriticalityDetector for PropagationBasedCriticalityDetector {
+    fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<FaceId> {
+        let known_costs: HashMap<FaceId, Cost> = graph
+            .iter_triangles(None)
+            .filter(|x| is_triangle_close_to_the_ground(x, settings))
+            .map(|x| (x.index, Cost::ZERO))
+            .collect();
+
+        let area: Vec<_> = graph.iter_triangles(None)
+            .map(|x| x.index)
+            .filter(|x| !known_costs.contains_key(x))
+            .collect();
+
+        let mut pm =  PropagationEvaluator::new(
+            graph,
+            settings,
+            &area, 
+            &known_costs
+        );
+
+        let costs = pm.evaluate(&|_| false);
+
+        costs
+            .iter()
+            .filter(|(_,c)| c.unit_cost != Cost::ZERO)
+            .map(|(k,_)| *k)
+            .collect()
+    }
+}
+
