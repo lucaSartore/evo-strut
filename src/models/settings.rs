@@ -68,8 +68,8 @@ pub struct ContactPointsOptimizationSettings {
     /// tell how the cost propagate from one critical surface to the next
     /// example:
     ///  - point A and B are connected by a 2mm gap
-    ///  - the vector A->B is 30 degrees more less steep than what is considered a valid
-    ///  inclination (defined by support_overhanging_angle)
+    ///  - the triangle has a `critical angle` of 30 (i.e. is 30 degrees less steep than what is
+    ///  considered non critical by support_overhanging_angle)
     ///  - A is below B and has a criticality score of 100
     ///  - cost_surplus_propagation_factor is 0.1 [cost/(mm^3*deg)]
     ///  - b represent a triangle that has an area of 4 mm^2
@@ -102,6 +102,11 @@ pub struct ContactPointsOptimizationSettings {
     /// unit of measure: [mm]
     pub layer_height: f32,
 
+    /// when propagating the cost surplus (using cost_surplus_propagation_factor)
+    /// the if the critical angle's absolute is higher than this threshold
+    /// it will be clipped (to avoid having criticality that are too high)
+    pub critical_angle_clipping_factor: f32,
+
     /// the density of support initially used
     /// unit of measure: 1/mm^2
     /// if is set to 0.05 and the area optimized
@@ -116,11 +121,12 @@ pub struct ContactPointsOptimizationSettings {
 impl Default for ContactPointsOptimizationSettings {
     fn default() -> Self {
         Self {
-            cost_surplus_propagation_factor: 0.002,
+            cost_surplus_propagation_factor: 10.,
             support_point_cost: 20.0,
             support_line_cost: 150.0,
-            non_supported_base_cost: 100.0,
-            layer_height: 0.2,
+            non_supported_base_cost: 1000.0,
+            layer_height: 1.,
+            critical_angle_clipping_factor: 5.,
             initialization_support_density: RandomDistribution::InRange { low: 0.0001, high: 0.001 },
             population_size: 100
         }

@@ -128,7 +128,11 @@ impl EvaluatedLayer {
         let angle_threshold = 90. - settings.criticality_settings.support_overhanging_angle;
 
         // is positive if cost should increase, negative if cost should decrease
-        let angle_difference = angle_threshold - angle;
+        let angle_difference = (angle_threshold - angle).clamp(
+            -settings.contact_points_optimization_settings.critical_angle_clipping_factor,
+            settings.contact_points_optimization_settings.critical_angle_clipping_factor
+        );
+
 
         let c = propagation_factor * distance * angle_difference;
         Cost::new(c)
