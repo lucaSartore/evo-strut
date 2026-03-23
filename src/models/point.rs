@@ -86,7 +86,7 @@ impl Point {
         let cos = Point::dot(
             a.as_versor(),
             b.as_versor()
-        );
+        ).clamp(-1., 1.);
         cos.acos()
     }
 
