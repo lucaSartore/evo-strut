@@ -3,6 +3,7 @@ use rerun::TriangleIndices;
 use crate::models::{PointId, FaceId};
 use super::*;
 
+#[derive(Copy, Clone)]
 pub struct Triangle<'a> {
     pub graph: &'a SurfaceGraph,
     pub index: FaceId

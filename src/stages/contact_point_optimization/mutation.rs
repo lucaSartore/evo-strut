@@ -1,6 +1,6 @@
 use hashbrown::HashSet;
 
-use crate::{evolution::{Mutator, Random}, models::{FaceId, Settings, SurfaceGraph}, stages::contact_point_optimization::{ContactPointShape, initializer::ContactPointsInitializerSettings}, support::remove_random::RemoveRandom};
+use crate::{evolution::{Mutator, Random}, models::{FaceId, Settings, SurfaceGraph}, stages::contact_point_optimization::{ContactPointShape, initializer::ContactPointsInitializerSettings}, support::{graph_circle::find_circle, remove_random::RemoveRandom}};
 use super::models::ContactPointsGene;
 
 
@@ -24,12 +24,20 @@ impl<'a> ContactPointMutator<'a> {
 
     fn move_support_mutation(&self, gene: &mut ContactPointsGene){
         let Some(removed) = gene.contact_points.remove_random(&self.rand) else { return };
-        let Some(to_add) = self
-            .graph
-            .iter_adjacent(removed.0)
-            .filter(|x| self.options_hash.contains(&x.index))
-            .next() else { return };
-        gene.add_contact_point(to_add.index, removed.1);
+        let radius = self.settings.contact_points_optimization_settings.move_support_mutation_intensity;
+        let mut options = find_circle(self.graph, removed.0, radius, false);
+        options = options.intersection(self.options_hash).copied().collect();
+
+        let selected = options.choose_random(&self.rand)
+            .expect("random selection failed");
+        gene.add_contact_point(*selected, removed.1);
+    }
+
+    fn change_support_size_mutation(&self, gene: &mut ContactPointsGene){
+        let Some(to_edit) = gene.contact_points.choose_random(&self.rand) else { return };
+        let to_edit = to_edit.0;
+        let Some(shape) = gene.contact_points.get_mut(&to_edit) else { return };
+        shape.mutate(&self.rand, self.settings);
     }
 }
 
@@ -48,16 +56,18 @@ impl<'a> Mutator<ContactPointsGene, ContactPointsInitializerSettings<'a>> for Co
         enum MK {
             AddCp,
             RemoveCp,
-            MoveCp
+            MoveCp,
+            ChangeSize,
         }
-        const OPTIONS: &[MK] = &[MK::AddCp, MK::RemoveCp, MK::MoveCp];
+        const OPTIONS: &[MK] = &[MK::AddCp, MK::RemoveCp, MK::MoveCp, MK::ChangeSize];
 
         let mutation = self.rand.choose_or_panic(OPTIONS);
 
         match mutation {
             MK::AddCp => self.add_support_mutation(gene),
             MK::RemoveCp => self.remove_support_mutation(gene),
-            MK::MoveCp => self.move_support_mutation(gene)
+            MK::MoveCp => self.move_support_mutation(gene),
+            MK::ChangeSize => self.change_support_size_mutation(gene),
         };
     }
 }

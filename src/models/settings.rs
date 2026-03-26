@@ -118,7 +118,20 @@ pub struct ContactPointsOptimizationSettings {
     pub population_size: usize,
 
     /// max allowed radius of optimized supports
-    pub max_support_radius: f32
+    pub max_support_radius: f32,
+
+    /// min allowed radius of optimized supports
+    pub min_support_radius: f32,
+
+    /// how much a support should be moved
+    /// when his position is mutated
+    /// unit of measure: [mm]
+    pub move_support_mutation_intensity: f32,
+
+    /// how much the radius of a support should change
+    /// when the change radius mutation is applied
+    /// unit of measure: [mm]
+    pub change_support_radius_mutation_intensity: f32,
 
 }
 
@@ -126,14 +139,17 @@ impl Default for ContactPointsOptimizationSettings {
     fn default() -> Self {
         Self {
             cost_surplus_propagation_factor: 10.,
-            support_point_cost: 100.0,
-            support_area_cost: 150.0,
+            support_point_cost: 500.0,
+            support_area_cost: 50.0,
             non_supported_base_cost: 1000.0,
             layer_height: 1.,
             critical_angle_clipping_factor: 5.,
             initialization_support_density: RandomDistribution::InRange { low: 0.0001, high: 0.001 },
             population_size: 100,
-            max_support_radius: 7.
+            max_support_radius: 4.,
+            min_support_radius: 0.5,
+            move_support_mutation_intensity: 2.5,
+            change_support_radius_mutation_intensity: 2.
         }
     }
 }

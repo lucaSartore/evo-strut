@@ -12,12 +12,23 @@ pub struct ContactPointShape {
 impl ContactPointShape {
     pub fn random(rand: &Random, settings: &Settings) -> Self {
         Self {
-            radius: rand.next_f32(0., settings.contact_points_optimization_settings.max_support_radius)
+            radius: rand.next_f32(
+                settings.contact_points_optimization_settings.min_support_radius,
+                settings.contact_points_optimization_settings.max_support_radius
+            )
         }
     }
 
     pub fn area(&self) -> f32 {
         self.radius.powi(2) * f32::consts::PI
+    }
+
+    pub fn mutate(&mut self, rand: &Random, settings: &Settings) {
+        let range = settings.contact_points_optimization_settings.change_support_radius_mutation_intensity;
+        let min = settings.contact_points_optimization_settings.min_support_radius;
+        let max = settings.contact_points_optimization_settings.max_support_radius;
+        self.radius = (self.radius + rand.next_f32(-range, range))
+            .clamp(min, max);
     }
 }
 
@@ -50,7 +61,7 @@ impl ContactPointsGene {
     pub fn get_supported(&self, graph: &SurfaceGraph) -> HashSet<FaceId> {
         let mut to_return = HashSet::new();
         for (center, shape) in self.contact_points.iter() {
-            let c = find_circle(graph, *center, shape.radius);
+            let c = find_circle(graph, *center, shape.radius, true);
             to_return.extend(c);
         }
         to_return
