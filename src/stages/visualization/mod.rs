@@ -98,15 +98,22 @@ impl Visualizer<ContactPointsDecidedState> for VisualizationStage {
                 .with_triangle_indices(graph.iter_triangles(None)),
         )?;
 
-        let cp = pipeline
+        let (centers, radiuses): (Vec<_>, Vec<_>) = pipeline
             .state
             .connection_points
             .iter_contacts()
-            .map(|x| graph.get_triangle(*x.0).center());
+            .map(|x| {
+                let center = graph.get_triangle(*x.0).center();
+                let radius = x.1.radius;
+                (center, radius)
+            }).unzip();
 
         rec.log(
             "support_points", 
-            &rerun::Points3D::new(cp)
+            &rerun::Cylinders3D::from_lengths_and_radii(
+                vec![0.; centers.len()],
+                radiuses
+            ).with_centers(centers)
         )?;
 
         Ok(())
