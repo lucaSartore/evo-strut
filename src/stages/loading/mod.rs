@@ -32,7 +32,7 @@ where
 
         let remesher = IncrementalRemesher::default();
 
-        remesher.remesh(&mut mesh, settings.voxel_size);
+        remesher.remesh(&mut mesh, settings.target_edge_length);
         Ok(mesh)
         
         // let mut remesher = VoxelRemesher::default()

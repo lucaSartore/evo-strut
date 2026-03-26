@@ -49,7 +49,7 @@ pub struct IoSettings {
     /// smaller voxel size make the process more precise
     /// but also slower
     /// unit of measure: mm
-    pub voxel_size: f32
+    pub target_edge_length: f32
 }
 
 impl Default for IoSettings {
