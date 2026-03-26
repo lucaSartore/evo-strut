@@ -2,7 +2,7 @@ use std::{hash::{Hash, Hasher}, ops::{Add, Sub}};
 use rerun::{Position3D, Vector3D, external::glam::Vec3};
 use nalgebra::{ArrayStorage, Const, Matrix};
 
-use crate::models::Settings;
+use crate::models::{PointId, Settings};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Point{
@@ -127,6 +127,14 @@ impl Point {
     pub fn layer(&self, s: &Settings) -> usize {
         let layer_height = s.contact_points_optimization_settings.layer_height;
         (self.z / layer_height).ceil() as usize
+    }
+
+    pub fn is_facing_upward(&self) -> bool {
+        Point::angle_between(self, &Point::UPWARD) <= std::f32::consts::PI / 2.
+    }
+
+    pub fn is_lower_or_equal_than(&self, other: &Point) -> bool {
+        self.z <= other.z
     }
 
 }

@@ -1,7 +1,9 @@
 use std::marker::PhantomData;
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
+use itertools::Itertools;
+use smallvec::{SmallVec, smallvec};
 
-use crate::{evolution::Cost, models::{FaceId, Point, Settings, SurfaceGraph, Triangle}, stages::{CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait, criticality_detection::propagation::KnownCosts }};
+use crate::{evolution::Cost, models::{FaceId, Point, PointId, Settings, SurfaceGraph, Triangle}, stages::{CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait, criticality_detection::propagation::KnownCosts }};
 
 pub mod propagation;
 use propagation::PropagationEvaluator;
@@ -88,6 +90,54 @@ impl CriticalityDetector for OrientationBasedCriticalityDetector {
 
 pub struct PropagationBasedCriticalityDetector {}
 
+impl PropagationBasedCriticalityDetector {
+    // find all the concavities.
+    // Concavities are automatically supported because they have the mesh
+    // below, however they are indistinguishable from a critical point
+    // if not for the surface normals. So we need to find them in order to
+    // calculate their criticality properly
+    fn find_concavity(graph: &SurfaceGraph) -> HashSet<FaceId> {
+        let mut point_to_triangles: HashMap<PointId, SmallVec<[Triangle<'_>; 4]>> = Default::default();
+
+        for t in graph.iter_triangles(None) {
+            for p in t.vertexes_index() {
+                let vec = point_to_triangles.entry(p).or_insert(smallvec![]);
+                vec.push(t);
+            }
+        }
+
+        // conditions for a concavity:
+        //  1) all triangles are facing upward
+        //  2) the point is the lowest among all of hist neighbor
+        let points: HashSet<_> = point_to_triangles
+            .iter()
+            .filter(|(_,triangles)|{
+                triangles
+                    .iter()
+                    .all(|t| t.normal().is_facing_upward())
+            })
+            .filter(|(point_id,triangles)|{
+                let point = graph.get_point(**point_id);
+                triangles
+                    .iter()
+                    .map(|x| x.vertexes())
+                    .flatten()
+                    .unique()
+                    .all(|new_p| point.is_lower_or_equal_than(&new_p))
+            })
+            .map(|(p,_)| *p)
+            .collect();
+
+        point_to_triangles
+            .iter()
+            .filter(|(p,_)| points.contains(*p))
+            .map(|(_,t)| t)
+            .flatten()
+            .map(|t| t.index)
+            .collect()
+    }
+}
+
 struct HeightBasedKnownCost<'a> {
     graph: &'a SurfaceGraph,
     settings: &'a Settings
@@ -122,7 +172,8 @@ impl CriticalityDetector for PropagationBasedCriticalityDetector {
             HeightBasedKnownCost{ graph, settings }
         );
 
-        let costs = pm.evaluate(&|_| false);
+        let supported = Self::find_concavity(graph);
+        let costs = pm.evaluate(&|x| supported.contains(&x));
 
         costs
             .iter()
