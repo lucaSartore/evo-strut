@@ -2,7 +2,7 @@ use core::num;
 
 use hashbrown::HashSet;
 
-use crate::{evolution::{PopulationInitializer, Random}, models::{FaceId, Settings, SurfaceGraph}, stages::contact_point_optimization::models::ContactPointsGene};
+use crate::{evolution::{PopulationInitializer, Random}, models::{FaceId, Settings, SurfaceGraph}, stages::contact_point_optimization::{ContactPointShape, models::ContactPointsGene}};
 
 pub struct ContactPointsInitializerSettings<'a> {
     pub settings: &'a Settings,
@@ -55,7 +55,8 @@ impl<'a> PopulationInitializer<ContactPointsGene, ContactPointsInitializerSettin
         let num_supports = (area * self.rand.next_distribution(support_density)) as usize;
         for _ in 0..num_supports {
             let s = self.rand.choose(self.options).expect("options shall always be at least one");
-            g.add_contact_point(*s);
+            let r = ContactPointShape::random(&self.rand, self.settings);
+            g.add_contact_point(*s, r);
         }
         g
     }

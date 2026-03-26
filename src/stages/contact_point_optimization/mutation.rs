@@ -1,6 +1,6 @@
 use hashbrown::HashSet;
 
-use crate::{evolution::{Mutator, Random}, models::{FaceId, Settings, SurfaceGraph}, stages::contact_point_optimization::initializer::ContactPointsInitializerSettings, support::remove_random::RemoveRandom};
+use crate::{evolution::{Mutator, Random}, models::{FaceId, Settings, SurfaceGraph}, stages::contact_point_optimization::{ContactPointShape, initializer::ContactPointsInitializerSettings}, support::remove_random::RemoveRandom};
 use super::models::ContactPointsGene;
 
 
@@ -15,7 +15,7 @@ pub struct ContactPointMutator<'a> {
 impl<'a> ContactPointMutator<'a> {
     fn add_support_mutation(&self, gene: &mut ContactPointsGene) {
         let to_add = self.rand.choose_or_panic(self.options);
-        gene.add_contact_point(*to_add);
+        gene.add_contact_point(*to_add, ContactPointShape::random(&self.rand, self.settings));
     }
 
     fn remove_support_mutation(&self, gene: &mut ContactPointsGene) {
@@ -26,10 +26,10 @@ impl<'a> ContactPointMutator<'a> {
         let Some(removed) = gene.contact_points.remove_random(&self.rand) else { return };
         let Some(to_add) = self
             .graph
-            .iter_adjacent(removed)
+            .iter_adjacent(removed.0)
             .filter(|x| self.options_hash.contains(&x.index))
             .next() else { return };
-        gene.add_contact_point(to_add.index);
+        gene.add_contact_point(to_add.index, removed.1);
     }
 }
 

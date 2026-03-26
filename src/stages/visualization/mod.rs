@@ -102,7 +102,7 @@ impl Visualizer<ContactPointsDecidedState> for VisualizationStage {
             .state
             .connection_points
             .iter_contacts()
-            .map(|x| graph.get_triangle(*x).center());
+            .map(|x| graph.get_triangle(*x.0).center());
 
         rec.log(
             "support_points", 

@@ -58,7 +58,7 @@ impl Default for IoSettings {
             input_file_path: "test_meshes/inclination_test.stl".into(),
             // input_file_path: "test_meshes/dragon.stl".into(),
             output_file_path: "output.stl".into(),
-            voxel_size: 1.
+            target_edge_length: 1.
         }
     }
 }
@@ -81,13 +81,13 @@ pub struct ContactPointsOptimizationSettings {
     /// ```
     /// unit of measure: [cost/(mm^3*deg)]
     pub cost_surplus_propagation_factor: f32,
-    /// cost associated with placing one support point
+    /// unit cost associated with placing one support point
     /// unit of measure: [cost]
     pub support_point_cost: f32,
-    /// cost associated with placing one support line 
-    /// with a specific length
-    /// unit of measure [cost/mm]
-    pub support_line_cost: f32,
+    /// cost associated the placing a support
+    /// with a specific area
+    /// unit of measure [cost/mm^2]
+    pub support_area_cost: f32,
     /// cost associated with an element that has no support at all 
     /// (i.e. a point that is not touching the flor, and is the
     /// lower among all of his neighbors)
@@ -114,7 +114,11 @@ pub struct ContactPointsOptimizationSettings {
     /// will be generated
     pub initialization_support_density: RandomDistribution,
 
-    pub population_size: usize
+    /// size of the population evaluated (in the genetic algorithm)
+    pub population_size: usize,
+
+    /// max allowed radius of optimized supports
+    pub max_support_radius: f32
 
 }
 
@@ -123,12 +127,13 @@ impl Default for ContactPointsOptimizationSettings {
         Self {
             cost_surplus_propagation_factor: 10.,
             support_point_cost: 100.0,
-            support_line_cost: 150.0,
+            support_area_cost: 150.0,
             non_supported_base_cost: 1000.0,
             layer_height: 1.,
             critical_angle_clipping_factor: 5.,
             initialization_support_density: RandomDistribution::InRange { low: 0.0001, high: 0.001 },
-            population_size: 100
+            population_size: 100,
+            max_support_radius: 7.
         }
     }
 }

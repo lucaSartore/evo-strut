@@ -113,7 +113,7 @@ impl<'a> ContactPointEvaluator<'a> {
 
         let contact_points = gene
             .iter_contacts()
-            .map(|p| self.graph.get_triangle(*p).center() - avg);
+            .map(|p| self.graph.get_triangle(*p.0).center() - avg);
 
         let points = self
             .graph
@@ -147,21 +147,18 @@ impl<'a> ContactPointEvaluator<'a> {
     }
 
     fn evaluate_criticality_costs(&self, gene: &ContactPointsGene) -> HashMap<FaceId, CostWithArea> {
-        self.propagator.evaluate(&|x| gene.is_supported(x))
-   }
+        let supported = gene.get_supported(self.graph);
+        self.propagator.evaluate(&|x| supported.contains(&x))
+    }
 
     pub fn evaluate_support_costs(&self, gene: &ContactPointsGene) -> Cost {
-        let support_costs = gene.num_contacts() as f32 * self.settings.contact_points_optimization_settings.support_point_cost;
-        let links_costs = gene
-            .iter_links()
-            .map(|(x,y)| {
-                let cx = self.graph.get_triangle(x).center();
-                let cy = self.graph.get_triangle(y).center();
-                let d = (cx - cy).abs();
-                self.settings.contact_points_optimization_settings.support_line_cost * d
+        let s = &self.settings.contact_points_optimization_settings;
+        let c = gene.iter_contacts()
+            .map(|(_, shape)| {
+                s.support_point_cost + s.support_area_cost * shape.area()
             })
-            .fold(0., |acc, x| acc + x);
-        Cost::new(support_costs + links_costs)
+            .sum();
+        Cost::new(c)
     }
 } 
 

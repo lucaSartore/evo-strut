@@ -108,6 +108,15 @@ impl Random {
         r.next_u64()
     }
 
+
+    // Returns a float in the specified range
+    publish!(next_f32 = _next_f32(from: f32, to: f32) -> f32);
+    fn _next_f32(&self, from: f32, to: f32, r: &mut impl R) -> f32 {
+        Uniform::new(from, to)
+            .expect("uniform distribution creation failed")
+            .sample(r)
+    }
+
     // generate a random number starting from a distribution
     publish!(next_distribution = _next_distribution(d: &RandomDistribution) -> f32);
     fn _next_distribution(&self, d: &RandomDistribution, r: &mut impl R) -> f32 {
