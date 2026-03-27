@@ -4,7 +4,7 @@ use crate::{evolution::Random, models::{Face, FaceId, Settings, SurfaceGraph}, s
 use hashbrown::{HashMap, HashSet};
 
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Copy, Clone, Default)]
 pub struct ContactPointShape {
     pub radius: f32
 }

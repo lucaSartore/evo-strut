@@ -1,5 +1,5 @@
 use crate::{
-    evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, models::Settings, stages::{ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait, contact_point_optimization::{evaluation::ContactPointEvaluatorSettings, initializer::ContactPointsInitializerSettings}}
+    evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, models::Settings, stages::{ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait, contact_point_optimization::{corssover::ContactPointCrossoverSettings, evaluation::ContactPointEvaluatorSettings, initializer::ContactPointsInitializerSettings}}
 };
 use anyhow::{Result, anyhow};
 use log::debug;
@@ -69,7 +69,7 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
         let critical = & status.critical;
         type Behaviour<'a> = EvolverBehaviour<
             ContactPointMutator<'a>,
-            ContactPointCrossover,
+            ContactPointCrossover<'a>,
             PatienceBasedTerminationStrategy,
             ContactPointEvaluator<'a>,
             TournamentBasedCrossoverSelection,
@@ -77,7 +77,7 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
             ContactPointInitializer<'a>,
             ContactPointsGene,
             ContactPointsInitializerSettings<'a>,
-            Settings,
+            ContactPointCrossoverSettings<'a>,
             PatienceBasedTerminationStrategySettings,
             ContactPointEvaluatorSettings<'a>,
             TournamentBasedCrossoverSelectionSettings,
@@ -86,7 +86,7 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
         >;
         let evolver = Evolver::<Behaviour<'a>>::new(
             &ContactPointsInitializerSettings::new(settings, graph, area, area_hash),
-            settings,
+            &ContactPointCrossoverSettings::new(settings, area, graph),
             &PatienceBasedTerminationStrategySettings::default(),
             &ContactPointEvaluatorSettings::new(graph, settings, area, critical, area_id),
             &TournamentBasedCrossoverSelectionSettings::default(),

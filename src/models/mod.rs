@@ -19,6 +19,9 @@ pub use mesh::{Mesh, Face};
 mod mesh_vector;
 pub use mesh_vector::MeshVector;
 
+mod plane;
+pub use plane::Plane;
+
 
 #[derive(Debug, Clone)]
 pub struct SurfaceNode {
