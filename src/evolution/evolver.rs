@@ -121,6 +121,8 @@ where
             std::mem::swap(&mut last_gen, &mut current_gen);
             std::mem::swap(&mut last_gen_costs, &mut current_gen_costs);
 
+            let x = last_gen.len();
+            let y = next_gen.len();
             (current_gen, current_gen_costs) = self.next_gen_selector.next_generation(
                 last_gen,
                 last_gen_costs,

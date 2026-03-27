@@ -4,14 +4,8 @@ use super::*;
 
 #[derive(Debug, Clone, Copy)]
 pub struct ElitistNextGenSelectorSettings {
-    num_elite_individual: usize,
-    num_novel_individual: usize
-}
-
-impl Default for ElitistNextGenSelectorSettings {
-    fn default() -> Self {
-        Self { num_elite_individual: 10, num_novel_individual: 90 }
-    }
+    pub num_elite_individual: usize,
+    pub num_novel_individual: usize
 }
 
 pub struct ElitistNextGenSelector {
@@ -49,7 +43,7 @@ impl<T> NextGenerationSelector<T, ElitistNextGenSelectorSettings> for ElitistNex
     }
 
     fn num_offspring_to_generate(&self) -> usize {
-        self.settings.num_elite_individual + self.settings.num_elite_individual
+        self.settings.num_elite_individual + self.settings.num_novel_individual
     }
 
     fn next_generation(

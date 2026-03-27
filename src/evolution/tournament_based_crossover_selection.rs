@@ -8,12 +8,6 @@ pub struct TournamentBasedCrossoverSelectionSettings {
     pub k: usize
 }
 
-impl Default for TournamentBasedCrossoverSelectionSettings {
-    fn default() -> Self {
-        Self { k: 10 }
-    }
-}
-
 pub struct TournamentBasedCrossoverSelection {
     settings: TournamentBasedCrossoverSelectionSettings,
     rand: Random

@@ -8,12 +8,6 @@ pub struct  PatienceBasedTerminationStrategySettings {
     pub patience: usize
 }
 
-impl Default for PatienceBasedTerminationStrategySettings {
-    fn default() -> Self {
-        Self { max_generations: 1000, patience: 25 }
-    }
-}
-
 struct State {
     pub best_so_far: Cost,
     pub best_so_far_generation: usize,

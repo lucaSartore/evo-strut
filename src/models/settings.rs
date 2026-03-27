@@ -55,8 +55,8 @@ pub struct IoSettings {
 impl Default for IoSettings {
     fn default() -> Self {
         Self {
-            input_file_path: "test_meshes/inclination_test.stl".into(),
-            // input_file_path: "test_meshes/dragon.stl".into(),
+            // input_file_path: "test_meshes/inclination_test.stl".into(),
+            input_file_path: "test_meshes/dragon.stl".into(),
             output_file_path: "output.stl".into(),
             target_edge_length: 1.
         }
@@ -69,7 +69,7 @@ pub struct ContactPointsOptimizationSettings {
     /// example:
     ///  - point A and B are connected by a 2mm gap
     ///  - the triangle has a `critical angle` of 30 (i.e. is 30 degrees less steep than what is
-    ///  considered non critical by support_overhanging_angle)
+    ///    considered non critical by support_overhanging_angle)
     ///  - A is below B and has a criticality score of 100
     ///  - cost_surplus_propagation_factor is 0.1 [cost/(mm^3*deg)]
     ///  - b represent a triangle that has an area of 4 mm^2
@@ -133,6 +133,22 @@ pub struct ContactPointsOptimizationSettings {
     /// unit of measure: [mm]
     pub change_support_radius_mutation_intensity: f32,
 
+    /// number of generations optimized
+    pub num_generations: usize,
+    /// patience when optimizing (if the score does not improve
+    /// for more than `patience` generations the optimization process will
+    /// be interrupted)
+    pub patience: usize,
+    /// the number of individuals in a generation
+    pub generation_size: usize,
+    /// the size of the tournaments made to select the individuals for crossover.
+    /// The tradeoffs are:
+    ///  - High tournament size => high selection pressure => fast to converge, may lose diversity
+    ///  too early
+    ///  - Small tournament size => slow selection process => slow to converge, preserve diversity
+    pub tournament_size: usize,
+    /// number of individual generated/evaluated in every generation
+    pub num_elite_individuals: usize
 }
 
 impl Default for ContactPointsOptimizationSettings {
@@ -149,7 +165,12 @@ impl Default for ContactPointsOptimizationSettings {
             max_support_radius: 4.,
             min_support_radius: 0.5,
             move_support_mutation_intensity: 2.5,
-            change_support_radius_mutation_intensity: 2.
+            change_support_radius_mutation_intensity: 2.,
+            num_generations: 2000,
+            patience: 25,
+            generation_size: 100,
+            tournament_size: 10,
+            num_elite_individuals: 10
         }
     }
 }
