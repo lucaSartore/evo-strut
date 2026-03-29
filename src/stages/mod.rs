@@ -6,6 +6,7 @@ pub mod visualization;
 pub mod criticality_detection;
 pub mod criticality_grouping;
 pub mod contact_point_optimization;
+pub mod support_structure_optimization;
 
 pub use criticality_detection::{CriticalityDetector, CriticalityDetectionStage, OrientationBasedCriticalityDetector};
 use hashbrown::HashSet;
