@@ -3,6 +3,12 @@ use hashbrown::HashSet;
 use crate::{evolution::{Mutator, Random}, models::{FaceId, Settings, SurfaceGraph}, stages::contact_point_optimization::{ContactPointShape, initializer::ContactPointsInitializerSettings}, support::{graph_circle::find_circle, remove_random::RemoveRandom}};
 use super::models::ContactPointsGene;
 
+pub struct ContactPointsMutatorSettings<'a> {
+    pub settings: &'a Settings,
+    pub graph: &'a SurfaceGraph,
+    pub options: &'a [FaceId],
+    pub options_hash: &'a HashSet<FaceId>
+}
 
 pub struct ContactPointMutator<'a> {
     settings: &'a Settings,
@@ -41,8 +47,8 @@ impl<'a> ContactPointMutator<'a> {
     }
 }
 
-impl<'a> Mutator<ContactPointsGene, ContactPointsInitializerSettings<'a>> for ContactPointMutator<'a> {
-    fn new(settings: &ContactPointsInitializerSettings<'a>, rand: Random) -> Self {
+impl<'a> Mutator<ContactPointsGene, ContactPointsMutatorSettings<'a>> for ContactPointMutator<'a> {
+    fn new(settings: &ContactPointsMutatorSettings<'a>, rand: Random) -> Self {
         Self {
             settings: settings.settings,
             graph: settings.graph,

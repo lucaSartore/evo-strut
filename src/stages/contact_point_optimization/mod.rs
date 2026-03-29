@@ -1,5 +1,5 @@
 use crate::{
-    evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, models::Settings, stages::{ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait, contact_point_optimization::{corssover::ContactPointCrossoverSettings, evaluation::ContactPointEvaluatorSettings, initializer::ContactPointsInitializerSettings}}
+    evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, models::Settings, stages::{ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait, contact_point_optimization::{corssover::ContactPointCrossoverSettings, evaluation::ContactPointEvaluatorSettings, initializer::ContactPointsInitializerSettings, mutation::ContactPointsMutatorSettings}}
 };
 use anyhow::{Result, anyhow};
 use log::debug;
@@ -77,7 +77,7 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
             ElitistNextGenSelector,
             ContactPointInitializer<'a>,
             ContactPointsGene,
-            ContactPointsInitializerSettings<'a>,
+            ContactPointsMutatorSettings<'a>,
             ContactPointCrossoverSettings<'a>,
             PatienceBasedTerminationStrategySettings,
             ContactPointEvaluatorSettings<'a>,
@@ -86,7 +86,7 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
             ContactPointsInitializerSettings<'a>
         >;
         let evolver = Evolver::<Behaviour<'a>>::new(
-            &ContactPointsInitializerSettings::new(settings, graph, area, area_hash),
+            &ContactPointsMutatorSettings::new(settings, graph, area, area_hash),
             &ContactPointCrossoverSettings::new(settings, area, graph),
             &PatienceBasedTerminationStrategySettings{
                 max_generations: s.num_generations,
