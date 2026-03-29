@@ -45,9 +45,15 @@ impl Default for CriticalitySettings {
 pub struct IoSettings {
     pub input_file_path: String,
     pub output_file_path: String,
+    /// optionally specify a path where to write the
+    /// re-meshed input.
+    pub re_meshed_input_file_path: Option<String>,
     /// used to re-mesh the input when loading it
-    /// smaller voxel size make the process more precise
-    /// but also slower
+    /// smaller length make the process more precise
+    /// but also slower.
+    /// put 0 to skip the re-meshing phase (note that doing
+    /// so in a mesh that is not properly meshed will result in
+    /// poor performances of the algorithm)
     /// unit of measure: mm
     pub target_edge_length: f32
 }
@@ -56,9 +62,10 @@ impl Default for IoSettings {
     fn default() -> Self {
         Self {
             // input_file_path: "test_meshes/inclination_test.stl".into(),
-            input_file_path: "test_meshes/dragon.stl".into(),
+            input_file_path: "test_meshes/dragon_re_meshed.stl".into(),
+            re_meshed_input_file_path: None,
             output_file_path: "output.stl".into(),
-            target_edge_length: 1.
+            target_edge_length: 0.
         }
     }
 }
@@ -166,7 +173,7 @@ impl Default for ContactPointsOptimizationSettings {
             min_support_radius: 0.5,
             move_support_mutation_intensity: 2.5,
             change_support_radius_mutation_intensity: 2.,
-            num_generations: 2000,
+            num_generations: 2,
             patience: 25,
             generation_size: 100,
             tournament_size: 10,

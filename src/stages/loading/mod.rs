@@ -3,7 +3,7 @@ use anyhow::{Result, anyhow};
 use super::*;
 use crate::models::{IoSettings, Mesh, SurfaceGraph};
 use baby_shark::{
-    io::read_from_file, 
+    io::{read_from_file, write_to_file}, 
     mesh::corner_table::CornerTableF, remeshing::{self, incremental::IncrementalRemesher, voxel::VoxelRemesher}
 };
 use std::path::Path;
@@ -32,7 +32,9 @@ where
 
         let remesher = IncrementalRemesher::default();
 
-        remesher.remesh(&mut mesh, settings.target_edge_length);
+        if (settings.target_edge_length != 0.) {
+            remesher.remesh(&mut mesh, settings.target_edge_length);
+        }
         Ok(mesh)
         
         // let mut remesher = VoxelRemesher::default()
@@ -57,7 +59,14 @@ where
     ) -> Result<Pipeline<LoadedState, TB>> {
         let settings = &input.state.settings.io_settings;
         let mesh = read(&settings.input_file_path)?;
+        if let Some(path) = &settings.re_meshed_input_file_path {
+            let r = write_to_file(&mesh, Path::new(path));
+            if let Err(e) = r { 
+                return Err(anyhow!("error while loading writing file \"{}\"\n{:?}", path, e))
+            };
+        }
         let mesh = Self::remesh(mesh, settings)?;
+
         let mesh_rc = Arc::new(mesh.into());
 
         let graph = SurfaceGraph::new(&mesh_rc);
