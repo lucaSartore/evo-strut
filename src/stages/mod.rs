@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, time::{SystemTime, UNIX_EPOCH}};
 use anyhow::Result;
 
 pub mod loading;
@@ -10,6 +10,7 @@ pub mod support_structure_optimization;
 
 pub use criticality_detection::{CriticalityDetector, CriticalityDetectionStage, OrientationBasedCriticalityDetector};
 use hashbrown::HashSet;
+use log::info;
 
 use crate::{models::{FaceId, MeshVector, Settings, SurfaceGraph}, stages::{contact_point_optimization::{ContactPointOptimizationStage, ContactPointOptimizer, ContactPointsGene}, criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, loading::LoadingStage}};
 use visualization::{VisualizationStage, Visualizer};
@@ -110,26 +111,40 @@ where
     }
 
 }
+
+macro_rules! timed {
+    ($name:literal, $exp:expr) => {
+        {
+            let start = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+            let to_return = $exp;
+            let end = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+            let duration = end - start;
+            info!("stage $name took {} [s]", duration.as_secs());
+            to_return
+        }
+        
+    };
+}
 impl<TB> Pipeline<StartedState, TB>
 where 
     TB: PipelineBehaviourTrait,
 {
     pub fn new(settings: Settings) -> Pipeline<StartedState,TB> {
         Self {
-            _b: PhantomData::default(),
+            _b: Default::default(),
             state: StartedState { settings }
         }
     }
     pub fn run(settings: Settings) -> Result<()> {
         let p = Self::new(settings);
-        let p = LoadingStage::<TB>::execute(p)?;
-        VisualizationStage::visualize(&p)?;
-        let p = CriticalityDetectionStage::<TB>::execute(p);
-        VisualizationStage::visualize(&p)?;
-        let p = CriticalityGroupingStage::<TB>::execute(p);
-        VisualizationStage::visualize(&p)?;
-        let p = ContactPointOptimizationStage::<TB>::execute(p)?;
-        VisualizationStage::visualize(&p)?;
+        let p = timed!("loading", LoadingStage::<TB>::execute(p))?;
+        timed!("visualizing", VisualizationStage::visualize(&p))?;
+        let p = timed!("criticality_detection", CriticalityDetectionStage::<TB>::execute(p));
+        timed! ("visualizing", VisualizationStage::visualize(&p))?;
+        let p = timed!("criticality_grouping", CriticalityGroupingStage::<TB>::execute(p));
+        timed!("visualizing", VisualizationStage::visualize(&p))?;
+        let p = timed!("contact_points_optimization", ContactPointOptimizationStage::<TB>::execute(p))?;
+        timed!("visualizing", VisualizationStage::visualize(&p))?;
         Ok(())
     }
 }
