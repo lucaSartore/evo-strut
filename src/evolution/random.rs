@@ -108,6 +108,13 @@ impl Random {
         r.next_u64()
     }
 
+    // Returns n random elements from the slice.
+    // Note: This uses 'choose_multiple', which samples without replacement.
+    publish!(next_u32 = _next_u32() -> u32);
+    fn _next_u32(&self, r: &mut impl R) -> u32 {
+        r.next_u32()
+    }
+
 
     // Returns a float in the specified range
     publish!(next_f32 = _next_f32(from: f32, to: f32) -> f32);
