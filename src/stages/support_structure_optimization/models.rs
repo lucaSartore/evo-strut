@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use hashbrown::{HashMap, HashSet};
 use smallvec::SmallVec;
 
-use crate::{evolution::Random, models::{FaceId, Point, SurfaceGraph}};
+use crate::{evolution::Random, models::{FaceId, Point, SurfaceGraph, SurfaceNode}};
 
 
 
@@ -76,7 +76,7 @@ pub struct NodeReference {
 impl MiddleNode {
     // repair the anchor by building a new one if the node i'm anchored to has being
     // deleted (or no longer depends on me)
-    pub fn repair_position(&mut self, genome: &SupportStructureGenome, prev_point: &NodeReference) {
+    pub fn repair_position(&mut self, genome: &SupportStructureGene, prev_point: &NodeReference) {
         // no need to repair
         if let Some(g) = genome.try_get_gene(prev_point.id) && g.leans_on(self.id) {
             self.last_position = g.get_position() + self.anchor.offset;
@@ -115,53 +115,58 @@ impl ContactNode {
 }
 
 #[derive(Clone, Debug)]
-pub enum SupportNodeGene {
+pub enum SupportNode {
     BaseNode(RefCell<BaseNode>),
     MiddleNode(RefCell<MiddleNode>),
     ContactNode(RefCell<ContactNode>)
 }
 
-impl SupportNodeGene {
+impl SupportNode {
     pub fn leans_on(&self, id: SupportNodeId) -> bool {
         match self {
-            SupportNodeGene::BaseNode(_) => false,
-            SupportNodeGene::MiddleNode(n) => n.borrow().leans_on.contains(&id),
-            SupportNodeGene::ContactNode(n) => n.borrow().leans_on.contains(&id)
+            SupportNode::BaseNode(_) => false,
+            SupportNode::MiddleNode(n) => n.borrow().leans_on.contains(&id),
+            SupportNode::ContactNode(n) => n.borrow().leans_on.contains(&id)
         }
     }
 
     pub fn get_position(&self) -> Point {
         match self {
-            SupportNodeGene::BaseNode(n) => n.borrow().last_position,
-            SupportNodeGene::MiddleNode(n) => n.borrow().last_position,
-            SupportNodeGene::ContactNode(n) => n.borrow().position
+            SupportNode::BaseNode(n) => n.borrow().last_position,
+            SupportNode::MiddleNode(n) => n.borrow().last_position,
+            SupportNode::ContactNode(n) => n.borrow().position
         }
     }
 
     pub fn is_floating(&self) -> bool {
         match self {
-            SupportNodeGene::BaseNode(_) => false,
-            SupportNodeGene::MiddleNode(n) => n.borrow().leans_on.is_empty(),
-            SupportNodeGene::ContactNode(n) => n.borrow().leans_on.is_empty(),
+            SupportNode::BaseNode(_) => false,
+            SupportNode::MiddleNode(n) => n.borrow().leans_on.is_empty(),
+            SupportNode::ContactNode(n) => n.borrow().leans_on.is_empty(),
         }
     }
 
     pub fn add_support(&self, support: SupportNodeId) {
         match self {
-            SupportNodeGene::BaseNode(_) => panic!("can't add support on base node"),
-            SupportNodeGene::MiddleNode(n) => n.borrow_mut().leans_on.push(support),
-            SupportNodeGene::ContactNode(n) => n.borrow_mut().leans_on.push(support),
+            SupportNode::BaseNode(_) => panic!("can't add support on base node"),
+            SupportNode::MiddleNode(n) => n.borrow_mut().leans_on.push(support),
+            SupportNode::ContactNode(n) => n.borrow_mut().leans_on.push(support),
         };
     }
 
 }
 
-#[derive(Debug)]
-pub struct SupportStructureGenome {
-    pub nodes: HashMap<SupportNodeId, SupportNodeGene>,
+#[derive(Debug, Clone)]
+pub struct SupportStructureGene {
+    pub nodes: HashMap<SupportNodeId, SupportNode>,
 }
 
-impl SupportStructureGenome {
+// todo: reason about this...
+unsafe impl Sync for SupportStructureGene {
+    
+}
+
+impl SupportStructureGene {
     pub fn new_random_id(&self, rand: &Random) -> SupportNodeId {
         let id = SupportNodeId(rand.next_u32());
         // re-generate it, as it is already taken
@@ -175,11 +180,11 @@ impl SupportStructureGenome {
         self.nodes.contains_key(&id)
     }
 
-    pub fn get_gene(&self, id: SupportNodeId) -> &SupportNodeGene {
+    pub fn get_gene(&self, id: SupportNodeId) -> &SupportNode {
         &self.nodes[&id]
     }
 
-    pub fn try_get_gene(&self, id: SupportNodeId) -> Option<&SupportNodeGene> {
+    pub fn try_get_gene(&self, id: SupportNodeId) -> Option<&SupportNode> {
         self.nodes.get(&id)
     }
 
@@ -191,7 +196,7 @@ impl SupportStructureGenome {
         let mut repaired = Default::default();
         // repair all the nodes
         for n in self.nodes.values() {
-            if let SupportNodeGene::ContactNode(n) = n {
+            if let SupportNode::ContactNode(n) = n {
                 self.repair_node_position(
                     n.borrow().id,
                     None,
@@ -222,7 +227,7 @@ impl SupportStructureGenome {
             node.add_support(support);
             let mut position = node.get_position();
             position.z = 0.;
-            self.nodes.insert(support, SupportNodeGene::BaseNode(
+            self.nodes.insert(support, SupportNode::BaseNode(
                 BaseNode::new_ground(support, position).into()
             ));
         }
@@ -235,7 +240,7 @@ impl SupportStructureGenome {
                 // node is not present... can't be repaired
                 return false;
             }
-            Some(SupportNodeGene::BaseNode(n)) => {
+            Some(SupportNode::BaseNode(n)) => {
                 let pp = prev_point.expect("only contact nodes can have prev_point = none");
                 let mut n_mut = n.borrow_mut();
 
@@ -244,7 +249,7 @@ impl SupportStructureGenome {
                 repaired_nodes.insert(n_mut.id);
                 return true;
             },
-            Some(SupportNodeGene::ContactNode(n)) => {
+            Some(SupportNode::ContactNode(n)) => {
                 let mut n_mut = n.borrow_mut();
 
                 // keep only the nodes successfully repaired
@@ -256,7 +261,7 @@ impl SupportStructureGenome {
                 repaired_nodes.insert(n_mut.id);
                 return true;
             },
-            Some(SupportNodeGene::MiddleNode(n)) => {
+            Some(SupportNode::MiddleNode(n)) => {
                 let pp = prev_point.expect("only contact nodes can have prev_point = none");
                 let mut n_mut = n.borrow_mut();
 

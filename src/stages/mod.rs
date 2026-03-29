@@ -12,39 +12,45 @@ pub use criticality_detection::{CriticalityDetector, CriticalityDetectionStage, 
 use hashbrown::HashSet;
 use log::info;
 
-use crate::{models::{FaceId, MeshVector, Settings, SurfaceGraph}, stages::{contact_point_optimization::{ContactPointOptimizationStage, ContactPointOptimizer, ContactPointsGene}, criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, loading::LoadingStage}};
+use crate::{models::{FaceId, MeshVector, Settings, SurfaceGraph}, stages::{contact_point_optimization::{ContactPointOptimizationStage, ContactPointOptimizer, ContactPointsGene}, criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, loading::LoadingStage, support_structure_optimization::{SupportStructureGene, SupportStructureOptimizer}}};
 use visualization::{VisualizationStage, Visualizer};
 
 pub trait PipelineBehaviourTrait {
     type TCriticalityDetection: CriticalityDetector;
     type TCriticalityGrouping: CriticalityGrouper;
     type TContactPointOptimizer: ContactPointOptimizer;
+    type TSupportStructureOptimizer: SupportStructureOptimizer;
 }
 
 pub struct PipelineBehaviour<
     TD: CriticalityDetector,
     TG: CriticalityGrouper,
-    TCPO: ContactPointOptimizer
+    TCPO: ContactPointOptimizer,
+    TSSO: SupportStructureOptimizer,
 > {
     _t: PhantomData<(
         TD,
         TG,
-        TCPO
+        TCPO,
+        TSSO
     )>
 }
 
 impl<
     TCriticalityDetection: CriticalityDetector,
     TCriticalityGrouping: CriticalityGrouper,
-    TContactPointOptimizer: ContactPointOptimizer
+    TContactPointOptimizer: ContactPointOptimizer,
+    TSupportStructureOptimizer: SupportStructureOptimizer
 > PipelineBehaviourTrait for PipelineBehaviour<
     TCriticalityDetection,
     TCriticalityGrouping,
-    TContactPointOptimizer
+    TContactPointOptimizer,
+    TSupportStructureOptimizer
 > {
     type TCriticalityDetection = TCriticalityDetection;
     type TCriticalityGrouping = TCriticalityGrouping;
     type TContactPointOptimizer = TContactPointOptimizer;
+    type TSupportStructureOptimizer = TSupportStructureOptimizer;
 }
 
 pub trait PipelineState {}
@@ -68,7 +74,7 @@ pub struct CriticalityDetectedState {
     pub graph: SurfaceGraph,
     pub critical: Vec<FaceId>
 }
-impl  PipelineState for CriticalityDetectedState { }
+impl PipelineState for CriticalityDetectedState { }
 
 /// we have grouped the criticality into areas
 pub struct CriticalityGroupedState {
@@ -78,7 +84,7 @@ pub struct CriticalityGroupedState {
     pub grouped_areas: Vec<Vec<FaceId>>,
     pub grouped_areas_hashes: Vec<HashSet<FaceId>>
 }
-impl  PipelineState for CriticalityGroupedState { }
+impl PipelineState for CriticalityGroupedState { }
 
 /// we have grouped the criticality into areas
 pub struct ContactPointsDecidedState {
@@ -87,7 +93,15 @@ pub struct ContactPointsDecidedState {
     pub critical: MeshVector<FaceId, bool>,
     pub connection_points: ContactPointsGene
 }
-impl  PipelineState for ContactPointsDecidedState { }
+impl PipelineState for ContactPointsDecidedState { }
+
+pub struct SupportStructureOptimizedState {
+    pub settings: Settings,
+    pub graph: SurfaceGraph,
+    pub connection_points: ContactPointsGene,
+    pub support_structure: SupportStructureGene
+}
+impl PipelineState for SupportStructureOptimizedState { }
 
 pub struct Pipeline<TS, TB> 
 where 

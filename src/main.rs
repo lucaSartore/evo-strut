@@ -9,7 +9,7 @@ use log::{LevelFilter, error};
 
 use crate::{
     evolution::TournamentBasedCrossoverSelection, models::Settings, stages::{
-        OrientationBasedCriticalityDetector, Pipeline, PipelineBehaviour, StartedState, contact_point_optimization::SimpleContactPointOptimizer, criticality_detection::PropagationBasedCriticalityDetector, criticality_grouping::DistanceBasedCriticalityGrouper
+        OrientationBasedCriticalityDetector, Pipeline, PipelineBehaviour, StartedState, contact_point_optimization::SimpleContactPointOptimizer, criticality_detection::PropagationBasedCriticalityDetector, criticality_grouping::DistanceBasedCriticalityGrouper, support_structure_optimization::{SimpleSupportStructureOptimizer, SupportStructureOptimizer}
     }
 };
 
@@ -18,14 +18,15 @@ fn main() {
 
     Builder::new()
         .filter_level(LevelFilter::Error)
-        .filter_module("evo_strut", LevelFilter::Debug)
+        .filter_module("evo_strut", LevelFilter::Info)
         .init();
 
     let settings = Settings::default();
     type Behaviour = PipelineBehaviour<
         PropagationBasedCriticalityDetector,
         DistanceBasedCriticalityGrouper,
-        SimpleContactPointOptimizer
+        SimpleContactPointOptimizer,
+        SimpleSupportStructureOptimizer
     >;
     let value = Pipeline::<StartedState, Behaviour>::run(settings);
 

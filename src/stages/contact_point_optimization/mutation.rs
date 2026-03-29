@@ -10,6 +10,18 @@ pub struct ContactPointsMutatorSettings<'a> {
     pub options_hash: &'a HashSet<FaceId>
 }
 
+impl<'a> ContactPointsMutatorSettings<'a> {
+    pub fn new(settings: &'a Settings, graph: &'a SurfaceGraph, options: &'a [FaceId], options_hash: &'a HashSet<FaceId>) -> Self {
+        Self {
+            settings,
+            graph,
+            options,
+            options_hash
+        }
+    }
+    
+}
+
 pub struct ContactPointMutator<'a> {
     settings: &'a Settings,
     graph: &'a SurfaceGraph,

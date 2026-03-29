@@ -12,6 +12,9 @@ pub struct Settings {
     /// contact points. This include cost functions weights as well as 
     /// optimization hyper-parameters
     pub contact_points_optimization_settings: ContactPointsOptimizationSettings,
+    /// parameters that control the optimization of the
+    /// support structure.
+    pub support_structure_optimization_settings: SupportStructureOptimizationSettings
 }
 
 #[derive(Debug, Clone)]
@@ -121,9 +124,6 @@ pub struct ContactPointsOptimizationSettings {
     /// will be generated
     pub initialization_support_density: RandomDistribution,
 
-    /// size of the population evaluated (in the genetic algorithm)
-    pub population_size: usize,
-
     /// max allowed radius of optimized supports
     pub max_support_radius: f32,
 
@@ -158,6 +158,8 @@ pub struct ContactPointsOptimizationSettings {
     pub num_elite_individuals: usize
 }
 
+
+
 impl Default for ContactPointsOptimizationSettings {
     fn default() -> Self {
         Self {
@@ -168,7 +170,6 @@ impl Default for ContactPointsOptimizationSettings {
             layer_height: 1.,
             critical_angle_clipping_factor: 5.,
             initialization_support_density: RandomDistribution::InRange { low: 0.0001, high: 0.001 },
-            population_size: 100,
             max_support_radius: 4.,
             min_support_radius: 0.5,
             move_support_mutation_intensity: 2.5,
@@ -182,3 +183,35 @@ impl Default for ContactPointsOptimizationSettings {
     }
 }
 
+
+#[derive(Debug, Clone)]
+pub struct SupportStructureOptimizationSettings {
+    /// number of generations optimized
+    pub num_generations: usize,
+    /// patience when optimizing (if the score does not improve
+    /// for more than `patience` generations the optimization process will
+    /// be interrupted)
+    pub patience: usize,
+    /// the number of individuals in a generation
+    pub generation_size: usize,
+    /// the size of the tournaments made to select the individuals for crossover.
+    /// The tradeoffs are:
+    ///  - High tournament size => high selection pressure => fast to converge, may lose diversity
+    ///  too early
+    ///  - Small tournament size => slow selection process => slow to converge, preserve diversity
+    pub tournament_size: usize,
+    /// number of individual generated/evaluated in every generation
+    pub num_elite_individuals: usize
+}
+
+impl Default for SupportStructureOptimizationSettings {
+    fn default() -> Self {
+        Self {
+            num_generations: 2,
+            patience: 25,
+            generation_size: 100,
+            tournament_size: 10,
+            num_elite_individuals: 10
+        }
+    }
+}

@@ -41,7 +41,7 @@ impl<'a> PopulationInitializer<ContactPointsGene, ContactPointsInitializerSettin
     }
 
     fn get_initial_individuals(&self) -> usize {
-        self.settings.contact_points_optimization_settings.population_size
+        self.settings.contact_points_optimization_settings.generation_size
     }
 
     fn get_random_individual(&self) -> ContactPointsGene {
