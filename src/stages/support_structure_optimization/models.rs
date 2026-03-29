@@ -43,13 +43,15 @@ impl BaseNode {
             last_position: graph.get_triangle(contact).center()
         }
     }
-    pub fn repair_position(&mut self, prev_point: &NodeReference, graph: &SurfaceGraph) {
+    pub fn repair_position(&self, prev_point: &NodeReference, graph: &SurfaceGraph) -> Self {
+        let mut to_return = self.clone();
         if let Some(e) = self.mesh_contact {
-            self.last_position = graph.get_triangle(e).center();
+            to_return.last_position = graph.get_triangle(e).center();
         } else {
-            self.last_position = prev_point.position;
-            self.last_position.z = 0.;
+            to_return.last_position = prev_point.position;
+            to_return.last_position.z = 0.;
         }
+        to_return
     }
 }
 
@@ -76,14 +78,17 @@ pub struct NodeReference {
 impl MiddleNode {
     // repair the anchor by building a new one if the node i'm anchored to has being
     // deleted (or no longer depends on me)
-    pub fn repair_position(&mut self, genome: &SupportStructureGene, prev_point: &NodeReference) {
-        // no need to repair
-        if let Some(g) = genome.try_get_gene(prev_point.id) && g.leans_on(self.id) {
-            self.last_position = g.get_position() + self.anchor.offset;
+    pub fn repair_position(&self, genome: &SupportStructureGene, prev_point: &NodeReference) -> Self {
+        let mut to_return = self.clone();
+        // anchor still present
+        if let Some(g) = genome.try_get_gene(self.anchor.to) && g.leans_on(self.id) {
+            to_return.last_position = g.get_position() + self.anchor.offset;
+            return to_return
         }
-        // repairing the anchor with the new node
-        self.anchor.to = prev_point.id;
-        self.anchor.offset = self.last_position - prev_point.position;
+        // repairing the anchor with a new node
+        to_return.anchor.to = prev_point.id;
+        to_return.anchor.offset = self.last_position - prev_point.position;
+        to_return
     }
 
     pub fn as_node_reference(&self) -> NodeReference {
@@ -116,41 +121,41 @@ impl ContactNode {
 
 #[derive(Clone, Debug)]
 pub enum SupportNode {
-    BaseNode(RefCell<BaseNode>),
-    MiddleNode(RefCell<MiddleNode>),
-    ContactNode(RefCell<ContactNode>)
+    BaseNode(BaseNode),
+    MiddleNode(MiddleNode),
+    ContactNode(ContactNode)
 }
 
 impl SupportNode {
     pub fn leans_on(&self, id: SupportNodeId) -> bool {
         match self {
             SupportNode::BaseNode(_) => false,
-            SupportNode::MiddleNode(n) => n.borrow().leans_on.contains(&id),
-            SupportNode::ContactNode(n) => n.borrow().leans_on.contains(&id)
+            SupportNode::MiddleNode(n) => n.leans_on.contains(&id),
+            SupportNode::ContactNode(n) => n.leans_on.contains(&id)
         }
     }
 
     pub fn get_position(&self) -> Point {
         match self {
-            SupportNode::BaseNode(n) => n.borrow().last_position,
-            SupportNode::MiddleNode(n) => n.borrow().last_position,
-            SupportNode::ContactNode(n) => n.borrow().position
+            SupportNode::BaseNode(n) => n.last_position,
+            SupportNode::MiddleNode(n) => n.last_position,
+            SupportNode::ContactNode(n) => n.position
         }
     }
 
     pub fn is_floating(&self) -> bool {
         match self {
             SupportNode::BaseNode(_) => false,
-            SupportNode::MiddleNode(n) => n.borrow().leans_on.is_empty(),
-            SupportNode::ContactNode(n) => n.borrow().leans_on.is_empty(),
+            SupportNode::MiddleNode(n) => n.leans_on.is_empty(),
+            SupportNode::ContactNode(n) => n.leans_on.is_empty(),
         }
     }
 
-    pub fn add_support(&self, support: SupportNodeId) {
+    pub fn add_support(&mut self, support: SupportNodeId) {
         match self {
             SupportNode::BaseNode(_) => panic!("can't add support on base node"),
-            SupportNode::MiddleNode(n) => n.borrow_mut().leans_on.push(support),
-            SupportNode::ContactNode(n) => n.borrow_mut().leans_on.push(support),
+            SupportNode::MiddleNode(n) => n.leans_on.push(support),
+            SupportNode::ContactNode(n) => n.leans_on.push(support),
         };
     }
 
@@ -159,11 +164,6 @@ impl SupportNode {
 #[derive(Debug, Clone)]
 pub struct SupportStructureGene {
     pub nodes: HashMap<SupportNodeId, SupportNode>,
-}
-
-// todo: reason about this...
-unsafe impl Sync for SupportStructureGene {
-    
 }
 
 impl SupportStructureGene {
@@ -194,16 +194,26 @@ impl SupportStructureGene {
 
     pub fn repair(&mut self, graph: &SurfaceGraph, rand: &Random) {
         let mut repaired = Default::default();
+            
+        let ids: Vec<SupportNodeId> = self
+            .nodes
+            .values()
+            .filter_map(|x| {
+                match x {
+                    SupportNode::ContactNode(n) => Some(n.id),
+                    _ => None,
+                }
+            })
+            .collect();
+
         // repair all the nodes
-        for n in self.nodes.values() {
-            if let SupportNode::ContactNode(n) = n {
-                self.repair_node_position(
-                    n.borrow().id,
-                    None,
-                    &mut repaired,
-                    graph
-                );
-            }
+        for id in ids {
+            self.repair_node_position(
+                id,
+                None,
+                &mut repaired,
+                graph
+            );
         }
         // remove nodes that were not repaired
         self.nodes.retain(|x,_| repaired.contains(x));
@@ -234,49 +244,48 @@ impl SupportStructureGene {
     }
 
     // try to repair the node. Return true if the repair succeeded, false otherwise.
-    fn repair_node_position(&self, id: SupportNodeId, prev_point: Option<&NodeReference>, repaired_nodes: &mut HashSet<SupportNodeId>, graph: &SurfaceGraph) -> bool {
+    fn repair_node_position(&mut self, id: SupportNodeId, prev_point: Option<&NodeReference>, repaired_nodes: &mut HashSet<SupportNodeId>, graph: &SurfaceGraph) -> bool {
         match self.nodes.get(&id) {
             None => {
                 // node is not present... can't be repaired
-                return false;
+                return false
             }
             Some(SupportNode::BaseNode(n)) => {
                 let pp = prev_point.expect("only contact nodes can have prev_point = none");
-                let mut n_mut = n.borrow_mut();
-
-                // repair just the position (has no dependencies)
-                n_mut.repair_position(pp, graph);
-                repaired_nodes.insert(n_mut.id);
-                return true;
+                let repaired = n.repair_position(pp, graph);
+                self.nodes.insert(id, SupportNode::BaseNode(repaired));
+                repaired_nodes.insert(id);
             },
             Some(SupportNode::ContactNode(n)) => {
-                let mut n_mut = n.borrow_mut();
+                let this_point = n.as_node_reference();
+                let mut lean_on = n.leans_on.clone();
 
-                // keep only the nodes successfully repaired
-                let this_point = n_mut.as_node_reference();
-                n_mut.leans_on.retain(|x| 
+                lean_on.retain(|x|
                     self.repair_node_position(*x, Some(&this_point), repaired_nodes, graph)
                 );
 
-                repaired_nodes.insert(n_mut.id);
-                return true;
+                let Some(SupportNode::ContactNode(n)) = self.nodes.get_mut(&id) else { panic!() };
+                n.leans_on = lean_on;
+                repaired_nodes.insert(id);
             },
             Some(SupportNode::MiddleNode(n)) => {
+                let this_point = n.as_node_reference();
                 let pp = prev_point.expect("only contact nodes can have prev_point = none");
-                let mut n_mut = n.borrow_mut();
 
-                // repairing the position
-                n_mut.repair_position(self, pp);
+                // repairing current 
+                let mut repaired = n.repair_position(self, pp);
 
-                // keep only the nodes successfully repaired
-                let this_point = n_mut.as_node_reference();
-                n_mut.leans_on.retain(
-                    |x| self.repair_node_position(*x, Some(&this_point), repaired_nodes, graph)
+                // update the last position of self, before progressing on the downward nodes
+                let Some(SupportNode::MiddleNode(n)) = self.nodes.get_mut(&id) else { panic!() };
+                n.last_position = repaired.last_position;
+
+                repaired.leans_on.retain(|x|
+                    self.repair_node_position(*x, Some(&this_point), repaired_nodes, graph)
                 );
 
-                repaired_nodes.insert(n_mut.id);
-                return true;
+                self.nodes.insert(id, SupportNode::MiddleNode(repaired));
             }
         };
+        true
     }
 }
