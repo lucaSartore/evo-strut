@@ -14,10 +14,11 @@ class Node:
             return False
         return self.id == value.id
 
-    def __init__(self, id: NodeId, position: Point):
+    def __init__(self, id: NodeId, position: Point, ground_node: bool = False):
         self.id = id
         self.adj: list[Node] = []
         self.position = position
+        self.ground_node = ground_node
 
 # A graph is a 2D structure of nodes connected by some junctures
 class Graph:
