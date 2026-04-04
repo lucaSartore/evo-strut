@@ -1,12 +1,27 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import numpy as np
 type NodeId = int
+
+
+@dataclass
+class Settings:
+    # axial stiffness of elements
+    # unit of measure (N)
+    ea: float
+    # bending stiffness of elements
+    # unit of measure (N*m^2)
+    ei: float
+
 
 class Point:
     def __init__(self, x: float, y: float) -> None:
         self.x = x
         self.y = y
+
+    def as_list(self) -> list[float]:
+        return [self.x, self.y]
 
 class Node:
     def __eq__(self, value: object, /) -> bool:

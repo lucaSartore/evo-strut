@@ -42,11 +42,14 @@ class Visualizer:
             for node_id, stiffness in stiffness_result.items():
                 if node_id not in self.graph.nodes:
                     continue
+                if self.graph.nodes[node_id].ground_node:
+                    continue
                 node = self.graph.nodes[node_id]
                 if stiffness.shape != (2, 2):
                     raise ValueError("Stiffness matrix must be a 2x2 array")
 
                 matrix = np.asarray(stiffness, dtype=float)
+                matrix = np.linalg.inv(matrix)
                 if not np.allclose(matrix, matrix.T, atol=1e-8):
                     matrix = 0.5 * (matrix + matrix.T)
 
