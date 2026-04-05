@@ -7,13 +7,17 @@ def main():
     settings = Settings(100, 10)
     # graph = load_triangle()
     # graph = load_lines()
-    graph = load_pillar()
-    # graph = load_struct_D()
+    # graph = load_pillars()
+    # graph = load_horizontal_beam()
+    graph = load_struct_D()
 
     stiffness = AnastructEvaluator.evaluate(graph, settings)
     stiffness_2 = BottomUpEvaluator.evaluate(graph, settings)
 
     v = Visualizer(graph)
+
+    print(f"ground truth {stiffness[3]}")
+    print(f"bottom up {stiffness_2[3]}")
 
     v.add_stiffness_visualization(stiffness, "red", "ground_truth")
     v.add_stiffness_visualization(stiffness_2, "green", "bottom_up")

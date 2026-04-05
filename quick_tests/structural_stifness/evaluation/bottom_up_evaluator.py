@@ -1,4 +1,3 @@
-from typing import Set
 from .interface import Evaluator
 from custom_types import Graph, Node, Point, Settings, StiffnessResult, Stiffness
 from evaluation.util import calculate_stiffness
@@ -22,7 +21,7 @@ class BottomUpEvaluator(Evaluator):
 
         for node in nodes:
             s = BottomUpEvaluator.evaluate_node(node, to_return, settings)
-            print(f"final stiffness {s}")
+            # print(f"final stiffness {s}")
             to_return[node.id] = s
 
         return to_return

@@ -17,31 +17,40 @@ class AnastructEvaluator(Evaluator):
     @staticmethod
     def evaluate_node(graph: Graph, node_id: NodeId, settings: Settings) -> Stiffness:
         # displacement we get by applying a force on the x axis
-        [dx_x, dy_x] = AnastructEvaluator.get_displacement(graph, node_id, settings, 1.0, 0);
+        [dx_x, dy_x, dth_x] = AnastructEvaluator.get_displacement(graph, node_id, settings, 1.0, 0.0, 0.0);
         # displacement we get by applying a force on the y axis
-        [dx_y, dy_y] = AnastructEvaluator.get_displacement(graph, node_id, settings, 0.0, 1.0);
-        m = np.asarray([[dx_x, dx_y], [dy_x, dy_y]])
+        [dx_y, dy_y, dth_y] = AnastructEvaluator.get_displacement(graph, node_id, settings, 0.0, 1.0, 0.0);
+        # displacement we get by applying a momentum (theta)
+        [dx_th, dy_th, dth_th] = AnastructEvaluator.get_displacement(graph, node_id, settings, 0.0, 0.0, 1.0);
+        m = np.asarray([
+            [dx_x, dx_y, dx_th],
+            [dy_x, dy_y, dy_th],
+            [dth_x, dth_y, dth_th],
+        ])
         if (m == 0).all():
             m = STIFFNESS_MATRIX_OF_GROUND
         else:
             m = np.linalg.inv(m)
-        # print(f"matrix for node {node_id} is {m}")
         return m
 
 
     @staticmethod
-    def get_displacement(graph: Graph, node_id: NodeId, settings: Settings, fx: float, fy: float) -> tuple[float, float]:
+    def get_displacement(graph: Graph, node_id: NodeId, settings: Settings, fx: float, fy: float, fth: float) -> tuple[float, float, float]:
         ss = AnastructEvaluator.build_simulator(graph, settings)
         id = ss.find_node_id(graph.nodes[node_id].position.as_list());
         assert id != None
-        ss.point_load(Fx=fx, Fy = fy, node_id=id)
+        if fx != 0 or fy != 0:
+            ss.point_load(Fx=fx, Fy=fy, node_id=id)
+        if fth != 0:
+            ss.moment_load(Ty=fth, node_id=id)
         displacement = ss.solve()
         dx = displacement[(id-1) * 3]
         dy = -displacement[(id-1) * 3 + 1]
-        # print(dx, dy)
+        dth = displacement[(id-1) * 3 + 2]
+        # print(dx, dy, dth)
         # ss.show_structure()
         # ss.show_displacement()
-        return (float(dx), float(dy))
+        return (float(dx), float(dy), float(dth))
 
 
     @staticmethod

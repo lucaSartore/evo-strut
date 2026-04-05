@@ -45,10 +45,12 @@ class Visualizer:
                 if self.graph.nodes[node_id].ground_node:
                     continue
                 node = self.graph.nodes[node_id]
-                if stiffness.shape != (2, 2):
-                    raise ValueError("Stiffness matrix must be a 2x2 array")
 
-                matrix = np.asarray(stiffness, dtype=float)
+                if stiffness.shape != (3, 3):
+                    raise ValueError("Stiffness matrix must be a 3x3 array")
+                # we can show only displacement in x and y (can't visualize theta properly)
+                matrix = np.asarray(stiffness, dtype=float)[0:2, 0:2]
+                # we invert matrix (we want to show displacement [m/N] rather than stiffness [N/m]
                 matrix = np.linalg.inv(matrix)
                 if not np.allclose(matrix, matrix.T, atol=1e-8):
                     matrix = 0.5 * (matrix + matrix.T)

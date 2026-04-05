@@ -117,7 +117,7 @@ def load_lines() -> Graph:
     return graph
 
 
-def load_pillar() -> Graph:
+def load_pillars() -> Graph:
     graph = Graph()
     graph.add_node(Node(1, Point(0.0, 0.0), True))
     graph.add_node(Node(2, Point(0.0, 1.0)))
@@ -138,3 +138,18 @@ def load_pillar() -> Graph:
     graph.add_adj(7, 8)
 
     return graph
+
+
+def load_horizontal_beam() -> Graph:
+    graph = Graph()
+    graph.add_node(Node(1, Point(0.0, 0.0), True))
+    graph.add_node(Node(2, Point(1.0, 0.0)))
+    graph.add_node(Node(3, Point(2.0, 0.0)))
+    graph.add_node(Node(4, Point(3.0, 0.0)))
+
+    graph.add_adj(1, 2)
+    graph.add_adj(2, 3)
+    graph.add_adj(3, 4)
+    
+    return graph
+
