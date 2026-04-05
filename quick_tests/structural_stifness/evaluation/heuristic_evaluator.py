@@ -1,9 +1,9 @@
 from typing import Tuple
-
 from const import STIFFNESS_MATRIX_OF_GROUND
 from evaluation.util import calculate_stiffness
 from .interface import Evaluator
 from custom_types import Graph, NodeId, Point, Settings, Stiffness
+import numpy as np
 
 type GraphDag = dict[NodeId, list[Tuple[NodeId, float]]]
 
@@ -27,7 +27,16 @@ class HeuristicEvaluator(Evaluator):
             support_stiffness = HeuristicEvaluator.evaluate_from_dag(graph, support_id, settings, dag)
             supports.append((support_position, support_stiffness * support_weight))
 
-        assert supports.count != 0
+        # remove nodes that have zero stiffness
+        supports = [x for x in supports if x[1].any()]
+
+        if len(supports) == 0:
+            return np.asarray([
+                [0,0,0],
+                [0,0,0],
+                [0,0,0]
+            ])
+
         return calculate_stiffness(node.position, supports, settings)
 
 

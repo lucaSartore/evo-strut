@@ -1,8 +1,5 @@
 from evaluation.heuristic_evaluator import GraphDag, HeuristicEvaluator
-from .interface import Evaluator
-from custom_types import Graph, Node, Point, Settings, StiffnessResult, Stiffness
-from evaluation.util import calculate_stiffness
-from const import STIFFNESS_MATRIX_OF_GROUND
+from custom_types import Graph, Settings, StiffnessResult
 
 class BottomUpEvaluator(HeuristicEvaluator):
 
