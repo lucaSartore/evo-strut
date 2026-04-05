@@ -3,6 +3,7 @@ from .interface import Evaluator
 from custom_types import Graph, NodeId, Settings, StiffnessResult, Stiffness
 import anastruct as anas
 import numpy as np
+from const import STIFFNESS_MATRIX_OF_GROUND
 
 class AnastructEvaluator(Evaluator):
 
@@ -21,7 +22,7 @@ class AnastructEvaluator(Evaluator):
         [dx_y, dy_y] = AnastructEvaluator.get_displacement(graph, node_id, settings, 0.0, 1.0);
         m = np.asarray([[dx_x, dx_y], [dy_x, dy_y]])
         if (m == 0).all():
-            m = np.asarray([[10e10, 0], [0, 10e10]])
+            m = STIFFNESS_MATRIX_OF_GROUND
         else:
             m = np.linalg.inv(m)
         # print(f"matrix for node {node_id} is {m}")
@@ -37,22 +38,20 @@ class AnastructEvaluator(Evaluator):
         displacement = ss.solve()
         dx = displacement[(id-1) * 3]
         dy = -displacement[(id-1) * 3 + 1]
-        print(dx, dy)
-        ss.show_structure()
-        ss.show_displacement()
+        # print(dx, dy)
+        # ss.show_structure()
+        # ss.show_displacement()
         return (float(dx), float(dy))
 
 
     @staticmethod
     def build_simulator(graph: Graph, settings: Settings) -> anas.SystemElements:
         ss = anas.SystemElements(EA=settings.ea, EI=settings.ei)
-        ids = [x for x in graph.nodes.keys()]
-        ids.sort()
-
-        for id in ids:
-            node = graph.nodes[id]
+        for (id, node) in graph.nodes.items():
             for adj in node.adj:
-                id = ss.add_element(location=[node.position.as_list(), adj.position.as_list()])
+                # avoid inserting beams twice
+                if adj.id < id:
+                    ss.add_element(location=[node.position.as_list(), adj.position.as_list()])
 
         for node in graph.nodes.values():
             if node.ground_node:

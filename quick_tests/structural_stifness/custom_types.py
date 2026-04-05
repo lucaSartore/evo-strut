@@ -23,6 +23,19 @@ class Point:
     def as_list(self) -> list[float]:
         return [self.x, self.y]
 
+    def __add__(self, other: Point) -> Point:
+        return Point(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other: Point) -> Point:
+        return Point(self.x - other.x, self.y - other.y)
+
+    def abs(self) -> float:
+        return (self.x ** 2 + self.y ** 2) ** 0.5
+
+    @staticmethod
+    def distance(a: Point, b: Point) -> float:
+        return (a-b).abs()
+
 class Node:
     def __eq__(self, value: object, /) -> bool:
         if type(value) != Node:

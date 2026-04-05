@@ -80,13 +80,61 @@ def load_struct_D() -> Graph:
     return graph
 
 
-def load_struct_E() -> Graph:
+def load_triangle() -> Graph:
     graph = Graph()
     graph.add_node(Node(1, Point(0.0, 0.0), True))
     graph.add_node(Node(2, Point(1.0, 0.0), True))
-    graph.add_node(Node(3, Point(2.0, 1.0)))
+    graph.add_node(Node(3, Point(1.0, 1.0)))
 
     graph.add_adj(1, 3)
     graph.add_adj(2, 3)
+    # graph.add_adj(1, 2)
+
+    return graph
+
+
+def load_lines() -> Graph:
+    graph = Graph()
+    graph.add_node(Node(1, Point(0.0, 0.0), True))
+    graph.add_node(Node(2, Point(1.0, 0.0)))
+    graph.add_node(Node(3, Point(1.0, 1.0)))
+    graph.add_node(Node(4, Point(0.0, 1.0)))
+    graph.add_node(Node(5, Point(-1.0, 1.0)))
+    graph.add_node(Node(6, Point(-1.0, 0.0)))
+    graph.add_node(Node(7, Point(-1.0, -1.0)))
+    graph.add_node(Node(8, Point(0.0, -1.0)))
+    graph.add_node(Node(9, Point(1.0, -1.0)))
+
+    graph.add_adj(1, 2)
+    graph.add_adj(1, 3)
+    graph.add_adj(1, 4)
+    graph.add_adj(1, 5)
+    graph.add_adj(1, 6)
+    graph.add_adj(1, 7)
+    graph.add_adj(1, 8)
+    graph.add_adj(1, 9)
+
+    return graph
+
+
+def load_pillar() -> Graph:
+    graph = Graph()
+    graph.add_node(Node(1, Point(0.0, 0.0), True))
+    graph.add_node(Node(2, Point(0.0, 1.0)))
+    graph.add_node(Node(3, Point(0.0, 2.0)))
+    graph.add_node(Node(4, Point(0.0, 3.0)))
+
+    graph.add_node(Node(5, Point(1.0, 0.0), True))
+    graph.add_node(Node(6, Point(2.0, 1.0)))
+    graph.add_node(Node(7, Point(1.0, 2.0)))
+    graph.add_node(Node(8, Point(2.0, 3.0)))
+
+    graph.add_adj(1, 2)
+    graph.add_adj(2, 3)
+    graph.add_adj(3, 4)
+    
+    graph.add_adj(5, 6)
+    graph.add_adj(6, 7)
+    graph.add_adj(7, 8)
 
     return graph

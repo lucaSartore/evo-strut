@@ -1,0 +1,8 @@
+import numpy as np
+
+STIFFNESS_OF_GROUND = 1e10
+
+STIFFNESS_MATRIX_OF_GROUND = np.asarray([
+    [STIFFNESS_OF_GROUND, 0],
+    [0, STIFFNESS_OF_GROUND],
+])
