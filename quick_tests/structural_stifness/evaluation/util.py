@@ -1,7 +1,22 @@
 import numpy as np
-from custom_types import Stiffness, Point, Settings
+from custom_types import Stiffness, Point, Settings, StiffnessResult
 import math
 
+
+def calculate_accuracy(stiffness: StiffnessResult, ground_truth: StiffnessResult) -> float:
+    errors_percentage = []
+    for k in stiffness:
+        result = stiffness[k]
+        actual = ground_truth[k]
+        difference = np.abs(result - actual)
+        filter = np.abs(actual) > 1e-4
+        percentage = difference[filter] / actual[filter]
+        errors_percentage.append(percentage.flatten())
+
+    errors = np.hstack(errors_percentage)
+    average_error = np.average(errors)
+    return 1.0 - float(average_error)
+        
 
 def stiffness_series(base_stiffness: Stiffness, point_from: Point, point_to: Point, settings: Settings) -> Stiffness:
     beam_stiffness = calculate_beam_stiffness(point_from, point_to, settings)
