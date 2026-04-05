@@ -2,6 +2,7 @@ from evaluation.bottom_up_evaluator import BottomUpEvaluator
 from evaluation.dag_evaluator import DagEvaluator
 from evaluation.interface import Evaluator
 from evaluation.util import calculate_accuracy
+from evaluation.weighted_dag_evaluator import WeightedDagEvaluator
 from testcases import *
 from visualize import Visualizer
 from evaluation.anastruct_evaluator import AnastructEvaluator
@@ -10,20 +11,23 @@ from collections import defaultdict
 def main():
     settings = Settings(100, 10)
 
-    visualize = True
-    evaluators: list[type[Evaluator]] = [
-        BottomUpEvaluator,
-        DagEvaluator
+    visualize = False
+    evaluators: list[tuple[str, type[Evaluator]]] = [
+        ("bottom_up", BottomUpEvaluator),
+        ("dag", DagEvaluator),
+        ("weighted_dag", WeightedDagEvaluator)
     ]
     graph_to_evaluate = [
-        ("triangle", load_triangle()),
-        ("lines", load_lines()),
-        ("pillars", load_pillars()),
-        ("horizontal_beam", load_horizontal_beam()),
+        # ("triangle", load_triangle()),
+        # ("lines", load_lines()),
+        # ("pillars", load_pillars()),
+        # ("horizontal_beam", load_horizontal_beam()),
         ("struct_A", load_struct_A()),
         ("struct_B", load_struct_B()),
         ("struct_C", load_struct_C()),
-        ("struct_D", load_struct_D())
+        ("struct_D", load_struct_D()),
+        ("struct_E", load_struct_E()),
+        ("struct_F", load_struct_F())
     ]
 
     # Data structures to track accuracies
@@ -34,8 +38,7 @@ def main():
     for (graph_name, graph) in graph_to_evaluate:
         ground_truth = AnastructEvaluator.evaluate(graph, settings)
         
-        for evaluator in evaluators:
-            eval_name = evaluator.__name__
+        for eval_name, evaluator in evaluators:
             stiffness = evaluator.evaluate(graph, settings)
 
             accuracy = calculate_accuracy(stiffness, ground_truth)
