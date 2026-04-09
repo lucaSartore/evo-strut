@@ -9,6 +9,15 @@ from evaluation.anastruct_evaluator import AnastructEvaluator
 from collections import defaultdict
 
 def main():
+
+    import numpy as np
+    struct = load_struct_A();
+    settings = Settings(12_000, 9_000)
+    results = AnastructEvaluator.evaluate(struct, settings)
+    m = np.linalg.inv(results[6])
+    print(m)
+
+    return
     settings = Settings(100, 10)
 
     # Set visualize to True to see the plots

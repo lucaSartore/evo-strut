@@ -1,0 +1,4 @@
+matplotlib==3.10.8
+numpy==2.4.4
+anastruct==1.6.2
+openseespy==3.8.0
