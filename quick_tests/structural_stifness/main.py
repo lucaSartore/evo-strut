@@ -1,7 +1,7 @@
 from evaluation.bottom_up_evaluator import BottomUpEvaluator
 from evaluation.dag_evaluator import DagEvaluator
 from evaluation.interface import Evaluator
-from evaluation.util import calculate_accuracy
+from evaluation.util import calculate_accuracy, calculate_beam_stiffness
 from evaluation.weighted_dag_evaluator import WeightedDagEvaluator
 from testcases import *
 from visualize import Visualizer
@@ -11,11 +11,13 @@ from collections import defaultdict
 def main():
 
     import numpy as np
-    struct = load_struct_A();
+    struct = load_lines();
     settings = Settings(12_000, 9_000)
     results = AnastructEvaluator.evaluate(struct, settings)
-    m = np.linalg.inv(results[6])
+    m = np.linalg.inv(results[2])
+    calculated = calculate_beam_stiffness(struct.nodes[1].position, struct.nodes[2].position, settings)
     print(m)
+    print(calculated)
 
     return
     settings = Settings(100, 10)

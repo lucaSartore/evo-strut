@@ -76,7 +76,7 @@ class OpenSeesEvaluator(Evaluator):
                 # lock all 6 degrees of freedom
                 ops.fix(node.id, 1, 1, 1, 1, 1, 1)
 
-        ops.geomTransf("Linear", 1, *[1.0, 0.0, 0.0])
+        ops.geomTransf("Linear", 1, *[1.0, 1.0, 0])
 
         elementId = 1
         for node_id, node in graph.nodes.items():

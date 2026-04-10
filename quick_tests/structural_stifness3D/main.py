@@ -3,7 +3,7 @@ from evaluation.bottom_up_evaluator import BottomUpEvaluator
 from evaluation.dag_evaluator import DagEvaluator
 from evaluation.interface import Evaluator
 from evaluation.opensees_evaluator import OpenSeesEvaluator
-from evaluation.util import calculate_accuracy
+from evaluation.util import calculate_accuracy, calculate_beam_stiffness
 from evaluation.weighted_dag_evaluator import WeightedDagEvaluator
 from testcases import *
 from visualize import Visualizer
@@ -12,11 +12,21 @@ import numpy as np
 
 def main():
     import numpy as np
-    struct = load_struct_A();
+    struct = load_pillars();
     settings = Settings()
-    results = OpenSeesEvaluator.evaluate(struct, settings)
-    m = np.linalg.inv(results[6])
-    print(m)
+    gt = OpenSeesEvaluator.evaluate(struct, settings)
+    calc = BottomUpEvaluator.evaluate(struct, settings)
+    node = 8
+    # fn = lambda x: (np.linalg.inv(x[node]) * 1000000).astype(np.int32)
+    fn = lambda x: x[node].astype(np.int32)
+    result = fn(gt)
+    approx = fn(calc)
+    print("actual stiffness")
+    print(result)
+    print("approximated stiffness)")
+    print(approx)
+    print("error")
+    print(result - approx)
 
 
 if __name__ == "__main__":

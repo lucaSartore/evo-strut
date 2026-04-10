@@ -10,8 +10,8 @@ class BottomUpEvaluator(HeuristicEvaluator):
         for node in graph.nodes.values():
             dag[node.id] = []
             for adj in node.adj:
-                lower = adj.position.y < node.position.y
-                same_hight_lower_id = adj.position.y == node.position.y and adj.id < node.id
+                lower = adj.position.z < node.position.z
+                same_hight_lower_id = adj.position.z == node.position.z and adj.id < node.id
                 is_ground_node = adj.ground_node
                 if lower or same_hight_lower_id or is_ground_node:
                     dag[node.id].append((adj.id, 1.0))

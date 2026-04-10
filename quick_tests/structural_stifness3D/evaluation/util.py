@@ -1,6 +1,5 @@
 import numpy as np
 from custom_types import Stiffness, Point, Settings, StiffnessResult
-import math
 
 
 def calculate_accuracy(stiffness: StiffnessResult, ground_truth: StiffnessResult) -> float:
@@ -20,13 +19,18 @@ def calculate_accuracy(stiffness: StiffnessResult, ground_truth: StiffnessResult
 
 def stiffness_series(base_stiffness: Stiffness, point_from: Point, point_to: Point, settings: Settings) -> Stiffness:
     beam_stiffness = calculate_beam_stiffness(point_from, point_to, settings)
-    beam_vector = point_to - point_from
+    v = point_to - point_from
 
-    # transformation matrix to project
-    conversion_matrix = np.asarray([
-        [1, 0, -beam_vector.y],
-        [0, 1, beam_vector.x],
-        [0, 0, 1]
+    # jacobian matrix of the function that maps the beam's "point_to"
+    # starting from the degrees of freedom of the beams's "point_from"
+    # there are 6 degrees of freedom as input and output [x,y,z,roll,pitch,yaw]
+    jacobian = np.asarray([
+     [1, 0, 0, 0   , v.z , -v.y ],
+     [0, 1, 0, -v.z, 0   , v.x ],
+     [0, 0, 1, v.y , -v.x, 0 ],
+     [0, 0, 0, 1   , 0   , 0 ],
+     [0, 0, 0, 0   , 1   , 0 ],
+     [0, 0, 0, 0   , 0   , 1 ],
     ])
 
     base_compliance = np.linalg.inv(base_stiffness)
@@ -38,9 +42,10 @@ def stiffness_series(base_stiffness: Stiffness, point_from: Point, point_to: Poi
     # - re-projecting the displacement on the final beam (conversion_matrix)
     # the two compliances are then summed (summing the distortion that is generated
     # by the first stick and by the second stick)
-    full_compliance = beam_compliance + conversion_matrix @ base_compliance @ conversion_matrix.T
+    full_compliance = beam_compliance + jacobian @ base_compliance @ jacobian.T
 
     full_stiffness = np.linalg.inv(full_compliance)
+
     return full_stiffness
 
 
@@ -48,48 +53,77 @@ def stiffness_series(base_stiffness: Stiffness, point_from: Point, point_to: Poi
 # calculate the stiffness of a series of multiple trusses in parallel
 def stiffness_parallel(s: list[Stiffness]) -> Stiffness:
     e = np.sum(np.stack(s), axis=0)
-    assert e.shape == (3,3)
+    assert e.shape == (6,6)
     return e
 
 
 # calculate the stiffness of a Cantilever Beam
 def calculate_beam_stiffness(point_from: Point, point_to: Point, settings: Settings) -> Stiffness:
-    ea = settings.ea
-    ei = settings.ei
+    len = (point_from - point_to).abs()
+    stiffness = get_stiffness_matrix(len, settings)
 
-    # first we assume the beam is horizontal
-    distance = Point.distance(point_from, point_to)
-    kxx = ea / distance
-    kyy = 12 * ei / (distance**3)
-    kyt = -6 * ei / (distance**2)
-    kty = -6 * ei / (distance**2)
-    ktt = 4 * ei / distance
+    v = np.asarray((point_to - point_from).as_list())
+    translation_matrix = get_rotation_matrix(v)
 
-    stiffness = np.asarray([
-        [kxx, 0, 0], 
-        [0, kyy, kyt],
-        [0, kty, ktt]
-    ])
-
-    # return stiffness
-    # the we rotate the stiffness
-    diff = point_to - point_from
-    # todo: it is still unclear to me why there shall be a minus here...
-    angle = -math.atan2(diff.y, diff.x)
-
-    rotation_matrix = np.asarray(
-        [[math.cos(angle), -math.sin(angle), 0],
-         [math.sin(angle),  math.cos(angle), 0],
-         [0,                0,               1]
-         ]
-    )
-
-    rotated = rotation_matrix.T @ stiffness @ rotation_matrix
-    # print(f"angle: {angle}")
-    # print(f"pre-rotation: {stiffness}")
-    # print(f"post-rotation: {rotated}")
+    rotated = translation_matrix.T @ stiffness @ translation_matrix
 
     return rotated
+
+# return the stiffness matrix of a beam with a specific length
+# the beam is assumed to be parallel to the x axis
+def get_stiffness_matrix(beam_length: float, settings: Settings) -> Stiffness:
+    ea = settings.e_mod * settings.area
+    eiz = settings.e_mod * settings.iz
+    eiy = settings.e_mod * settings.iy
+    gj = settings.g_mod * settings.jxx
+
+    l = beam_length
+
+    kxx = ea / l
+    kyy = 12 * eiz / (l**3)
+    kiy = -6 * eiz / (l**2)
+    kzz = 12 * eiy / (l**3)
+    kpz = 6 * eiy / (l**2)
+    krr = gj / l
+    kpp = 4 * eiy / l
+    kii = 4 * eiz / l
+
+    # matrix axis ordered in: x,y,z,roll,pitch,yaw
+    return np.asarray([
+        [kxx, 0,   0,   0,   0,   0   ], 
+        [0,   kyy, 0,   0,   0,   kiy ], 
+        [0,   0,   kzz, 0,   kpz, 0   ], 
+        [0,   0,   0,   krr, 0,   0   ], 
+        [0,   0,   kpz, 0,   kpp, 0   ], 
+        [0,   kiy, 0,   0,   0,   kii ]
+    ])
+
+def get_rotation_matrix(beam_vec: np.ndarray) -> np.ndarray:
+    # 1. Local x-axis
+    L = np.linalg.norm(beam_vec)
+    nx = beam_vec / L
+    
+    # 2. Define a temporary 'up' vector
+    # If the beam is vertical, use the Z-axis as a reference instead
+    if np.allclose(nx, [0, 1, 0]) or np.allclose(nx, [0, -1, 0]):
+        up = np.array([0, 0, 1])
+    else:
+        up = np.array([0, 1, 0])
+    
+    # 3. Derive local z and y using cross products
+    nz = np.cross(nx, up)
+    nz /= np.linalg.norm(nz)
+    ny = np.cross(nz, nx)
+    
+    # 4. Create 3x3 R
+    R = np.array([nx, ny, nz])
+    
+    # 5. Create 6x6 T
+    T = np.zeros((6, 6))
+    T[0:3, 0:3] = R
+    T[3:6, 3:6] = R
+    
+    return T
 
 
 def calculate_stiffness(point: Point, supports: list[tuple[Point, Stiffness]], settings: Settings) -> Stiffness:

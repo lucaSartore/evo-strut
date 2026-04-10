@@ -28,7 +28,7 @@ class Point:
         return Point(self.x + other.x, self.y + other.y, self.z + other.z)
 
     def __sub__(self, other: Point) -> Point:
-        return Point(self.x - other.x, self.y - other.y, self.z + other.z)
+        return Point(self.x - other.x, self.y - other.y, self.z - other.z)
 
     def abs(self) -> float:
         return (self.x ** 2 + self.y ** 2 + self.z ** 2) ** 0.5
