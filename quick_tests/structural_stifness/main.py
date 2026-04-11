@@ -9,17 +9,6 @@ from evaluation.anastruct_evaluator import AnastructEvaluator
 from collections import defaultdict
 
 def main():
-
-    import numpy as np
-    struct = load_lines();
-    settings = Settings(12_000, 9_000)
-    results = AnastructEvaluator.evaluate(struct, settings)
-    m = np.linalg.inv(results[2])
-    calculated = calculate_beam_stiffness(struct.nodes[1].position, struct.nodes[2].position, settings)
-    print(m)
-    print(calculated)
-
-    return
     settings = Settings(100, 10)
 
     # Set visualize to True to see the plots

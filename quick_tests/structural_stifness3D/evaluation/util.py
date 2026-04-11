@@ -9,7 +9,7 @@ def calculate_accuracy(stiffness: StiffnessResult, ground_truth: StiffnessResult
         actual = ground_truth[k]
         difference = np.abs(result - actual)
         filter = np.abs(actual) > 1e-4
-        percentage = difference[filter] / actual[filter]
+        percentage = np.clip(0, 1.0, difference[filter] / np.abs(actual[filter]))
         errors_percentage.append(percentage.flatten())
 
     errors = np.hstack(errors_percentage)
