@@ -80,7 +80,7 @@ impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
                 max_generations: s.num_generations,
                 patience: s.patience
             },
-            &SupportStructureEvaluatorSettings::new(settings),
+            &SupportStructureEvaluatorSettings::new(settings, graph),
             &TournamentBasedCrossoverSelectionSettings{
                 k: s.tournament_size
             },

@@ -16,11 +16,6 @@ impl<'a> SupportStructureEvaluatorSettings<'a> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
-struct HorizontalStiffness<N: const> {
-    stiffness: [f32; N]
-}
-
 pub struct SupportStructureEvaluator<'a> {
     settings: &'a Settings,
     graph: &'a SurfaceGraph
