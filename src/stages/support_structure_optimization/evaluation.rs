@@ -1,6 +1,7 @@
 use crate::{evolution::Evaluator, models::{Settings, SurfaceGraph}, stages::support_structure_optimization::SupportStructureGene};
 
 mod stiffness;
+mod graph;
 
 pub struct SupportStructureEvaluatorSettings<'a> {
     settings: &'a Settings,

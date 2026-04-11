@@ -9,27 +9,36 @@ use smallvec::SmallVec;
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct QueuedElement {
-    pub id: FaceId,
-    pub cost: Cost
+pub struct QueuedElement<T>
+where T: Clone + PartialEq + Eq{
+    pub id: T,
+    pub value: Cost
 }
 #[allow(clippy::non_canonical_partial_ord_impl)]
-impl PartialOrd for QueuedElement {
+impl<T> PartialOrd for QueuedElement<T> 
+where T: Clone + PartialEq + Eq {
     // order is inverted in order to use the std "max-heap" (instead of haveing
     // to create a custom min-heap)
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        other.cost.partial_cmp(&self.cost)
+        other.value.partial_cmp(&self.value)
     }
 }
-impl Ord for QueuedElement {
+impl<T> Ord for QueuedElement<T> 
+where T: Clone + PartialEq + Eq {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.cost.cmp(&other.cost)
+        self.value.cmp(&other.value)
     }
 }
-impl QueuedElement {
-    pub fn new(id: FaceId, cost: Cost) -> Self {
+impl<T> QueuedElement<T>
+where T: Clone + PartialEq + Eq {
+    pub fn new_from_value(id: T, value: f32) -> Self {
         Self {
-            id, cost
+            id, value: Cost::new(value)
+        }
+    }
+    pub fn new(id: T, cost: Cost) -> Self {
+        Self {
+            id, value: cost
         }
     }
 }
@@ -245,13 +254,13 @@ impl EvaluatedLayer {
             // adding the point to the known costs
             to_evaluate -= 1;
             // _ = costs.insert(popped.id, popped.cost.times(self.triangles[&popped.id].area));
-            let cwa = CostWithArea { unit_cost: popped.cost, area: self.triangles[&popped.id].area };
+            let cwa = CostWithArea { unit_cost: popped.value, area: self.triangles[&popped.id].area };
             _ = costs.insert(popped.id, cwa );
 
             // publishing recurrent cost for neighbor
             let triangle = self.triangles.get(&popped.id).expect("triangle should always be found");
             for n in &triangle.same_layer_neighbors {
-                let neighbor_recursive_cost = (popped.cost + n.cost_surplus_forward).max(Cost::ZERO);
+                let neighbor_recursive_cost = (popped.value + n.cost_surplus_forward).max(Cost::ZERO);
                 let neighbor_current_cost = *id_to_current_cost.get(&n.id).unwrap_or(&Cost::MAX);
                 if neighbor_recursive_cost < neighbor_current_cost {
                     _ = id_to_current_cost.insert(n.id, neighbor_recursive_cost);
