@@ -1,25 +1,37 @@
-use crate::{evolution::Evaluator, models::Settings, stages::support_structure_optimization::SupportStructureGene};
+use crate::{evolution::Evaluator, models::{Settings, SurfaceGraph}, stages::support_structure_optimization::SupportStructureGene};
 
+mod stiffness;
 
 pub struct SupportStructureEvaluatorSettings<'a> {
-    settings: &'a Settings
+    settings: &'a Settings,
+    graph: &'a SurfaceGraph
 }
 
 impl<'a> SupportStructureEvaluatorSettings<'a> {
-    pub fn new(settings: &'a Settings) -> Self {
+    pub fn new(settings: &'a Settings, graph: &'a SurfaceGraph) -> Self {
         Self {
-            settings
+            settings,
+            graph
         }
     }
 }
 
+#[derive(Copy, Clone, Debug)]
+struct HorizontalStiffness<N: const> {
+    stiffness: [f32; N]
+}
+
 pub struct SupportStructureEvaluator<'a> {
-    settings: &'a Settings
+    settings: &'a Settings,
+    graph: &'a SurfaceGraph
 }
 
 impl<'a> Evaluator<SupportStructureGene, SupportStructureEvaluatorSettings<'a>> for SupportStructureEvaluator<'a> {
     fn new(settings: &SupportStructureEvaluatorSettings<'a>) -> Self {
-        todo!()
+        Self {
+            settings: settings.settings,
+            graph: settings.graph
+        }
     }
 
     fn evaluate(&self, gene: &SupportStructureGene) -> crate::evolution::Cost {
