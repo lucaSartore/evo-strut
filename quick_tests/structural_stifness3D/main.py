@@ -16,17 +16,21 @@ def main():
     settings = Settings()
     gt = OpenSeesEvaluator.evaluate(struct, settings)
     calc = BottomUpEvaluator.evaluate(struct, settings)
-    node = 8
-    # fn = lambda x: (np.linalg.inv(x[node]) * 1000000).astype(np.int32)
-    fn = lambda x: x[node].astype(np.int32)
-    result = fn(gt)
-    approx = fn(calc)
-    print("actual stiffness")
-    print(result)
-    print("approximated stiffness)")
-    print(approx)
-    print("error")
-    print(result - approx)
+    v = Visualizer(struct)
+    v.add_stiffness_visualization(gt, "green", "ground_through")
+    v.add_stiffness_visualization(calc, "red", "approximation")
+    v.plot("test")
+    # node = 8
+    # # fn = lambda x: (np.linalg.inv(x[node]) * 1000000).astype(np.int32)
+    # fn = lambda x: x[node].astype(np.int32)
+    # result = fn(gt)
+    # approx = fn(calc)
+    # print("actual stiffness")
+    # print(result)
+    # print("approximated stiffness)")
+    # print(approx)
+    # print("error")
+    # print(result - approx)
 
 
 if __name__ == "__main__":
