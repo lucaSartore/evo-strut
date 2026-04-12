@@ -3,17 +3,17 @@ use std::{collections::BinaryHeap};
 use hashbrown::HashMap;
 use smallvec::{SmallVec, smallvec};
 
-use crate::{models::Point, stages::{criticality_detection::propagation::QueuedElement, support_structure_optimization::SupportNodeId}};
+use crate::{models::{Point, PointId}, stages::{criticality_detection::propagation::QueuedElement, support_structure_optimization::SupportNodeId}};
 
 
 
 #[derive(Clone, Debug)]
-struct Neighbor {
+pub struct Neighbor {
     pub id: SupportNodeId,
     pub distance: f32,
 }
 
-struct Node {
+pub struct Node {
     pub id: SupportNodeId,
     pub position: Point,
     pub visited: bool,
@@ -23,7 +23,7 @@ struct Node {
 }
 
 pub struct Graph {
-    nodes: HashMap<SupportNodeId, Node>
+    pub nodes: HashMap<SupportNodeId, Node>
 }
 
 impl Graph {
@@ -125,6 +125,9 @@ impl Graph {
     }
 
 
+    // add a node with a list of neighbors.
+    // return a subset of the list of added neighbors (that represent the subset of the neighbors
+    // that were already present in the graph)
     pub fn add_node(&mut self, id: SupportNodeId, position: Point, neighbors: &[SupportNodeId], supported: bool) {
         let mut new_node = Node { 
             id,

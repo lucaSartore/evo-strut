@@ -151,7 +151,7 @@ pub struct ContactPointsOptimizationSettings {
     /// the size of the tournaments made to select the individuals for crossover.
     /// The tradeoffs are:
     ///  - High tournament size => high selection pressure => fast to converge, may lose diversity
-    ///  too early
+    ///    too early
     ///  - Small tournament size => slow selection process => slow to converge, preserve diversity
     pub tournament_size: usize,
     /// number of individual generated/evaluated in every generation
@@ -197,11 +197,35 @@ pub struct SupportStructureOptimizationSettings {
     /// the size of the tournaments made to select the individuals for crossover.
     /// The tradeoffs are:
     ///  - High tournament size => high selection pressure => fast to converge, may lose diversity
-    ///  too early
+    ///    too early
     ///  - Small tournament size => slow selection process => slow to converge, preserve diversity
     pub tournament_size: usize,
     /// number of individual generated/evaluated in every generation
-    pub num_elite_individuals: usize
+    pub num_elite_individuals: usize,
+    /// cost for every mm of length of supports
+    /// unit of measure: cost/mm
+    pub cost_for_unit_of_length: f32,
+    /// cost foe every mm of support that goes over the desired angle by some degrees
+    /// unit of measure: cost/(mm*deg)
+    pub cost_for_support_too_steep: f32,
+    /// cost associated with the support being not stiff enough
+    /// unit of measure: cost/(mm/N)
+    pub non_stiffness_cost: f32,
+    /// resolution used when integrating over a beam stiffness to calculate the cost
+    /// unit of measure: mm
+    pub stiffness_cost_integration_size: f32,
+    /// cost associated with a squared mm of a support cone (the last step of a support)
+    /// unit of measure: cost/mm^2
+    pub cone_area_cost: f32,
+    /// cost associated with a cone being too steep.
+    /// unit of measure cost/(mm*deg)
+    pub cone_too_steep_cost: f32,
+    /// cost of a support cone that is unfeasible (due to it having
+    /// the base above the cone's ring
+    /// unit of measure: cost
+    pub cost_of_un_feasible_cone: f32,
+    /// settings used to calculate the stiffness of the material
+    pub material_stiffness_settings: MaterialStiffnessSettings
 }
 
 impl Default for SupportStructureOptimizationSettings {
@@ -211,7 +235,38 @@ impl Default for SupportStructureOptimizationSettings {
             patience: 25,
             generation_size: 100,
             tournament_size: 10,
-            num_elite_individuals: 10
+            num_elite_individuals: 10,
+            cost_for_unit_of_length: 1.0,
+            cost_for_support_too_steep: 1.0,
+            non_stiffness_cost: 1.0,
+            stiffness_cost_integration_size: 1.0,
+            cone_area_cost: 1.0,
+            cone_too_steep_cost: 1.0,
+            cost_of_un_feasible_cone: 1e7,
+            material_stiffness_settings: MaterialStiffnessSettings::default()
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct MaterialStiffnessSettings {
+    pub area: f32,
+    pub e_mod: f32,
+    pub g_mod: f32,
+    pub jxx: f32,
+    pub iy: f32,
+    pub iz: f32
+}
+
+impl Default for MaterialStiffnessSettings {
+    fn default() -> Self {
+        Self { 
+            area: 4.0,
+            e_mod: 3000.0,
+            g_mod: 1000.0,
+            jxx: 6.0,
+            iy: 3.0,
+            iz: 3.0
         }
     }
 }

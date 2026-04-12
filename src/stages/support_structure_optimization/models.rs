@@ -12,7 +12,7 @@ pub struct SupportNodeId(u32);
 
 
 #[derive(Clone, Debug)]
-struct PositionAnchor {
+pub struct PositionAnchor {
     pub to: SupportNodeId,
     pub offset: Point
 }
@@ -177,6 +177,13 @@ impl SupportStructureGene {
 
     pub fn is_id_present(&self, id: SupportNodeId) -> bool {
         self.nodes.contains_key(&id)
+    }
+
+    pub fn is_supported(&self, id: SupportNodeId) -> bool {
+        if let SupportNode::Base(_) = self.nodes[&id] {
+            return true;
+        }
+        false
     }
 
     pub fn get_gene(&self, id: SupportNodeId) -> &SupportNode {

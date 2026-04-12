@@ -1,40 +1,41 @@
+use std::ops::Mul;
+
 use nalgebra::{Matrix6, ArrayStorage, Const, Matrix};
-use crate::models::Point;
+use crate::models::{MaterialStiffnessSettings, Point};
 
 /// stiffness of a point across all major axis (as well as the
 /// distortion coefficients of the two angles)
 #[derive(Clone, Debug)]
 pub struct Stiffness(pub Matrix6<f32>);
 
-#[derive(Clone, Debug)]
-pub struct MaterialStiffnessSettings {
-    pub area: f32,
-    pub e_mod: f32,
-    pub g_mod: f32,
-    pub jxx: f32,
-    pub iy: f32,
-    pub iz: f32
-}
+impl Mul<f32> for Stiffness {
+    type Output = Stiffness;
 
-impl Default for MaterialStiffnessSettings {
-    fn default() -> Self {
-        Self { 
-            area: 4.0,
-            e_mod: 3000.0,
-            g_mod: 1000.0,
-            jxx: 6.0,
-            iy: 3.0,
-            iz: 3.0
-        }
+    fn mul(self, rhs: f32) -> Self::Output {
+        Self(self.0 * rhs)
     }
 }
+
+impl Stiffness {
+    pub const STF: f32 = 1e10;
+    /// stiffness of element that are supported
+    pub const SUPPORTED_STIFFNESS: Stiffness = Stiffness(Matrix6::from_array_storage(ArrayStorage([
+        [Self::STF, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, Self::STF, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, Self::STF, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, Self::STF, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, Self::STF, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0, Self::STF],
+    ])));
+}
+
 
 /// Calculate the stiffness of a series of two trusses
 /// 
 /// This function computes the combined stiffness when one beam (base_stiffness)
 /// is connected from point_from to point_to, and the result is in series with
 /// a cantilever beam from point_from to point_to.
-pub fn stiffness_series(base_stiffness: Stiffness, point_from: Point, point_to: Point, settings: MaterialStiffnessSettings) -> Stiffness {
+pub fn stiffness_series(base_stiffness: &Stiffness, point_from: Point, point_to: Point, settings: &MaterialStiffnessSettings) -> Stiffness {
     let beam_stiffness = calculate_beam_stiffness(point_from, point_to, settings);
     let v = point_to - point_from;
 
@@ -64,7 +65,7 @@ pub fn stiffness_series(base_stiffness: Stiffness, point_from: Point, point_to: 
         .expect("Failed to invert beam stiffness matrix");
 
     // Calculate full compliance: beam_compliance + jacobian * base_compliance * jacobian.T
-    let full_compliance = beam_compliance + jacobian.clone() * base_compliance * jacobian.transpose();
+    let full_compliance = beam_compliance + jacobian * base_compliance * jacobian.transpose();
 
     // Invert to get stiffness
     let full_stiffness = full_compliance.try_inverse()
@@ -83,7 +84,7 @@ pub fn stiffness_parallel(s: &[Stiffness]) -> Stiffness {
 
     let mut result = s[0].0.clone();
     for stiffness in &s[1..] {
-        result += stiffness.0.clone();
+        result += stiffness.0;
     }
 
     Stiffness(result)
@@ -93,7 +94,7 @@ pub fn stiffness_parallel(s: &[Stiffness]) -> Stiffness {
 /// 
 /// This function calculates the stiffness matrix of a beam in its local coordinate
 /// system and then rotates it to the global coordinate system based on the beam's orientation.
-pub fn calculate_beam_stiffness(point_from: Point, point_to: Point, settings: MaterialStiffnessSettings) -> Stiffness {
+pub fn calculate_beam_stiffness(point_from: Point, point_to: Point, settings: &MaterialStiffnessSettings) -> Stiffness {
     let beam_length = (point_to - point_from).abs();
     let beam_stiffness = get_stiffness_matrix(beam_length, &settings);
 
@@ -110,11 +111,11 @@ pub fn calculate_beam_stiffness(point_from: Point, point_to: Point, settings: Ma
 /// Calculate the stiffness of a point given its supporting points
 /// 
 /// This combines all support stiffness values in series and then in parallel.
-pub fn calculate_stiffness(point: Point, supports: &[(Point, Stiffness)], settings: MaterialStiffnessSettings) -> Stiffness {
+pub fn calculate_stiffness(point: Point, supports: &[(Point, Stiffness)], settings: &MaterialStiffnessSettings) -> Stiffness {
     let mut supports_stiffness: Vec<Stiffness> = Vec::new();
 
     for (support_p, support_s) in supports {
-        let full_stiffness = stiffness_series(support_s.clone(), *support_p, point, settings.clone());
+        let full_stiffness = stiffness_series(support_s, *support_p, point, settings);
         supports_stiffness.push(full_stiffness);
     }
 

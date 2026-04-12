@@ -2,6 +2,7 @@ use crate::{evolution::Evaluator, models::{Settings, SurfaceGraph}, stages::supp
 
 mod stiffness;
 mod graph;
+mod logic;
 
 pub struct SupportStructureEvaluatorSettings<'a> {
     settings: &'a Settings,
