@@ -3,7 +3,7 @@ use log::debug;
 pub use models::*;
 
 use anyhow::Result;
-use std::marker::PhantomData;
+use std::{marker::PhantomData, os::linux::raw::stat};
 
 
 use crate::{evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, stages::{ContactPointsDecidedState, Pipeline, PipelineBehaviourTrait, SupportStructureOptimizedState}};
@@ -53,6 +53,7 @@ pub struct SimpleSupportStructureOptimizer {
 impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
     fn optimize<'a>(status: &'a ContactPointsDecidedState) -> Result<SupportStructureGene> {
         let settings = &status.settings;
+        let connection_points = &status.connection_points;
         let graph = &status.graph;
         let s = &settings.support_structure_optimization_settings;
 
@@ -74,7 +75,7 @@ impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
             SupportStructureInitializerSettings<'a>
         >;
         let evolver = Evolver::<Behaviour<'a>>::new(
-            &SupportStructureMutatorSettings::new(settings),
+            &SupportStructureMutatorSettings::new(settings, graph),
             &SupportStructureCrossoverSettings::new(settings),
             &PatienceBasedTerminationStrategySettings{
                 max_generations: s.num_generations,
@@ -88,7 +89,7 @@ impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
                 num_novel_individual: s.generation_size - s.num_elite_individuals,
                 num_elite_individual: s.num_elite_individuals
             },
-            &SupportStructureInitializerSettings::new(settings),
+            &SupportStructureInitializerSettings::new(settings, connection_points, graph),
             Random::UnSeededRandom
         );
 

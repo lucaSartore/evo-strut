@@ -12,7 +12,7 @@ pub use criticality_detection::{CriticalityDetector, CriticalityDetectionStage, 
 use hashbrown::HashSet;
 use log::info;
 
-use crate::{models::{FaceId, MeshVector, Settings, SurfaceGraph}, stages::{contact_point_optimization::{ContactPointOptimizationStage, ContactPointOptimizer, ContactPointsGene}, criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, loading::LoadingStage, support_structure_optimization::{SupportStructureGene, SupportStructureOptimizer}}};
+use crate::{models::{FaceId, MeshVector, Settings, SurfaceGraph}, stages::{contact_point_optimization::{ContactPointOptimizationStage, ContactPointOptimizer, ContactPointsGene}, criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, loading::LoadingStage, support_structure_optimization::{SupportStructureGene, SupportStructureOptimizationStage, SupportStructureOptimizer}}};
 use visualization::{VisualizationStage, Visualizer};
 
 pub trait PipelineBehaviourTrait {
@@ -133,7 +133,7 @@ macro_rules! timed {
             let to_return = $exp;
             let end = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
             let duration = end - start;
-            info!("stage $name took {} [s]", duration.as_secs());
+            info!("stage {} took {} [s]", $name, duration.as_secs());
             to_return
         }
         
@@ -159,6 +159,7 @@ where
         timed!("visualizing", VisualizationStage::visualize(&p))?;
         let p = timed!("contact_points_optimization", ContactPointOptimizationStage::<TB>::execute(p))?;
         timed!("visualizing", VisualizationStage::visualize(&p))?;
+        let p = timed!("support_structure_optimization", SupportStructureOptimizationStage::<TB>::execute(p))?;
         Ok(())
     }
 }

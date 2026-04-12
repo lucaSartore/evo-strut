@@ -149,6 +149,7 @@ where
             .zip(current_gen_costs.iter())
             .min_by_key(|(_,c)| **c)
             .ok_or(anyhow!("Unable to find best individual, the list was empty"))?;
+        self.evaluator.visualize(&x.0)?;
         Ok(x.0)
     }
 }

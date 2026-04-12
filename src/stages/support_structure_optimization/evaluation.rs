@@ -32,7 +32,7 @@ impl<'a> Evaluator<SupportStructureGene, SupportStructureEvaluatorSettings<'a>> 
     }
 
     fn evaluate(&self, gene: &SupportStructureGene) -> crate::evolution::Cost {
-        todo!()
+        logic::evaluate_cost(gene, self.settings)
     }
 
     fn visualize(&self, gene: &SupportStructureGene) -> anyhow::Result<()> {
