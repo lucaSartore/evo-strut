@@ -17,7 +17,7 @@ pub struct GraphDescriptor {
     pub edges: HashMap<SupportNodeId, SmallVec<[SupportNodeId;4]>>
 }
 
-fn genome_to_graph_descriptor(gene: &SupportStructureGene) -> GraphDescriptor {
+pub fn genome_to_graph_descriptor(gene: &SupportStructureGene) -> GraphDescriptor {
     let mut nodes = vec![];
     let mut positions = HashMap::new();
     let mut edges = HashMap::new();

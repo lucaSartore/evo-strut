@@ -3,6 +3,7 @@ use crate::{evolution::Evaluator, models::{Settings, SurfaceGraph}, stages::supp
 mod stiffness;
 mod graph;
 mod logic;
+mod visualization;
 
 pub struct SupportStructureEvaluatorSettings<'a> {
     settings: &'a Settings,
@@ -36,6 +37,6 @@ impl<'a> Evaluator<SupportStructureGene, SupportStructureEvaluatorSettings<'a>> 
     }
 
     fn visualize(&self, gene: &SupportStructureGene) -> anyhow::Result<()> {
-        todo!()
+        visualization::visualize(gene, self.graph)
     }
 }

@@ -55,6 +55,10 @@ impl Point {
     pub const UPWARD: Point = Point{x: 0., y: 0., z: 1.};
     pub const DOWNWARD: Point = Point{x: 0., y: 0., z: -1.};
 
+    pub fn new(x: f32, y: f32, z: f32) -> Point {
+        Point {x,y,z}
+    }
+
     pub fn abs(&self) -> f32 {
         (
             self.x.powi(2) + 
