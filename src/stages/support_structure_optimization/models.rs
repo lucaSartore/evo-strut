@@ -18,6 +18,7 @@ pub struct PositionAnchor {
     pub offset: Point
 }
 
+
 /// represent a base point (i.e. a point that is connected either to the ground,
 /// or to the printed mesh itself, and provide "support to the support structure")
 #[derive(Clone, Debug)]
@@ -240,13 +241,15 @@ impl SupportStructureGene {
         }
     }
 
-    pub fn random_middle_node(&mut self, rand: &Random) -> SupportNodeId {
-        loop {
-            let v = self.nodes.choose_random(rand).expect("can't execute random selection on an empty graph");
+    pub fn random_middle_node(&mut self, rand: &Random) -> Option<SupportNodeId> {
+        for _ in 0..5 {
+            let v = self.nodes.choose_random(rand)
+                .expect("can't execute random selection on an empty graph");
             if v.1.is_middle() {
-                return v.0;
+                return Some(v.0);
             }
         }
+        None
     }
 
     pub fn get_gene(&self, id: SupportNodeId) -> &SupportNode {

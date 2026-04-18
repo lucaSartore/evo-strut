@@ -5,7 +5,9 @@ use super::*;
 pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureGene) {
     let rand = &mutator.rand;
     let n1 = gene.random_non_base_node(rand);
-    let node_to_add = gene.random_middle_node(rand);
+    let Some(node_to_add) = gene.random_middle_node(rand) else {
+        return;
+    };
     if node_to_add == n1 {
         return;
     }

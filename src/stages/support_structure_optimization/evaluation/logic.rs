@@ -23,7 +23,7 @@ pub fn genome_to_graph_descriptor(gene: &SupportStructureGene) -> GraphDescripto
     let mut edges = HashMap::new();
     for (_,g) in gene.nodes.iter() {
         let (node_id, position, adj) = match g {
-            SupportNode::Contact(_) => continue,
+            SupportNode::Contact(n) => (n.id, n.position, &n.leans_on),
             SupportNode::Base(n) => (n.id, n.last_position, &smallvec![]),
             SupportNode::Middle(n) => (n.id, n.last_position, &n.leans_on)
         };
@@ -151,9 +151,18 @@ fn evaluate_single_support_stiffness(base_stiffness: &Stiffness, from: Point, to
         let scalar = i as f32 / (to_integrate.len() - 1) as f32;
         let new_to = from + vector.to_scaled(scalar);
         let stiffness = stiffness_series(base_stiffness, from, new_to, &s.material_stiffness_settings);
-        let sxx = stiffness.0[(0,0)];
-        let syy = stiffness.0[(1,1)];
-        cost += s.non_stiffness_cost * sxx + s.non_stiffness_cost * syy
+        let Some(compliance) = stiffness.0.try_inverse() else {
+            // zero matrix mean node is somehow floating, we need
+            // to add maximum cost
+            if stiffness.0.iter().all(|x| *x == 0.) {
+                cost += s.max_non_stiffness_cost;
+                continue;
+            }
+            panic!("fail to invert stiffness matrix: {:?}", stiffness)
+        };
+        let cxx = compliance[(0,0)];
+        let cyy = compliance[(1,1)];
+        cost += s.non_stiffness_cost * cxx + s.non_stiffness_cost * cyy
     }
     cost
 }
@@ -227,6 +236,8 @@ pub fn evaluate_cost(gene: &SupportStructureGene, settings: &Settings) -> Cost {
     let steepness_cost = evaluate_steepness_cost(&descriptor, settings);
     let length_cost = evaluate_length_cost(&descriptor, settings);
     let stiffness_cost = evaluate_stiffness_cost(gene, &descriptor, settings);
+
+    return stiffness_cost;
 
     // println!(
     //     "cone_cost: {}, steepness_cost: {}, length_cost: {}, stiffness_cost: {}",

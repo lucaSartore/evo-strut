@@ -65,9 +65,9 @@ impl Default for IoSettings {
     fn default() -> Self {
         Self {
             // input_file_path: "test_meshes/inclination_test.stl".into(),
-            input_file_path: "test_meshes/inclination_test_re_meshed.stl".into(),
-            // input_file_path: "test_meshes/dragon_re_meshed.stl".into(),
-            re_meshed_input_file_path: None, //Some("test_meshes/inclination_test_re_meshed.stl".into()),
+            // input_file_path: "test_meshes/inclination_test_re_meshed.stl".into(),
+            input_file_path: "test_meshes/dragon_re_meshed.stl".into(),
+            re_meshed_input_file_path: None,
             output_file_path: "output.stl".into(),
             target_edge_length: 0.
         }
@@ -231,26 +231,30 @@ pub struct SupportStructureOptimizationSettings {
     /// this parameter represent the standard deviation of the multivariate
     /// normal distribution that mutates the position
     /// unit of measure: mm
-    pub node_position_mutation_std: f32
+    pub node_position_mutation_std: f32,
+    /// cost of a node that is not stiff at all
+    /// unit of measure: cost
+    pub max_non_stiffness_cost: f32
 }
 
 impl Default for SupportStructureOptimizationSettings {
     fn default() -> Self {
         Self {
-            num_generations: 200,
-            patience: 25,
+            num_generations: 2000,
+            patience: 50,
             generation_size: 100,
             tournament_size: 10,
             num_elite_individuals: 10,
             cost_for_unit_of_length: 1.0,
             cost_for_support_too_steep: 1.0,
-            non_stiffness_cost: 0.,
+            non_stiffness_cost: 1.,
             stiffness_cost_integration_size: 1.0,
             cone_area_cost: 10.0,
             cone_too_steep_cost: 1.0,
             cost_of_un_feasible_cone: 1e7,
             material_stiffness_settings: MaterialStiffnessSettings::default(),
-            node_position_mutation_std: 3.0
+            node_position_mutation_std: 3.0,
+            max_non_stiffness_cost: 1e7
         }
     }
 }

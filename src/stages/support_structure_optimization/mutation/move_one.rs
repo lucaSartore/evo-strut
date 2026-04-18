@@ -10,7 +10,9 @@ use super::super::models;
 
 pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureGene) {
     let rand = &mutator.rand;
-    let n1 = gene.random_middle_node(rand);
+    let Some(n1) = gene.random_middle_node(rand) else {
+        return;
+    };
     let SupportNode::Middle(node) = gene.nodes.get_mut(&n1)
         .expect("node must be present") else {
         panic!("node must be middle");

@@ -32,7 +32,12 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureGene
     let p2 = n2.get_position();
 
     let mut support_position = Point::random_in_between(p1, p2, rand);
-    let z = rand.next_f32(0., p1.z.min(p2.z));
+    let mut z = p1.z.min(p2.z);
+    if z > 0. {
+        z = rand.next_f32(0., z);
+    } else {
+        z = 0.;
+    }
     support_position.z = z;
 
     
