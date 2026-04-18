@@ -223,10 +223,18 @@ fn evaluate_stiffness_cost(gene: &SupportStructureGene, descriptor: &GraphDescri
 
 pub fn evaluate_cost(gene: &SupportStructureGene, settings: &Settings) -> Cost {
     let descriptor = genome_to_graph_descriptor(gene);
-    let mut cost = Cost::ZERO;
-    cost = cost + evaluate_cones_cost(gene, &descriptor, settings);
-    cost = cost + evaluate_steepness_cost(&descriptor, settings);
-    cost = cost + evaluate_length_cost(&descriptor, settings);
-    cost = cost + evaluate_stiffness_cost(gene, &descriptor, settings);
-    cost
+    let cone_cost = evaluate_cones_cost(gene, &descriptor, settings);
+    let steepness_cost = evaluate_steepness_cost(&descriptor, settings);
+    let length_cost = evaluate_length_cost(&descriptor, settings);
+    let stiffness_cost = evaluate_stiffness_cost(gene, &descriptor, settings);
+
+    // println!(
+    //     "cone_cost: {}, steepness_cost: {}, length_cost: {}, stiffness_cost: {}",
+    //     cone_cost.as_f32(),
+    //     steepness_cost.as_f32(),
+    //     length_cost.as_f32(),
+    //     stiffness_cost.as_f32()
+    // );
+
+    cone_cost + steepness_cost + length_cost + stiffness_cost
 }

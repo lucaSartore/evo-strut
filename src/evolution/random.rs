@@ -116,6 +116,7 @@ impl Random {
     }
 
 
+
     // Returns a float in the specified range
     publish!(next_f32 = _next_f32(from: f32, to: f32) -> f32);
     fn _next_f32(&self, from: f32, to: f32, r: &mut impl R) -> f32 {
@@ -128,6 +129,10 @@ impl Random {
     publish!(next_distribution = _next_distribution(d: &RandomDistribution) -> f32);
     fn _next_distribution(&self, d: &RandomDistribution, r: &mut impl R) -> f32 {
         self._next_distribution_many(d, 1, r)[0]
+    }
+
+    pub fn random_choice(&self, true_probability: f32) -> bool {
+        self.next_f32(0.,1.) <= true_probability
     }
 
     // generate many random numbers starting from a distribution

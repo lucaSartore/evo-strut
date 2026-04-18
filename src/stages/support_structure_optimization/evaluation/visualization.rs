@@ -1,10 +1,9 @@
 use crate::{models::{Point, SurfaceGraph}, stages::{support_structure_optimization::{ContactNode, SupportNode, SupportStructureGene, evaluation::logic::genome_to_graph_descriptor}, visualization::Color}};
 use anyhow::Result;
 use itertools::Position;
+use rerun::RecordingStream;
 
-pub fn visualize(gene: &SupportStructureGene, mesh: & SurfaceGraph) -> Result<()> {
-    let rec = rerun::RecordingStreamBuilder::new("contact points structure optimization").spawn()?;
-
+pub fn visualize(rec: &RecordingStream, gene: &SupportStructureGene, mesh: & SurfaceGraph) -> Result<()> {
     let descriptor = genome_to_graph_descriptor(gene);
     let colors = vec![Color::Green; mesh.count_vertices()];
 
@@ -28,8 +27,6 @@ pub fn visualize(gene: &SupportStructureGene, mesh: & SurfaceGraph) -> Result<()
                 .collect::<Vec<_>>()
         }).collect();
 
-    println!("{:?}",descriptor.edges);
-    println!("{:?}",lines);
     rec.log(
         "support_structure",
         &rerun::LineStrips3D::new(lines)

@@ -37,7 +37,7 @@ pub  struct CriticalitySettings {
 impl Default for CriticalitySettings {
     fn default() -> Self {
         Self { 
-            support_overhanging_angle: 60.,
+            support_overhanging_angle: 75.,
             max_detachment_from_z_plane: 0.1,
             criticality_expansion_rate: 1.
         }
@@ -65,8 +65,9 @@ impl Default for IoSettings {
     fn default() -> Self {
         Self {
             // input_file_path: "test_meshes/inclination_test.stl".into(),
-            input_file_path: "test_meshes/dragon_re_meshed.stl".into(),
-            re_meshed_input_file_path: None,
+            input_file_path: "test_meshes/inclination_test_re_meshed.stl".into(),
+            // input_file_path: "test_meshes/dragon_re_meshed.stl".into(),
+            re_meshed_input_file_path: None, //Some("test_meshes/inclination_test_re_meshed.stl".into()),
             output_file_path: "output.stl".into(),
             target_edge_length: 0.
         }
@@ -174,7 +175,7 @@ impl Default for ContactPointsOptimizationSettings {
             min_support_radius: 0.5,
             move_support_mutation_intensity: 2.5,
             change_support_radius_mutation_intensity: 2.,
-            num_generations: 2,
+            num_generations: 1,
             patience: 25,
             generation_size: 100,
             tournament_size: 10,
@@ -225,25 +226,31 @@ pub struct SupportStructureOptimizationSettings {
     /// unit of measure: cost
     pub cost_of_un_feasible_cone: f32,
     /// settings used to calculate the stiffness of the material
-    pub material_stiffness_settings: MaterialStiffnessSettings
+    pub material_stiffness_settings: MaterialStiffnessSettings,
+    /// how much a node in the support graph is moved when mutated
+    /// this parameter represent the standard deviation of the multivariate
+    /// normal distribution that mutates the position
+    /// unit of measure: mm
+    pub node_position_mutation_std: f32
 }
 
 impl Default for SupportStructureOptimizationSettings {
     fn default() -> Self {
         Self {
-            num_generations: 2,
+            num_generations: 200,
             patience: 25,
             generation_size: 100,
             tournament_size: 10,
             num_elite_individuals: 10,
             cost_for_unit_of_length: 1.0,
             cost_for_support_too_steep: 1.0,
-            non_stiffness_cost: 1.0,
+            non_stiffness_cost: 0.,
             stiffness_cost_integration_size: 1.0,
-            cone_area_cost: 1.0,
+            cone_area_cost: 10.0,
             cone_too_steep_cost: 1.0,
             cost_of_un_feasible_cone: 1e7,
-            material_stiffness_settings: MaterialStiffnessSettings::default()
+            material_stiffness_settings: MaterialStiffnessSettings::default(),
+            node_position_mutation_std: 3.0
         }
     }
 }

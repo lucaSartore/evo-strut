@@ -1,8 +1,9 @@
 use std::{hash::{Hash, Hasher}, ops::{Add, Sub}};
+use rand_distr::Normal;
 use rerun::{Position3D, Vector3D, external::glam::Vec3};
 use nalgebra::{ArrayStorage, Const, Matrix};
 
-use crate::models::{PointId, Settings};
+use crate::{evolution::Random, models::{PointId, Settings}, support::random_distribution::RandomDistribution};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Point{
@@ -52,6 +53,7 @@ impl Sub for Point {
 }
 
 impl Point {
+    pub const ZERO: Point = Point{x: 0., y: 0., z: 0.};
     pub const UPWARD: Point = Point{x: 0., y: 0., z: 1.};
     pub const DOWNWARD: Point = Point{x: 0., y: 0., z: -1.};
 
@@ -139,6 +141,20 @@ impl Point {
 
     pub fn is_lower_or_equal_than(&self, other: &Point) -> bool {
         self.z <= other.z
+    }
+
+    pub fn random_in_between(a: Point, b: Point, rand: &Random) -> Point {
+        let v = b - a;
+        let scaler = rand.next_f32(0.0, 1.0);
+        a + v.to_scaled(scaler)
+    }
+
+    pub fn random(mean: Point, std: f32, rand: &Random) -> Point {
+        let distribution = RandomDistribution::Normal{ mean: 0., std_dev: std};
+        let x = mean.x + rand.next_distribution(&distribution);
+        let y = mean.y + rand.next_distribution(&distribution);
+        let z = mean.z + rand.next_distribution(&distribution);
+        Point { x, y, z }
     }
 
 }

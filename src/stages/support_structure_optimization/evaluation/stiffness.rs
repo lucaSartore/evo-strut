@@ -36,6 +36,10 @@ impl Stiffness {
 /// is connected from point_from to point_to, and the result is in series with
 /// a cantilever beam from point_from to point_to.
 pub fn stiffness_series(base_stiffness: &Stiffness, point_from: Point, point_to: Point, settings: &MaterialStiffnessSettings) -> Stiffness {
+
+    if base_stiffness.0.iter().all(|x| *x == 0.) {
+        return Stiffness(Matrix6::zeros());
+    }
     let beam_stiffness = calculate_beam_stiffness(point_from, point_to, settings);
     let v = point_to - point_from;
 
@@ -59,10 +63,12 @@ pub fn stiffness_series(base_stiffness: &Stiffness, point_from: Point, point_to:
     jacobian[(5, 5)] = 1.0;
 
     // Calculate compliances (inverse of stiffness)
-    let base_compliance = base_stiffness.0.try_inverse()
-        .expect("Failed to invert base stiffness matrix");
-    let beam_compliance = beam_stiffness.0.try_inverse()
-        .expect("Failed to invert beam stiffness matrix");
+    let Some(base_compliance) = base_stiffness.0.try_inverse() else {
+        panic!("Failed to invert base stiffness matrix {:?}", base_stiffness.0);
+    };
+    let Some(beam_compliance) = beam_stiffness.0.try_inverse() else {
+        panic!("Failed to invert base stiffness matrix {:?}", beam_stiffness.0);
+    };
 
     // Calculate full compliance: beam_compliance + jacobian * base_compliance * jacobian.T
     let full_compliance = beam_compliance + jacobian * base_compliance * jacobian.transpose();

@@ -101,8 +101,8 @@ where
                 .crossover_selector
                 .select_for_crossover(&current_gen_costs, n)
                 .ok_or(anyhow!("Crossover selection failed to return any element"))?
-                .par_iter()
-                // .iter()
+                // .par_iter()
+                .iter()
                 .map(|(ai, bi)| {
                     let a = &current_gen[*ai];
                     let b = &current_gen[*bi];
@@ -121,8 +121,6 @@ where
             std::mem::swap(&mut last_gen, &mut current_gen);
             std::mem::swap(&mut last_gen_costs, &mut current_gen_costs);
 
-            let x = last_gen.len();
-            let y = next_gen.len();
             (current_gen, current_gen_costs) = self.next_gen_selector.next_generation(
                 last_gen,
                 last_gen_costs,

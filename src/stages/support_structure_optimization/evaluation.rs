@@ -1,3 +1,5 @@
+use rerun::RecordingStream;
+
 use crate::{evolution::Evaluator, models::{Settings, SurfaceGraph}, stages::support_structure_optimization::SupportStructureGene};
 
 mod stiffness;
@@ -21,14 +23,18 @@ impl<'a> SupportStructureEvaluatorSettings<'a> {
 
 pub struct SupportStructureEvaluator<'a> {
     settings: &'a Settings,
-    graph: &'a SurfaceGraph
+    graph: &'a SurfaceGraph,
+    stream: RecordingStream
 }
 
 impl<'a> Evaluator<SupportStructureGene, SupportStructureEvaluatorSettings<'a>> for SupportStructureEvaluator<'a> {
     fn new(settings: &SupportStructureEvaluatorSettings<'a>) -> Self {
         Self {
             settings: settings.settings,
-            graph: settings.graph
+            graph: settings.graph,
+            stream: rerun::RecordingStreamBuilder::new("contact points structure optimization")
+                .spawn()
+                .expect("fail to build rerun stream")
         }
     }
 
@@ -37,6 +43,6 @@ impl<'a> Evaluator<SupportStructureGene, SupportStructureEvaluatorSettings<'a>> 
     }
 
     fn visualize(&self, gene: &SupportStructureGene) -> anyhow::Result<()> {
-        visualization::visualize(gene, self.graph)
+        visualization::visualize(&self.stream, gene, self.graph)
     }
 }

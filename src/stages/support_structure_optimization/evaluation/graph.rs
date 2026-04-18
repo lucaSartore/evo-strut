@@ -13,6 +13,7 @@ pub struct Neighbor {
     pub distance: f32,
 }
 
+#[derive(Debug)]
 pub struct Node {
     pub id: SupportNodeId,
     pub position: Point,
@@ -22,6 +23,7 @@ pub struct Node {
     pub supported: bool
 }
 
+#[derive(Debug)]
 pub struct Graph {
     pub nodes: HashMap<SupportNodeId, Node>
 }
@@ -88,7 +90,7 @@ impl Graph {
                 .collect();
 
             let weight_this = weighted_supports.iter()
-                .find(|x| x.0.id == supporter.id)
+                .find(|x| x.0.id == id)
                 .expect("id of current node must be found")
                 .1;
 
