@@ -56,3 +56,4 @@ impl Add<Cost> for Cost {
         Cost::new(self.cost + rhs.cost)
     }
 }
+

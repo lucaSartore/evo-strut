@@ -175,7 +175,7 @@ impl Default for ContactPointsOptimizationSettings {
             min_support_radius: 0.5,
             move_support_mutation_intensity: 2.5,
             change_support_radius_mutation_intensity: 2.,
-            num_generations: 1,
+            num_generations: 1000,
             patience: 25,
             generation_size: 100,
             tournament_size: 10,
@@ -184,6 +184,25 @@ impl Default for ContactPointsOptimizationSettings {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct ContactPointsGroupingSettings {
+    /// number of generations optimized
+    pub num_generations: usize,
+    /// patience when optimizing (if the score does not improve
+    /// for more than `patience` generations the optimization process will
+    /// be interrupted)
+    pub patience: usize,
+    /// the number of individuals in a generation
+    pub generation_size: usize,
+    /// the size of the tournaments made to select the individuals for crossover.
+    /// The tradeoffs are:
+    ///  - High tournament size => high selection pressure => fast to converge, may lose diversity
+    ///    too early
+    ///  - Small tournament size => slow selection process => slow to converge, preserve diversity
+    pub tournament_size: usize,
+    /// number of individual generated/evaluated in every generation
+    pub num_elite_individuals: usize,
+}
 
 #[derive(Debug, Clone)]
 pub struct SupportStructureOptimizationSettings {

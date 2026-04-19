@@ -1,8 +1,12 @@
+mod models;
+use log::debug;
+pub use models::*;
+
 use anyhow::Result;
 use std::{marker::PhantomData};
 
 
-use crate::{evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, stages::{ContactPointsDecidedState, Pipeline, PipelineBehaviourTrait, SupportStructureOptimizedState}};
+use crate::{evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, stages::{ContactPointsDecidedState, Pipeline, PipelineBehaviourTrait, SupportStructureOptimizedState, SupportStructureRefinedState}};
 
 
 mod crossover;
@@ -11,49 +15,52 @@ mod initializer;
 use initializer::{SupportStructureInitializerSettings, SupportStructureInitializer};
 mod mutation;
 use mutation::{SupportStructureMutatorSettings, SupportStructureMutator};
-mod evaluation;
+pub mod evaluation;
 use evaluation::{SupportStructureEvaluatorSettings, SupportStructureEvaluator};
-mod models;
-use models::*;
 
 
-pub struct SupportStructureOptimizationStage<TB>
+pub struct SupportStructureRefinementStage<TB>
 where
     TB: PipelineBehaviourTrait,
 {
     _d: PhantomData<TB>,
 }
 
-impl<TB> SupportStructureOptimizationStage<TB>
+impl<TB> SupportStructureRefinementStage<TB>
 where
     TB: PipelineBehaviourTrait,
 {
     pub fn execute(
-        input: Pipeline<ContactPointsDecidedState, TB>,
-    ) -> Result<Pipeline<SupportStructureOptimizedState, TB>> {
-        let result = TB::TSupportStructureOptimizer::optimize(&input.state)?;
-        Ok(Pipeline::from_state(SupportStructureOptimizedState{
+        input: Pipeline<SupportStructureOptimizedState, TB>,
+    ) -> Result<Pipeline<SupportStructureRefinedState, TB>> {
+        let results: Result<Vec<_>> = (0..input.state.support_structures.len())
+            .map(|i| {
+                TB::TSupportStructureRefiner::optimize(&input.state, i)
+            })
+            .collect();
+        Ok(Pipeline::from_state(SupportStructureRefinedState{
             settings: input.state.settings,
             graph: input.state.graph,
-            support_structures: result.to_full_genes(),
-            connection_points: input.state.connection_points
+            connection_points: input.state.connection_points,
+            support_structures: results?
         }))
     }
 }
 
-pub trait SupportStructureOptimizer {
-    fn optimize(status: &ContactPointsDecidedState) -> Result<CompressedSupportGene>;
+pub trait SupportStructureRefiner {
+    fn optimize<'a>(status: &'a SupportStructureOptimizedState, structure_index: usize) -> Result<SupportStructureGene>;
 }
 
-pub struct SimpleSupportStructureOptimizer {
-}
+pub struct SimpleSupportStructureRefiner { }
 
-impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
-    fn optimize<'a>(status: &'a ContactPointsDecidedState) -> Result<CompressedSupportGene> {
+impl SupportStructureRefiner for SimpleSupportStructureRefiner {
+    fn optimize<'a>(status: &'a SupportStructureOptimizedState, structure_index: usize) -> Result<SupportStructureGene> {
+        debug!("starting optimization for structure {structure_index}");
         let settings = &status.settings;
         let connection_points = &status.connection_points;
         let graph = &status.graph;
         let s = &settings.support_structure_optimization_settings;
+        let structure = &status.support_structures[structure_index];
 
         type Behaviour<'a> = EvolverBehaviour<
             SupportStructureMutator<'a>,
@@ -63,7 +70,7 @@ impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
             TournamentBasedCrossoverSelection,
             ElitistNextGenSelector,
             SupportStructureInitializer<'a>,
-            CompressedSupportGene,
+            SupportStructureGene,
             SupportStructureMutatorSettings<'a>,
             SupportStructureCrossoverSettings<'a>,
             PatienceBasedTerminationStrategySettings,
@@ -87,7 +94,7 @@ impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
                 num_novel_individual: s.generation_size - s.num_elite_individuals,
                 num_elite_individual: s.num_elite_individuals
             },
-            &SupportStructureInitializerSettings::new(settings, connection_points),
+            &SupportStructureInitializerSettings::new(settings, structure),
             Random::UnSeededRandom
         );
 

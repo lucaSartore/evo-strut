@@ -1,48 +1,27 @@
-use rerun::RecordingStream;
-
-use crate::{evolution::Evaluator, models::{Settings, SurfaceGraph}, stages::support_structure_optimization::SupportStructureGene};
-
-mod stiffness;
-mod graph;
-mod logic;
-mod visualization;
-
-pub struct SupportStructureEvaluatorSettings<'a> {
-    settings: &'a Settings,
-    graph: &'a SurfaceGraph
-}
-
-impl<'a> SupportStructureEvaluatorSettings<'a> {
-    pub fn new(settings: &'a Settings, graph: &'a SurfaceGraph) -> Self {
-        Self {
-            settings,
-            graph
-        }
-    }
-}
+use crate::{evolution::{Cost, Evaluator}, stages::support_structure_optimization::models::CompressedSupportGene};
+use crate::stages::support_structure_refinement::evaluation::SupportStructureEvaluator as FullEvaluator;
+pub use crate::stages::support_structure_refinement::evaluation::SupportStructureEvaluatorSettings;
 
 pub struct SupportStructureEvaluator<'a> {
-    settings: &'a Settings,
-    graph: &'a SurfaceGraph,
-    stream: RecordingStream
+    evaluator: FullEvaluator<'a>
 }
 
-impl<'a> Evaluator<SupportStructureGene, SupportStructureEvaluatorSettings<'a>> for SupportStructureEvaluator<'a> {
+impl<'a> Evaluator<CompressedSupportGene, SupportStructureEvaluatorSettings<'a>> for SupportStructureEvaluator<'a> {
     fn new(settings: &SupportStructureEvaluatorSettings<'a>) -> Self {
         Self {
-            settings: settings.settings,
-            graph: settings.graph,
-            stream: rerun::RecordingStreamBuilder::new("contact points structure optimization")
-                .spawn()
-                .expect("fail to build rerun stream")
+            evaluator: FullEvaluator::new(settings)
         }
     }
 
-    fn evaluate(&self, gene: &SupportStructureGene) -> crate::evolution::Cost {
-        logic::evaluate_cost(gene, self.settings)
+    fn evaluate(&self, gene: &CompressedSupportGene) -> Cost {
+        Cost::new(gene
+            .to_full_genes()
+            .iter()
+            .map(|x| self.evaluator.evaluate(x).as_f32())
+            .sum())
     }
 
-    fn visualize(&self, gene: &SupportStructureGene) -> anyhow::Result<()> {
-        visualization::visualize(&self.stream, gene, self.graph)
+    fn visualize(&self, gene: &CompressedSupportGene) -> anyhow::Result<()> {
+        self.evaluator.visualize(&gene.to_full_gene())
     }
 }

@@ -4,8 +4,8 @@ use rerun::external::arrow::ipc::convert::try_schema_from_ipc_buffer;
 use smallvec::{SmallVec, smallvec};
 use crate::models::MaterialStiffnessSettings;
 
-use crate::stages::support_structure_optimization::evaluation::stiffness::calculate_stiffness;
-use crate::{evolution::Cost, models::{Point, PointId}, stages::support_structure_optimization::{ContactNode, SupportNode, SupportNodeId, evaluation::{graph::Graph, stiffness::{ Stiffness, stiffness_parallel, stiffness_series}}}};
+use crate::stages::support_structure_refinement::evaluation::stiffness::calculate_stiffness;
+use crate::{evolution::Cost, models::{Point, PointId}, stages::support_structure_refinement::{ContactNode, SupportNode, SupportNodeId, evaluation::{graph::Graph, stiffness::{ Stiffness, stiffness_parallel, stiffness_series}}}};
 
 use super::*;
 
@@ -246,6 +246,5 @@ pub fn evaluate_cost(gene: &SupportStructureGene, settings: &Settings) -> Cost {
     //     stiffness_cost.as_f32()
     // );
 
-    return cone_cost + stiffness_cost + steepness_cost;
     cone_cost + steepness_cost + length_cost + stiffness_cost
 }

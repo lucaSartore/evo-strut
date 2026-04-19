@@ -1,4 +1,4 @@
-use crate::stages::support_structure_optimization::SupportNode;
+use crate::stages::support_structure_refinement::SupportNode;
 
 use super::*;
 

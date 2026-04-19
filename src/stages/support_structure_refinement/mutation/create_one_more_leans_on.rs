@@ -1,6 +1,6 @@
 use smallvec::smallvec;
 
-use crate::{models::Point, stages::support_structure_optimization::{MiddleNode, PositionAnchor, SupportNode}};
+use crate::{models::Point, stages::support_structure_refinement::{MiddleNode, PositionAnchor, SupportNode}};
 
 use super::*;
 

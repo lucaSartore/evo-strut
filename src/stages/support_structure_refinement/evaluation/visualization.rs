@@ -1,4 +1,4 @@
-use crate::{models::{Point, SurfaceGraph}, stages::{support_structure_optimization::{ContactNode, SupportNode, SupportStructureGene, evaluation::logic::genome_to_graph_descriptor}, visualization::Color}};
+use crate::{models::{Point, SurfaceGraph}, stages::{support_structure_refinement::{ContactNode, SupportNode, SupportStructureGene, evaluation::logic::genome_to_graph_descriptor}, visualization::Color}};
 use anyhow::Result;
 use itertools::Position;
 use rerun::RecordingStream;
