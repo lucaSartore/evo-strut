@@ -2,14 +2,13 @@ mod models;
 mod stages;
 mod evolution;
 mod support;
-use std::marker::PhantomData;
 
 use env_logger::Builder;
 use log::{LevelFilter, error};
 
 use crate::{
-    evolution::TournamentBasedCrossoverSelection, models::Settings, stages::{
-        OrientationBasedCriticalityDetector, Pipeline, PipelineBehaviour, StartedState, contact_point_optimization::SimpleContactPointOptimizer, criticality_detection::PropagationBasedCriticalityDetector, criticality_grouping::DistanceBasedCriticalityGrouper, support_structure_optimization::{SimpleSupportStructureOptimizer, SupportStructureOptimizer}, support_structure_refinement::SimpleSupportStructureRefiner
+    models::Settings, stages::{
+        Pipeline, PipelineBehaviour, StartedState, contact_point_optimization::SimpleContactPointOptimizer, criticality_detection::PropagationBasedCriticalityDetector, criticality_grouping::DistanceBasedCriticalityGrouper, support_structure_optimization::SimpleSupportStructureOptimizer, support_structure_refinement::SimpleSupportStructureRefiner
     }
 };
 

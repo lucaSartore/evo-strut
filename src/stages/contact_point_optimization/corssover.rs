@@ -1,7 +1,5 @@
 
-use std::ops::Deref;
 
-use rerun::demo_util::grid;
 
 use crate::models::{FaceId, Plane, Settings, SurfaceGraph};
 use crate::evolution::*;

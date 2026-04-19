@@ -1,6 +1,6 @@
 use std::ops::Mul;
 
-use nalgebra::{Matrix6, ArrayStorage, Const, Matrix};
+use nalgebra::{Matrix6, ArrayStorage};
 use crate::models::{MaterialStiffnessSettings, Point};
 
 /// stiffness of a point across all major axis (as well as the

@@ -1,6 +1,4 @@
-use std::collections::VecDeque;
 
-use baby_shark::data_structures::st_tree::NodeIndex;
 use hashbrown::HashSet;
 
 use crate::models::{FaceId, SurfaceGraph};

@@ -1,11 +1,8 @@
 use hashbrown::HashMap;
-use nalgebra::{ArrayStorage, Matrix6, distance};
-use rerun::external::arrow::ipc::convert::try_schema_from_ipc_buffer;
 use smallvec::{SmallVec, smallvec};
 use crate::models::MaterialStiffnessSettings;
 
-use crate::stages::support_structure_refinement::evaluation::stiffness::calculate_stiffness;
-use crate::{evolution::Cost, models::{Point, PointId}, stages::support_structure_refinement::{ContactNode, SupportNode, SupportNodeId, evaluation::{graph::Graph, stiffness::{ Stiffness, stiffness_parallel, stiffness_series}}}};
+use crate::{evolution::Cost, models::Point, stages::support_structure_refinement::{SupportNode, SupportNodeId, evaluation::{graph::Graph, stiffness::{ Stiffness, stiffness_parallel, stiffness_series}}}};
 
 use super::*;
 

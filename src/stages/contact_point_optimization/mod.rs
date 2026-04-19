@@ -1,9 +1,9 @@
 use crate::{
-    evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, models::Settings, stages::{ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait, contact_point_optimization::{corssover::ContactPointCrossoverSettings, evaluation::ContactPointEvaluatorSettings, initializer::ContactPointsInitializerSettings, mutation::ContactPointsMutatorSettings}}
+    evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, stages::{ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait, contact_point_optimization::{corssover::ContactPointCrossoverSettings, evaluation::ContactPointEvaluatorSettings, initializer::ContactPointsInitializerSettings, mutation::ContactPointsMutatorSettings}}
 };
 use anyhow::{Result, anyhow};
 use log::debug;
-use std::{hash::Hash, marker::PhantomData};
+use std::marker::PhantomData;
 
 mod corssover;
 pub use corssover::ContactPointCrossover;

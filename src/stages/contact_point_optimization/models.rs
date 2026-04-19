@@ -1,6 +1,6 @@
 use core::f32;
 
-use crate::{evolution::Random, models::{Face, FaceId, Settings, SurfaceGraph}, support::{graph_circle::find_circle, links::Links}};
+use crate::{evolution::Random, models::{FaceId, Settings, SurfaceGraph}, support::graph_circle::find_circle};
 use hashbrown::{HashMap, HashSet};
 
 

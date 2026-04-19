@@ -1,10 +1,9 @@
-use std::cell::RefCell;
 
-use crate::support::remove_random::{self, RemoveRandom};
+use crate::support::remove_random::RemoveRandom;
 use hashbrown::{HashMap, HashSet};
 use smallvec::SmallVec;
 
-use crate::{evolution::Random, models::{FaceId, Point, SurfaceGraph, SurfaceNode}};
+use crate::{evolution::Random, models::{FaceId, Point, SurfaceGraph}};
 
 
 

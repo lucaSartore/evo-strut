@@ -1,10 +1,10 @@
 use std::sync::Arc;
 use anyhow::{Result, anyhow};
 use super::*;
-use crate::models::{IoSettings, Mesh, SurfaceGraph};
+use crate::models::{IoSettings, SurfaceGraph};
 use baby_shark::{
     io::{read_from_file, write_to_file}, 
-    mesh::corner_table::CornerTableF, remeshing::{self, incremental::IncrementalRemesher, voxel::VoxelRemesher}
+    mesh::corner_table::CornerTableF, remeshing::incremental::IncrementalRemesher
 };
 use std::path::Path;
 
@@ -32,7 +32,7 @@ where
 
         let remesher = IncrementalRemesher::default();
 
-        if (settings.target_edge_length != 0.) {
+        if settings.target_edge_length != 0.  {
             remesher.remesh(&mut mesh, settings.target_edge_length);
         }
         Ok(mesh)

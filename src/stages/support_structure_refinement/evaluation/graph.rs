@@ -3,7 +3,7 @@ use std::{collections::BinaryHeap};
 use hashbrown::HashMap;
 use smallvec::{SmallVec, smallvec};
 
-use crate::{models::{Point, PointId}, stages::{criticality_detection::propagation::QueuedElement, support_structure_refinement::SupportNodeId}};
+use crate::{models::Point, stages::{criticality_detection::propagation::QueuedElement, support_structure_refinement::SupportNodeId}};
 
 
 

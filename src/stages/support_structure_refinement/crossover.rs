@@ -26,7 +26,7 @@ impl<'a> Crossover<SupportStructureGene, SupportStructureCrossoverSettings<'a>> 
         }
     }
 
-    fn crossover(&self, a: &SupportStructureGene, b: &SupportStructureGene) -> SupportStructureGene {
+    fn crossover(&self, a: &SupportStructureGene, _b: &SupportStructureGene) -> SupportStructureGene {
         // todo: implement real crossover
         a.clone()
     }

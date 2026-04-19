@@ -122,7 +122,7 @@ impl Visualizer<ContactPointsDecidedState> for VisualizationStage {
 fn visualize_mesh(graph: &SurfaceGraph, name: &str, colors: Option<Vec<Color>>) -> Result<()> {
     let rec = rerun::RecordingStreamBuilder::new(name).spawn()?;
 
-    let mut colors = match colors {
+    let colors = match colors {
         Some(e) => e,
         None => vec![Color::Green; graph.count_vertices()]
     };

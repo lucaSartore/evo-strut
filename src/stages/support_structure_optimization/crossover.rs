@@ -27,7 +27,7 @@ impl<'a> Crossover<CompressedSupportGene, SupportStructureCrossoverSettings<'a>>
         }
     }
 
-    fn crossover(&self, a: &CompressedSupportGene, b: &CompressedSupportGene) -> CompressedSupportGene {
+    fn crossover(&self, a: &CompressedSupportGene, _b: &CompressedSupportGene) -> CompressedSupportGene {
         // todo: implement real crossover
         a.clone()
     }

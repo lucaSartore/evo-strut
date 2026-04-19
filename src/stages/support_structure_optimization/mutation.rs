@@ -1,5 +1,5 @@
 
-use crate::{evolution::{Mutator, Random}, models::{Settings, SurfaceGraph}, stages::{support_structure_optimization::models::CompressedSupportGene, support_structure_refinement::SupportStructureGene}};
+use crate::{evolution::{Mutator, Random}, models::{Settings, SurfaceGraph}, stages::support_structure_optimization::models::CompressedSupportGene};
 
 pub struct SupportStructureMutatorSettings<'a> {
     settings: &'a Settings,
@@ -31,6 +31,6 @@ impl<'a> Mutator<CompressedSupportGene, SupportStructureMutatorSettings<'a>> for
         }
     }
 
-    fn mutate(&self, gene: &mut CompressedSupportGene) {
+    fn mutate(&self, _gene: &mut CompressedSupportGene) {
     }
 }

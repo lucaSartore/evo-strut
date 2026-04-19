@@ -1,9 +1,7 @@
 use std::{hash::{Hash, Hasher}, ops::{Add, Sub}};
-use rand_distr::Normal;
-use rerun::{Position3D, Vector3D, external::glam::Vec3};
 use nalgebra::{ArrayStorage, Const, Matrix};
 
-use crate::{evolution::Random, models::{PointId, Settings}, support::random_distribution::RandomDistribution};
+use crate::{evolution::Random, models::Settings, support::random_distribution::RandomDistribution};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Point{

@@ -36,7 +36,7 @@ impl ElitistNextGenSelector {
 }
 
 impl<T> NextGenerationSelector<T, ElitistNextGenSelectorSettings> for ElitistNextGenSelector  {
-    fn new(settings: &ElitistNextGenSelectorSettings, rand: Random) -> Self {
+    fn new(settings: &ElitistNextGenSelectorSettings, _rand: Random) -> Self {
         Self{
             settings: *settings
         }

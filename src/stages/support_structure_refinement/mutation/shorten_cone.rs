@@ -1,12 +1,9 @@
 use smallvec::smallvec;
 
 use crate::models::Point;
-use crate::stages::support_structure_refinement::{ContactNode, MiddleNode, PositionAnchor, SupportNode};
-use crate::support;
-use crate::support::remove_random::RemoveRandom;
+use crate::stages::support_structure_refinement::{MiddleNode, PositionAnchor, SupportNode};
 
 use super::*;
-use super::super::models;
 
 pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureGene) {
     let rand = &mutator.rand;

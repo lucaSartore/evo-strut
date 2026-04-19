@@ -21,7 +21,7 @@ pub struct SupportStructureInitializer<'a> {
 }
 
 impl<'a> PopulationInitializer<SupportStructureGene, SupportStructureInitializerSettings<'a>> for SupportStructureInitializer<'a> {
-    fn new(settings: &SupportStructureInitializerSettings<'a>, rand: crate::evolution::Random) -> Self {
+    fn new(settings: &SupportStructureInitializerSettings<'a>, _rand: crate::evolution::Random) -> Self {
         Self {
             settings: settings.settings,
             template: settings.template

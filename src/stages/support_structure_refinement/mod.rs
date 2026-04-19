@@ -6,7 +6,7 @@ use anyhow::Result;
 use std::{marker::PhantomData};
 
 
-use crate::{evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, stages::{ContactPointsDecidedState, Pipeline, PipelineBehaviourTrait, SupportStructureOptimizedState, SupportStructureRefinedState}};
+use crate::{evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, stages::{Pipeline, PipelineBehaviourTrait, SupportStructureOptimizedState, SupportStructureRefinedState}};
 
 
 mod crossover;
@@ -57,7 +57,6 @@ impl SupportStructureRefiner for SimpleSupportStructureRefiner {
     fn optimize<'a>(status: &'a SupportStructureOptimizedState, structure_index: usize) -> Result<SupportStructureGene> {
         debug!("starting optimization for structure {structure_index}");
         let settings = &status.settings;
-        let connection_points = &status.connection_points;
         let graph = &status.graph;
         let s = &settings.support_structure_optimization_settings;
         let structure = &status.support_structures[structure_index];

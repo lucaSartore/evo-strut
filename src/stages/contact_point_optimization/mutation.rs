@@ -1,6 +1,6 @@
 use hashbrown::HashSet;
 
-use crate::{evolution::{Mutator, Random}, models::{FaceId, Settings, SurfaceGraph}, stages::contact_point_optimization::{ContactPointShape, initializer::ContactPointsInitializerSettings}, support::{graph_circle::find_circle, remove_random::RemoveRandom}};
+use crate::{evolution::{Mutator, Random}, models::{FaceId, Settings, SurfaceGraph}, stages::contact_point_optimization::ContactPointShape, support::{graph_circle::find_circle, remove_random::RemoveRandom}};
 use super::models::ContactPointsGene;
 
 pub struct ContactPointsMutatorSettings<'a> {

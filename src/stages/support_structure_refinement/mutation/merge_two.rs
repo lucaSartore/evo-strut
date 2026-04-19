@@ -1,8 +1,7 @@
 use smallvec::smallvec;
 
 use crate::models::Point;
-use crate::stages::support_structure_refinement::{ContactNode, MiddleNode, SupportNode, SupportNodeId};
-use crate::support;
+use crate::stages::support_structure_refinement::{MiddleNode, SupportNode};
 
 use super::*;
 use super::super::models;

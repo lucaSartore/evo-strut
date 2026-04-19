@@ -2,8 +2,7 @@ use std::marker::PhantomData;
 use anyhow::Result;
 
 mod evolver;
-pub use evolver::{Evolver, EvolverBehaviourTrait, EvolverBehaviour};
-use rand::Rng;
+pub use evolver::{Evolver, EvolverBehaviour};
 use rerun::external::glam::usize;
 
 mod score;
