@@ -37,7 +37,7 @@ pub  struct CriticalitySettings {
 impl Default for CriticalitySettings {
     fn default() -> Self {
         Self { 
-            support_overhanging_angle: 45.,
+            support_overhanging_angle: 60.,
             max_detachment_from_z_plane: 0.1,
             criticality_expansion_rate: 1.
         }
@@ -250,7 +250,7 @@ impl Default for SupportStructureOptimizationSettings {
             non_stiffness_cost: 1.,
             stiffness_cost_integration_size: 1.0,
             cone_area_cost: 2.0,
-            cone_too_steep_cost: 1.0,
+            cone_too_steep_cost: 10.0,
             cost_of_un_feasible_cone: 1e7,
             material_stiffness_settings: MaterialStiffnessSettings::default(),
             node_position_mutation_std: 3.0,

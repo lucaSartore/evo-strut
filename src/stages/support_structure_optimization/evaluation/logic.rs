@@ -113,9 +113,9 @@ fn evaluate_steepness_cost(descriptor: &GraphDescriptor, settings: &Settings) ->
                     let neighbour_position = descriptor.positions[neighbour];
                     let angle = Point::horizon_angle(node_position, neighbour_position).to_degrees().abs();
                     let distance = (node_position - neighbour_position).abs();
-                    let angle_diff = angle - settings.criticality_settings.support_overhanging_angle;
-                    if angle_diff < threshold {
-                        return (threshold - angle_diff) * distance;
+                    let surplus = threshold - angle;
+                    if surplus > 0. {
+                        return surplus * distance;
                     }
                     0.0
                 }).sum();
@@ -237,7 +237,6 @@ pub fn evaluate_cost(gene: &SupportStructureGene, settings: &Settings) -> Cost {
     let length_cost = evaluate_length_cost(&descriptor, settings);
     let stiffness_cost = evaluate_stiffness_cost(gene, &descriptor, settings);
 
-    return cone_cost + stiffness_cost;
 
     // println!(
     //     "cone_cost: {}, steepness_cost: {}, length_cost: {}, stiffness_cost: {}",
@@ -247,5 +246,6 @@ pub fn evaluate_cost(gene: &SupportStructureGene, settings: &Settings) -> Cost {
     //     stiffness_cost.as_f32()
     // );
 
+    return cone_cost + stiffness_cost + steepness_cost;
     cone_cost + steepness_cost + length_cost + stiffness_cost
 }
