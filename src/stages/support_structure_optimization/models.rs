@@ -18,6 +18,15 @@ pub struct PositionAnchor {
     pub offset: Point
 }
 
+impl PositionAnchor {
+    pub fn new(node_to: SupportNodeId, node_to_position: Point, anchored_node_position: Point) -> Self {
+        Self {
+            to: node_to,
+            offset: anchored_node_position - node_to_position
+        }
+    }
+}
+
 
 /// represent a base point (i.e. a point that is connected either to the ground,
 /// or to the printed mesh itself, and provide "support to the support structure")
@@ -236,6 +245,15 @@ impl SupportStructureGene {
         loop {
             let v = self.nodes.choose_random(rand).expect("can't execute random selection on an empty graph");
             if !v.1.is_contact() {
+                return v.0;
+            }
+        }
+    }
+
+    pub fn random_contact_node(&mut self, rand: &Random) -> SupportNodeId {
+        loop {
+            let v = self.nodes.choose_random(rand).expect("can't execute random selection on an empty graph");
+            if v.1.is_contact() {
                 return v.0;
             }
         }

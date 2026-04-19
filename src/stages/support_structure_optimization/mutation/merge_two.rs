@@ -44,7 +44,7 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureGene
 
     let new_node = MiddleNode {
         id,
-        anchor: models::PositionAnchor { to: n1.id(), offset: support_position - p1},
+        anchor: models::PositionAnchor::new(n1.id(), p1, support_position),
         last_position: support_position,
         leans_on: smallvec![]
     };

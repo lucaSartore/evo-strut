@@ -19,6 +19,12 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureGene
         SupportNode::Contact(contact_node) => &mut contact_node.leans_on,
     };
 
+    // 50% probability to remove the node (instead of just adding one)
+    if rand.random_choice(0.5) {
+        let to_remove = rand.next_in_range(0, leans_on.len() as u64) as usize;
+        leans_on.swap_remove(to_remove);
+    }
+
     if leans_on.contains(&node_to_add) {
         return;
     }

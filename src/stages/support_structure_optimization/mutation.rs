@@ -6,6 +6,7 @@ mod remove_one_node;
 mod remove_one_leans_on;
 mod add_one_leans_on;
 mod create_one_more_leans_on;
+mod shorten_cone;
 
 pub struct SupportStructureMutatorSettings<'a> {
     settings: &'a Settings,
@@ -44,7 +45,8 @@ impl<'a> Mutator<SupportStructureGene, SupportStructureMutatorSettings<'a>> for 
             MergeTwo,
             MoveOne,
             RemoveOneLeansOn,
-            RemoveOneNode
+            RemoveOneNode,
+            ShortenCone,
         }
         const OPTIONS: &[MK] = &[
             MK::AddOneLeansOn,
@@ -52,19 +54,23 @@ impl<'a> Mutator<SupportStructureGene, SupportStructureMutatorSettings<'a>> for 
             MK::MergeTwo,
             MK::MoveOne,
             MK::RemoveOneLeansOn,
-            MK::RemoveOneNode
+            MK::RemoveOneNode,
+            MK::ShortenCone
         ];
 
-        let mutation = self.rand.choose_or_panic(OPTIONS);
+        for _ in 0..5 {
+            let mutation = self.rand.choose_or_panic(OPTIONS);
 
-        match mutation {
-            MK::AddOneLeansOn => add_one_leans_on::mutate(self, gene),
-            MK::CreateOneMoreLeansOn => create_one_more_leans_on::mutate(self, gene),
-            MK::MergeTwo => merge_two::mutate(self, gene),
-            MK::MoveOne => move_one::mutate(self, gene),
-            MK::RemoveOneLeansOn => remove_one_leans_on::mutate(self, gene),
-            MK::RemoveOneNode => remove_one_node::mutate(self, gene),
-        };
-        gene.repair(self.graph, &self.rand);
+            match mutation {
+                MK::AddOneLeansOn => add_one_leans_on::mutate(self, gene),
+                MK::CreateOneMoreLeansOn => create_one_more_leans_on::mutate(self, gene),
+                MK::MergeTwo => merge_two::mutate(self, gene),
+                MK::MoveOne => move_one::mutate(self, gene),
+                MK::RemoveOneLeansOn => remove_one_leans_on::mutate(self, gene),
+                MK::RemoveOneNode => remove_one_node::mutate(self, gene),
+                MK::ShortenCone => shorten_cone::mutate(self, gene),
+            };
+            gene.repair(self.graph, &self.rand);
+        }
     }
 }

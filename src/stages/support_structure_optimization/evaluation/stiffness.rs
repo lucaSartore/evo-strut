@@ -66,10 +66,9 @@ pub fn stiffness_series(base_stiffness: &Stiffness, point_from: Point, point_to:
     let Some(base_compliance) = base_stiffness.0.try_inverse() else {
         panic!("Failed to invert base stiffness matrix {:?}", base_stiffness.0);
     };
-    let Some(beam_compliance) = beam_stiffness.0.try_inverse() else {
-        panic!("Failed to invert base stiffness matrix {:?}", beam_stiffness.0);
-    };
-
+    // when the beam is too short, the stiffness matrix is so high that is some times not
+    // invertible. In that case we default to a zero matrix
+    let beam_compliance = beam_stiffness.0.try_inverse().unwrap_or(Matrix6::zeros());
     // Calculate full compliance: beam_compliance + jacobian * base_compliance * jacobian.T
     let full_compliance = beam_compliance + jacobian * base_compliance * jacobian.transpose();
 
@@ -88,10 +87,12 @@ pub fn stiffness_parallel(s: &[Stiffness]) -> Stiffness {
         return Stiffness(Matrix6::zeros());
     }
 
-    let mut result = s[0].0.clone();
+    let mut result = s[0].0;
     for stiffness in &s[1..] {
         result += stiffness.0;
     }
+    // ensuring stiffness is never too high
+    result.iter_mut().for_each(|x| *x = x.clamp(-Stiffness::STF, Stiffness::STF));
 
     Stiffness(result)
 }
@@ -109,7 +110,10 @@ pub fn calculate_beam_stiffness(point_from: Point, point_to: Point, settings: &M
     let translation_matrix = get_rotation_matrix(&beam_vec);
 
     // Rotate: T.T * K * T
-    let rotated = translation_matrix.transpose() * beam_stiffness * translation_matrix;
+    let mut rotated = translation_matrix.transpose() * beam_stiffness * translation_matrix;
+
+    // ensuring stiffness is never too high
+    rotated.iter_mut().for_each(|x| *x = x.clamp(-Stiffness::STF, Stiffness::STF));
 
     Stiffness(rotated)
 }

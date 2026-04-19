@@ -59,7 +59,7 @@ fn cost_of_single_cone(base: Point, circle_center: Point, circle_radius: f32, se
     let side = ((base_offset + circle_radius).powi(2) + height.powi(2)).sqrt();
     let area = side * circle_radius * std::f32::consts::PI;
 
-    let steepness = f32::atan(height / (circle_radius + base_offset));
+    let steepness = f32::atan(height / (circle_radius + base_offset)).to_degrees();
     let threshold = 90. - settings.criticality_settings.support_overhanging_angle;
 
     let mut cost = 0.;
@@ -237,7 +237,7 @@ pub fn evaluate_cost(gene: &SupportStructureGene, settings: &Settings) -> Cost {
     let length_cost = evaluate_length_cost(&descriptor, settings);
     let stiffness_cost = evaluate_stiffness_cost(gene, &descriptor, settings);
 
-    return stiffness_cost;
+    return cone_cost + stiffness_cost;
 
     // println!(
     //     "cone_cost: {}, steepness_cost: {}, length_cost: {}, stiffness_cost: {}",

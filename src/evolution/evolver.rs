@@ -89,8 +89,8 @@ where
             .collect();
 
         let mut current_gen_costs = current_gen
-            // .par_iter()
-            .iter()
+            .par_iter()
+            // .iter()
             .map(|y| self.evaluator.evaluate(y))
             .collect::<Vec<Cost>>();
 
@@ -101,8 +101,8 @@ where
                 .crossover_selector
                 .select_for_crossover(&current_gen_costs, n)
                 .ok_or(anyhow!("Crossover selection failed to return any element"))?
-                // .par_iter()
-                .iter()
+                .par_iter()
+                // .iter()
                 .map(|(ai, bi)| {
                     let a = &current_gen[*ai];
                     let b = &current_gen[*bi];

@@ -33,7 +33,7 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureGene
 
     gene.nodes.insert(new_node_id, SupportNode::Middle(MiddleNode{
         id: new_node_id,
-        anchor: PositionAnchor{to: n1, offset: Point::ZERO},
+        anchor: PositionAnchor::new(n1, position, new_node_position),
         last_position: new_node_position,
         leans_on: smallvec![]
     }));
