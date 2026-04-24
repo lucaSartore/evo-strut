@@ -90,6 +90,13 @@ impl Random {
     fn _choose<'a, T>(&self, options: &'a [T], r: &mut impl R) -> Option<&'a T> {
         options.choose(r)
     }
+    
+    // Returns a random element from the slice.
+    // Panics if the slice is empty.
+    publish!(choose_mut = _choose_mut<'a, T>(options: &'a mut [T]) -> Option<&'a mut T>);
+    fn _choose_mut<'a, T>(&self, options: &'a mut [T], r: &mut impl R) -> Option<&'a mut T> {
+        options.choose_mut(r)
+    }
 
     // Returns n random elements from the slice.
     // Note: This uses 'choose_multiple', which samples without replacement.

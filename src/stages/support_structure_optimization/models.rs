@@ -1,4 +1,6 @@
-use hashbrown::HashMap;
+use hashbrown::{HashMap, hash_set::Iter};
+use itertools::Itertools;
+use nalgebra::Matrix2;
 use rerun::demo_util::grid;
 use smallvec::smallvec;
 
@@ -66,6 +68,61 @@ pub struct SupportGroup {
     pub supports: Vec<ContactPoint>,
     pub layers: Vec<SupportLayer>
 }
+impl SupportGroup {
+    pub fn max_height(&self) -> f32 {
+        self.support_positions()
+            .max_by_key(|x| Cost::new(x.z))
+            .expect("each group must contains at least one support")
+            .z
+    }
+
+    // calculate the mean and covariance matrix of the distribution of supports
+    // at a certain height.
+    // is based on al the nodes that are above the height (including
+    // both support nodes, and nodes that are part of layers
+    pub fn mean_and_cov(&self, height: f32) -> (Point, Matrix2<f32>) {
+        let points: Vec<Point> = self
+            .layers
+            .iter()
+            .flat_map(|x| x.nodes_positions())
+            .chain(self.support_positions())
+            .filter(|x| x.z > height)
+            .map(|mut x| {x.z = 0.; x})
+            .collect();
+        let n = points.len() as f32;
+
+        assert_ne!(n, 0., "there shall always be at least a point above the height");
+
+        let sum_point = points.iter().fold(Point::ZERO, |acc, p| acc + *p);
+        let mean = sum_point.to_scaled(1./n);
+
+        let mut cov_xx = 0.0;
+        let mut cov_yy = 0.0;
+        let mut cov_xy = 0.0;
+
+        for p in &points {
+            let dx = p.x - mean.x;
+            let dy = p.y - mean.y;
+            
+            cov_xx += dx * dx;
+            cov_yy += dy * dy;
+            cov_xy += dx * dy;
+        }
+
+        let covariance_matrix = Matrix2::new(
+            cov_xx / n, cov_xy / n,
+            cov_xy / n, cov_yy / n,
+        );
+
+        (mean, covariance_matrix)
+    }
+
+    pub fn support_positions(&self) -> impl Iterator<Item = Point> {
+        self.supports
+            .iter()
+            .map(|x| x.position)
+    }
+}
 
 impl CompressedSupportGene {
     pub fn to_full_genes(&self, graph: & SurfaceGraph) -> Vec<SupportStructureGene> {
@@ -83,6 +140,15 @@ impl CompressedSupportGene {
             builder.add_group(g);
         }
         builder.build(graph)
+    }
+
+    pub fn rand_group_mut(&mut self, rand: &Random) -> &mut SupportGroup {
+        rand.choose_mut(&mut self.groups)
+            .expect("there shall always be at least a group")
+    }
+    pub fn rand_group(&self, rand: &Random) -> &SupportGroup {
+        rand.choose(&self.groups)
+            .expect("there shall always be at least a group")
     }
 }
 

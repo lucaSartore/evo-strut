@@ -15,11 +15,20 @@ impl<'a> SupportStructureMutatorSettings<'a> {
     }
 }
 
+mod add_layer;
+mod add_layer_point;
+mod create_new_group;
+mod edit_layer_connections;
+mod move_contact;
+mod move_layer_height;
+mod move_points_in_layer;
+mod remove_layer_point;
+
 
 pub struct SupportStructureMutator<'a> {
-    settings: &'a Settings,
-    graph: &'a SurfaceGraph,
-    rand: Random
+    pub settings: &'a Settings,
+    pub graph: &'a SurfaceGraph,
+    pub rand: Random
 }
 
 impl<'a> Mutator<CompressedSupportGene, SupportStructureMutatorSettings<'a>> for SupportStructureMutator<'a> {
@@ -31,6 +40,42 @@ impl<'a> Mutator<CompressedSupportGene, SupportStructureMutatorSettings<'a>> for
         }
     }
 
-    fn mutate(&self, _gene: &mut CompressedSupportGene) {
+    fn mutate(&self, gene: &mut CompressedSupportGene) {
+        enum MK {
+            AddLayer,
+            AddLayerPoint,
+            CreateNewGroup,
+            EditLayerConnections,
+            MoveContact,
+            MoveLayerHeight,
+            MovePointsInLayer,
+            RemoveLayerPoint,
+        }
+        const OPTIONS: &[MK] = &[
+            MK::AddLayer,
+            MK::AddLayerPoint,
+            MK::CreateNewGroup,
+            MK::EditLayerConnections,
+            MK::MoveContact,
+            MK::MoveLayerHeight,
+            MK::MovePointsInLayer,
+            MK::RemoveLayerPoint
+        ];
+
+        let n_mutations = self.rand.next_in_range(1, 6);
+        for _ in 0..n_mutations {
+            let mutation = self.rand.choose_or_panic(OPTIONS);
+
+            match mutation {
+                MK::AddLayer => add_layer::mutate(self, gene),
+                MK::AddLayerPoint => add_layer_point::mutate(self, gene),
+                MK::CreateNewGroup => create_new_group::mutate(self, gene),
+                MK::EditLayerConnections => edit_layer_connections::mutate(self, gene),
+                MK::MoveContact => move_contact::mutate(self, gene),
+                MK::MoveLayerHeight => move_layer_height::mutate(self, gene),
+                MK::MovePointsInLayer => move_points_in_layer::mutate(self, gene),
+                MK::RemoveLayerPoint => remove_layer_point::mutate(self, gene)
+            };
+        }
     }
 }
