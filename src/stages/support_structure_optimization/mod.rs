@@ -32,10 +32,12 @@ where
         input: Pipeline<ContactPointsDecidedState, TB>,
     ) -> Result<Pipeline<SupportStructureOptimizedState, TB>> {
         let result = TB::TSupportStructureOptimizer::optimize(&input.state)?;
+
+        let support_structures = result.to_full_genes(&input.state.graph);
         Ok(Pipeline::from_state(SupportStructureOptimizedState{
             settings: input.state.settings,
             graph: input.state.graph,
-            support_structures: result.to_full_genes(),
+            support_structures,
             connection_points: input.state.connection_points
         }))
     }

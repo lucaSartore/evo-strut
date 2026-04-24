@@ -15,13 +15,13 @@ impl<'a> Evaluator<CompressedSupportGene, SupportStructureEvaluatorSettings<'a>>
 
     fn evaluate(&self, gene: &CompressedSupportGene) -> Cost {
         Cost::new(gene
-            .to_full_genes()
+            .to_full_genes(&self.evaluator.graph)
             .iter()
             .map(|x| self.evaluator.evaluate(x).as_f32())
             .sum())
     }
 
     fn visualize(&self, gene: &CompressedSupportGene) -> anyhow::Result<()> {
-        self.evaluator.visualize(&gene.to_full_gene())
+        self.evaluator.visualize(&gene.to_full_gene(&self.evaluator.graph))
     }
 }

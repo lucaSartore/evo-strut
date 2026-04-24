@@ -23,7 +23,7 @@ impl<'a> SupportStructureEvaluatorSettings<'a> {
 
 pub struct SupportStructureEvaluator<'a> {
     settings: &'a Settings,
-    graph: &'a SurfaceGraph,
+    pub graph: &'a SurfaceGraph,
     stream: RecordingStream
 }
 

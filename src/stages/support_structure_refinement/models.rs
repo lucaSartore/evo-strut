@@ -157,6 +157,14 @@ impl SupportNode {
         }
     }
 
+    pub fn add_leans_on(&mut self, id: SupportNodeId) {
+        match self {
+            SupportNode::Base(_) => (),
+            SupportNode::Middle(n) => n.leans_on.push(id),
+            SupportNode::Contact(n) => n.leans_on.push(id)
+        };
+    }
+
     pub fn id(&self) -> SupportNodeId {
         match self {
             SupportNode::Base(n) => n.id,
