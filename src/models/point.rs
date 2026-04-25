@@ -1,5 +1,6 @@
 use std::{hash::{Hash, Hasher}, ops::{Add, Sub}};
-use nalgebra::{ArrayStorage, Const, Matrix};
+use nalgebra::{ArrayStorage, Const, Matrix, Matrix2};
+use rand::seq::index::sample;
 
 use crate::{evolution::Random, models::Settings, support::random_distribution::RandomDistribution};
 
@@ -155,6 +156,24 @@ impl Point {
         Point { x, y, z }
     }
 
+    /// create a new random point with z = 0 and x,y sampled from the a random distribution
+    pub fn random_zero_z(mean: Point, covariance: &Matrix2<f32>, rand: &Random) -> Point {
+        let distribution = RandomDistribution::Normal{ mean: 0., std_dev: 1.};
+        let u = rand.next_distribution(&distribution);
+        let v = rand.next_distribution(&distribution);
+        
+        // Compute Cholesky decomposition of covariance matrix
+        let l = covariance.cholesky().map(|x| x.l());
+        
+        // Apply linear transformation to independent standard normals
+        let sample = l.map(|l| l * Matrix::<f32, Const<2>, Const<1>, _>::from_column_slice(&[u, v]));
+        
+        Point {
+            x: mean.x + sample.map(|x| x[0]).unwrap_or(0.),
+            y: mean.y + sample.map(|x| x[1]).unwrap_or(0.),
+            z: 0.0
+        }
+    }
 }
 
 impl Into<[f32;3]> for Point {

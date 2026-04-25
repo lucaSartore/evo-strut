@@ -43,7 +43,7 @@ pub fn genome_to_graph_descriptor(gene: &SupportStructureGene) -> GraphDescripto
 
 
 fn cost_of_single_cone(base: Point, circle_center: Point, circle_radius: f32, settings: &Settings) -> f32 {
-    let s = &settings.support_structure_optimization_settings;
+    let s = &settings.support_structure_refinement_settings;
     if base.z >= circle_center.z {
         return s.cost_of_un_feasible_cone;
     }
@@ -118,7 +118,7 @@ fn evaluate_steepness_cost(descriptor: &GraphDescriptor, settings: &Settings) ->
                 }).sum();
             len
         }).sum();
-    Cost::new(distance_times_angle * settings.support_structure_optimization_settings.cost_for_support_too_steep)
+    Cost::new(distance_times_angle * settings.support_structure_refinement_settings.cost_for_support_too_steep)
 }
 
 fn evaluate_length_cost(descriptor: &GraphDescriptor, settings: &Settings) -> Cost {
@@ -136,11 +136,11 @@ fn evaluate_length_cost(descriptor: &GraphDescriptor, settings: &Settings) -> Co
                 }).sum();
             len
         }).sum();
-    Cost::new(distance * settings.support_structure_optimization_settings.cost_for_unit_of_length)
+    Cost::new(distance * settings.support_structure_refinement_settings.cost_for_unit_of_length)
 }
 
 fn evaluate_single_support_stiffness(base_stiffness: &Stiffness, from: Point, to: Point, settings: &Settings) -> f32 {
-    let s = &settings.support_structure_optimization_settings;
+    let s = &settings.support_structure_refinement_settings;
     let to_integrate = Point::interpolate(from, to, s.stiffness_cost_integration_size);
     let vector = to - from;
     let mut cost = 0.;
@@ -198,7 +198,7 @@ fn evaluate_stiffness<'b, 'a: 'b>(point: SupportNodeId, graph: &Graph, cache: &'
 }
 
 fn evaluate_stiffness_cost(gene: &SupportStructureGene, descriptor: &GraphDescriptor, settings: &Settings) -> Cost {
-    let s = &settings.support_structure_optimization_settings;
+    let s = &settings.support_structure_refinement_settings;
     let mut cost = 0.;
     let mut graph = Graph::new();
     for node in &descriptor.nodes {

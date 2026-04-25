@@ -58,7 +58,7 @@ impl SupportStructureRefiner for SimpleSupportStructureRefiner {
         debug!("starting optimization for structure {structure_index}");
         let settings = &status.settings;
         let graph = &status.graph;
-        let s = &settings.support_structure_optimization_settings;
+        let s = &settings.support_structure_refinement_settings;
         let structure = &status.support_structures[structure_index];
 
         type Behaviour<'a> = EvolverBehaviour<

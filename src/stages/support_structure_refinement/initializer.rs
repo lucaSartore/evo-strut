@@ -29,7 +29,7 @@ impl<'a> PopulationInitializer<SupportStructureGene, SupportStructureInitializer
     }
 
     fn get_initial_individuals(&self) -> usize {
-        self.settings.support_structure_optimization_settings.generation_size
+        self.settings.support_structure_refinement_settings.generation_size
     }
 
     fn get_random_individual(&self) -> SupportStructureGene {

@@ -1,6 +1,5 @@
 use crate::support::random_distribution::RandomDistribution;
 
-
 #[derive(Default, Debug, Clone)]
 pub struct Settings {
     /// input output parameters
@@ -8,17 +7,18 @@ pub struct Settings {
     /// parameters that define what constitute a "critical" surface
     /// (i.e. a surface that needs supports)
     pub criticality_settings: CriticalitySettings,
-    /// parameters that control the optimization of the
-    /// contact points. This include cost functions weights as well as 
-    /// optimization hyper-parameters
     pub contact_points_optimization_settings: ContactPointsOptimizationSettings,
     /// parameters that control the optimization of the
+    /// contact points. This include cost functions weights as well as
+    /// optimization hyper-parameters
+    pub support_structure_optimization_settings: SupportStructureOptimizationSettings,
+    /// parameters that control the optimization of the
     /// support structure.
-    pub support_structure_optimization_settings: SupportStructureOptimizationSettings
+    pub support_structure_refinement_settings: SupportStructureRefinementSettings,
 }
 
 #[derive(Debug, Clone)]
-pub  struct CriticalitySettings {
+pub struct CriticalitySettings {
     /// minimum angle for which supports are added
     /// if set to zero all overhangs will be supported
     /// if set to 90 none of the overhangs will be supported
@@ -31,15 +31,15 @@ pub  struct CriticalitySettings {
     /// the critical areas are expanded into adjacent surfaces
     /// in order to merge many small and grouped critical surfaces
     /// measured in mm
-    pub criticality_expansion_rate: f32
+    pub criticality_expansion_rate: f32,
 }
 
 impl Default for CriticalitySettings {
     fn default() -> Self {
-        Self { 
+        Self {
             support_overhanging_angle: 60.,
             max_detachment_from_z_plane: 0.1,
-            criticality_expansion_rate: 1.
+            criticality_expansion_rate: 1.,
         }
     }
 }
@@ -58,7 +58,7 @@ pub struct IoSettings {
     /// so in a mesh that is not properly meshed will result in
     /// poor performances of the algorithm)
     /// unit of measure: mm
-    pub target_edge_length: f32
+    pub target_edge_length: f32,
 }
 
 impl Default for IoSettings {
@@ -69,7 +69,7 @@ impl Default for IoSettings {
             input_file_path: "test_meshes/dragon_re_meshed.stl".into(),
             re_meshed_input_file_path: None,
             output_file_path: "output.stl".into(),
-            target_edge_length: 0.
+            target_edge_length: 0.,
         }
     }
 }
@@ -99,7 +99,7 @@ pub struct ContactPointsOptimizationSettings {
     /// with a specific area
     /// unit of measure [cost/mm^2]
     pub support_area_cost: f32,
-    /// cost associated with an element that has no support at all 
+    /// cost associated with an element that has no support at all
     /// (i.e. a point that is not touching the flor, and is the
     /// lower among all of his neighbors)
     /// it goes without saying that this should be set to something
@@ -156,10 +156,8 @@ pub struct ContactPointsOptimizationSettings {
     ///  - Small tournament size => slow selection process => slow to converge, preserve diversity
     pub tournament_size: usize,
     /// number of individual generated/evaluated in every generation
-    pub num_elite_individuals: usize
+    pub num_elite_individuals: usize,
 }
-
-
 
 impl Default for ContactPointsOptimizationSettings {
     fn default() -> Self {
@@ -170,22 +168,25 @@ impl Default for ContactPointsOptimizationSettings {
             non_supported_base_cost: 1000.0,
             layer_height: 1.,
             critical_angle_clipping_factor: 5.,
-            initialization_support_density: RandomDistribution::InRange { low: 0.0001, high: 0.001 },
+            initialization_support_density: RandomDistribution::InRange {
+                low: 0.05,
+                high: 0.051,
+            },
             max_support_radius: 4.,
             min_support_radius: 0.5,
             move_support_mutation_intensity: 2.5,
             change_support_radius_mutation_intensity: 2.,
-            num_generations: 1000,
+            num_generations: 1,
             patience: 25,
             generation_size: 100,
             tournament_size: 10,
-            num_elite_individuals: 10
+            num_elite_individuals: 10,
         }
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct ContactPointsGroupingSettings {
+pub struct SupportStructureOptimizationSettings {
     /// number of generations optimized
     pub num_generations: usize,
     /// patience when optimizing (if the score does not improve
@@ -202,10 +203,31 @@ pub struct ContactPointsGroupingSettings {
     pub tournament_size: usize,
     /// number of individual generated/evaluated in every generation
     pub num_elite_individuals: usize,
+    /// number of points that are on generated on average when a new layer is initialized
+    pub num_points_per_layer: RandomDistribution,
+    /// multiplier for the covariance matrix used to sample the points within a layer.
+    pub points_sampling_covariance_multiplier: f32,
+    /// number of groups that are initially present in each individual
+    pub num_initial_groups: usize,
+}
+
+impl Default for SupportStructureOptimizationSettings {
+    fn default() -> Self {
+        Self {
+            num_generations: 2000,
+            patience: 50,
+            generation_size: 100,
+            tournament_size: 10,
+            num_elite_individuals: 10,
+            num_points_per_layer: RandomDistribution::InRange { low: 1., high: 7. },
+            points_sampling_covariance_multiplier: 0.3,
+            num_initial_groups: 10
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
-pub struct SupportStructureOptimizationSettings {
+pub struct SupportStructureRefinementSettings {
     /// number of generations optimized
     pub num_generations: usize,
     /// patience when optimizing (if the score does not improve
@@ -253,10 +275,10 @@ pub struct SupportStructureOptimizationSettings {
     pub node_position_mutation_std: f32,
     /// cost of a node that is not stiff at all
     /// unit of measure: cost
-    pub max_non_stiffness_cost: f32
+    pub max_non_stiffness_cost: f32,
 }
 
-impl Default for SupportStructureOptimizationSettings {
+impl Default for SupportStructureRefinementSettings {
     fn default() -> Self {
         Self {
             num_generations: 2000,
@@ -273,7 +295,7 @@ impl Default for SupportStructureOptimizationSettings {
             cost_of_un_feasible_cone: 1e7,
             material_stiffness_settings: MaterialStiffnessSettings::default(),
             node_position_mutation_std: 3.0,
-            max_non_stiffness_cost: 1e7
+            max_non_stiffness_cost: 1e7,
         }
     }
 }
@@ -285,18 +307,18 @@ pub struct MaterialStiffnessSettings {
     pub g_mod: f32,
     pub jxx: f32,
     pub iy: f32,
-    pub iz: f32
+    pub iz: f32,
 }
 
 impl Default for MaterialStiffnessSettings {
     fn default() -> Self {
-        Self { 
+        Self {
             area: 4.0,
             e_mod: 3000.0,
             g_mod: 1000.0,
             jxx: 6.0,
             iy: 3.0,
-            iz: 3.0
+            iz: 3.0,
         }
     }
 }

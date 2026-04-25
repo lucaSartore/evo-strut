@@ -15,14 +15,14 @@ impl<'a> SupportStructureMutatorSettings<'a> {
     }
 }
 
-mod add_layer;
-mod add_layer_point;
-mod create_new_group;
-mod edit_layer_connections;
-mod move_contact;
-mod move_layer_height;
-mod move_points_in_layer;
-mod remove_layer_point;
+pub mod add_layer;
+pub mod add_layer_point;
+pub mod create_new_group;
+pub mod edit_layer_connections;
+pub mod move_contact;
+pub mod move_layer_height;
+pub mod move_points_in_layer;
+pub mod remove_layer_point;
 
 
 pub struct SupportStructureMutator<'a> {
@@ -53,13 +53,13 @@ impl<'a> Mutator<CompressedSupportGene, SupportStructureMutatorSettings<'a>> for
         }
         const OPTIONS: &[MK] = &[
             MK::AddLayer,
-            MK::AddLayerPoint,
-            MK::CreateNewGroup,
-            MK::EditLayerConnections,
-            MK::MoveContact,
-            MK::MoveLayerHeight,
-            MK::MovePointsInLayer,
-            MK::RemoveLayerPoint
+            // MK::AddLayerPoint,
+            // MK::CreateNewGroup,
+            // MK::EditLayerConnections,
+            // MK::MoveContact,
+            // MK::MoveLayerHeight,
+            // MK::MovePointsInLayer,
+            // MK::RemoveLayerPoint
         ];
 
         let n_mutations = self.rand.next_in_range(1, 6);

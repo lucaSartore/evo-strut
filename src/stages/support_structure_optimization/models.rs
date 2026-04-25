@@ -54,6 +54,14 @@ pub struct LayerNode {
     pub offset: Point,
     pub connections: LayerConnections
 }
+impl LayerNode {
+    pub(crate) fn new_random(mean: Point, covariance: &nalgebra::Matrix2<f32>, rand: &Random) -> Self {
+        Self {
+            offset: Point::random_zero_z(mean, covariance, rand),
+            connections: LayerConnections::new_random(rand)
+        }
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct LayerConnections {
@@ -61,6 +69,15 @@ pub struct LayerConnections {
     pub connect_to_closest_below_layer_node: bool,
     pub connect_to_second_closest_below_layer_node: bool,
     pub connect_to_third_closest_below_layer_node: bool
+}
+impl LayerConnections {
+    fn new_random(rand: &Random) -> LayerConnections {
+        Self {
+            connect_to_closest_below_layer_node: rand.random_choice(0.5),
+            connect_to_second_closest_below_layer_node: rand.random_choice(0.5),
+            connect_to_third_closest_below_layer_node: rand.random_choice(0.5)
+        }
+    }
 }
 
 #[derive(Clone, Debug)]

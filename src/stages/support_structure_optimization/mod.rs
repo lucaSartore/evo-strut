@@ -89,7 +89,7 @@ impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
                 num_novel_individual: s.generation_size - s.num_elite_individuals,
                 num_elite_individual: s.num_elite_individuals
             },
-            &SupportStructureInitializerSettings::new(settings, connection_points),
+            &SupportStructureInitializerSettings::new(settings, connection_points, graph),
             Random::UnSeededRandom
         );
 

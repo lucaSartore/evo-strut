@@ -19,7 +19,7 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureGene
     let mut new_node_position = Point::random_in_between(position, position_zero, rand);
     new_node_position = Point::random(
         new_node_position,
-        mutator.settings.support_structure_optimization_settings.node_position_mutation_std,
+        mutator.settings.support_structure_refinement_settings.node_position_mutation_std,
         rand
     );
 
