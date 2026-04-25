@@ -83,6 +83,12 @@ impl Random {
         self.next_u64() % (high - low) + low
     }
 
+    /// Returns a random element from the slice.
+    /// Panics if the slice is empty.
+    pub fn next_in_range_usize(&self, low: usize, high: usize) -> usize {
+        self.next_u64() as usize % (high - low) + low
+    }
+
 
     // Returns a random element from the slice.
     // Panics if the slice is empty.

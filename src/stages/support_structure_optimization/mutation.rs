@@ -56,13 +56,13 @@ impl<'a> Mutator<CompressedSupportGene, SupportStructureMutatorSettings<'a>> for
             // MK::AddLayerPoint,
             // MK::CreateNewGroup,
             // MK::EditLayerConnections,
-            // MK::MoveContact,
+            MK::MoveContact,
             // MK::MoveLayerHeight,
             // MK::MovePointsInLayer,
             // MK::RemoveLayerPoint
         ];
 
-        let n_mutations = self.rand.next_in_range(1, 6);
+        let n_mutations = self.rand.next_in_range(1, 3);
         for _ in 0..n_mutations {
             let mutation = self.rand.choose_or_panic(OPTIONS);
 

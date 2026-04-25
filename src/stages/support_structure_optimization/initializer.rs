@@ -1,4 +1,7 @@
+use core::f32;
+
 use itertools::{Group, Itertools};
+use rerun::external::glam::usize;
 
 use crate::{evolution::{PopulationInitializer, Random}, models::{Settings, SurfaceGraph}, stages::{contact_point_optimization::ContactPointsGene, support_structure_optimization::{CompressedSupportGene, models::{ContactPoint, SupportGroup}}}};
 
@@ -41,7 +44,8 @@ impl<'a> PopulationInitializer<CompressedSupportGene, SupportStructureInitialize
     }
 
     fn get_random_individual(&self) -> CompressedSupportGene {
-        let num_groups = self.settings.support_structure_optimization_settings.num_initial_groups;
+        let mult = self.settings.support_structure_optimization_settings.num_initial_groups_multiplier;
+        let num_groups = (mult * self.contact_points.contact_points.len() as f32) as usize;
 
         let groups = self.contact_points
             .contact_points

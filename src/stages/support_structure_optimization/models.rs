@@ -1,11 +1,15 @@
+use std::fmt::Debug;
+
 use hashbrown::{HashMap, hash_set::Iter};
 use itertools::Itertools;
 use nalgebra::Matrix2;
-use rerun::demo_util::grid;
+use rerun::{demo_util::grid, external::glam::usize};
 use smallvec::smallvec;
 
 use crate::{evolution::{Cost, Random}, models::{Point, SurfaceGraph}, stages::support_structure_refinement::{BaseNode, ContactNode, MiddleNode, PositionAnchor, SupportNode, SupportNodeId, SupportStructureGene}};
 
+
+type ContactPointMutPtr<'a> = (&'a mut ContactPoint, usize);
 
 #[derive(Clone, Debug)]
 pub struct CompressedSupportGene {
@@ -55,9 +59,9 @@ pub struct LayerNode {
     pub connections: LayerConnections
 }
 impl LayerNode {
-    pub(crate) fn new_random(mean: Point, covariance: &nalgebra::Matrix2<f32>, rand: &Random) -> Self {
+    pub(crate) fn new_random(covariance: &nalgebra::Matrix2<f32>, rand: &Random) -> Self {
         Self {
-            offset: Point::random_zero_z(mean, covariance, rand),
+            offset: Point::random_zero_z(Point::ZERO, covariance, rand),
             connections: LayerConnections::new_random(rand)
         }
     }
@@ -71,7 +75,7 @@ pub struct LayerConnections {
     pub connect_to_third_closest_below_layer_node: bool
 }
 impl LayerConnections {
-    fn new_random(rand: &Random) -> LayerConnections {
+    pub fn new_random(rand: &Random) -> LayerConnections {
         Self {
             connect_to_closest_below_layer_node: rand.random_choice(0.5),
             connect_to_second_closest_below_layer_node: rand.random_choice(0.5),
@@ -139,6 +143,19 @@ impl SupportGroup {
             .iter()
             .map(|x| x.position)
     }
+
+    pub fn pop_random_support(&mut self, rand: &Random) -> ContactPoint {
+        let index = rand.next_in_range_usize(0, self.supports.len());
+        self.supports.swap_remove(index)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.supports.is_empty()
+    }
+
+    pub fn add_support(&mut self, element: ContactPoint)  {
+        self.supports.push(element);
+    }
 }
 
 impl CompressedSupportGene {
@@ -166,6 +183,28 @@ impl CompressedSupportGene {
     pub fn rand_group(&self, rand: &Random) -> &SupportGroup {
         rand.choose(&self.groups)
             .expect("there shall always be at least a group")
+    }
+
+    pub(crate) fn get_two_groups_mut(&mut self, g1: usize, g2: usize) -> (&mut SupportGroup, &mut SupportGroup) {
+        assert_ne!(g1, g2, "can't get two mutable references");
+        let swap = g1 > g2;
+        let (min, max) = if swap {
+            (g2, g1)
+        } else {
+            (g1, g2)
+        };
+        let (left, right) = self.groups.split_at_mut(max);
+        let ref1 = &mut left[min];
+        let ref2 = &mut right[0];
+        if swap {
+            (ref2, ref1)
+        } else {
+            (ref1, ref2)
+        }
+    }
+
+    pub fn remove_group(&mut self, id1: usize) {
+        self.groups.swap_remove(id1);
     }
 }
 

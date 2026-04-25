@@ -1,4 +1,4 @@
-use crate::stages::support_structure_optimization::models::{LayerNode, SupportLayer};
+use crate::{models::Point, stages::support_structure_optimization::models::{LayerNode, SupportLayer}};
 
 use super::*;
 
@@ -18,7 +18,7 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut CompressedSupportGen
     let layer = SupportLayer {
         center: mean,
         nodes: (0..number_of_points).map(|_| {
-            LayerNode::new_random(mean, &covariance, rand)
+            LayerNode::new_random(&covariance, rand)
         }).collect()
     };
 

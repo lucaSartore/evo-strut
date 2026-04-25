@@ -207,8 +207,9 @@ pub struct SupportStructureOptimizationSettings {
     pub num_points_per_layer: RandomDistribution,
     /// multiplier for the covariance matrix used to sample the points within a layer.
     pub points_sampling_covariance_multiplier: f32,
-    /// number of groups that are initially present in each individual
-    pub num_initial_groups: usize,
+    /// multiplier for the number of groups that are initially present in each individual.
+    /// number_of_groups = number_os_supports * num_initial_groups_multiplier
+    pub num_initial_groups_multiplier: f32,
 }
 
 impl Default for SupportStructureOptimizationSettings {
@@ -221,7 +222,7 @@ impl Default for SupportStructureOptimizationSettings {
             num_elite_individuals: 10,
             num_points_per_layer: RandomDistribution::InRange { low: 1., high: 7. },
             points_sampling_covariance_multiplier: 0.3,
-            num_initial_groups: 10
+            num_initial_groups_multiplier: 0.7
         }
     }
 }
