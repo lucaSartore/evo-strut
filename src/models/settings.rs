@@ -169,8 +169,8 @@ impl Default for ContactPointsOptimizationSettings {
             layer_height: 1.,
             critical_angle_clipping_factor: 5.,
             initialization_support_density: RandomDistribution::InRange {
-                low: 0.05,
-                high: 0.051,
+                low: 0.005,
+                high: 0.0051,
             },
             max_support_radius: 4.,
             min_support_radius: 0.5,

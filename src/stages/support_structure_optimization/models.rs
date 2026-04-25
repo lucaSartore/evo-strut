@@ -49,6 +49,11 @@ impl SupportLayer {
             .iter()
             .map(|x| self.center + x.offset)
     }
+
+    pub(crate) fn mutate_random_connection(&mut self, rand: &Random) {
+        let Some(to_mutate) = rand.choose_mut(&mut self.nodes) else { return } ;
+        to_mutate.mutate_connections(rand);
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -64,6 +69,10 @@ impl LayerNode {
             offset: Point::random_zero_z(Point::ZERO, covariance, rand),
             connections: LayerConnections::new_random(rand)
         }
+    }
+
+    fn mutate_connections(&mut self, rand: &Random) {
+        self.connections.mutate_connections(rand)
     }
 }
 
@@ -81,6 +90,12 @@ impl LayerConnections {
             connect_to_second_closest_below_layer_node: rand.random_choice(0.5),
             connect_to_third_closest_below_layer_node: rand.random_choice(0.5)
         }
+    }
+
+    fn mutate_connections(&mut self, rand: &Random) {
+        self.connect_to_closest_below_layer_node ^= rand.random_choice(0.3);
+        self.connect_to_second_closest_below_layer_node ^= rand.random_choice(0.3);
+        self.connect_to_third_closest_below_layer_node ^= rand.random_choice(0.3);
     }
 }
 
@@ -138,6 +153,11 @@ impl SupportGroup {
         (mean, covariance_matrix)
     }
 
+    pub fn mean_and_cov_layer(&self, layer: usize) -> (Point, Matrix2<f32>) {
+        let height = self.layers[layer].center.z - f32::EPSILON;
+        self.mean_and_cov(height)
+    }
+
     pub fn support_positions(&self) -> impl Iterator<Item = Point> {
         self.supports
             .iter()
@@ -155,6 +175,24 @@ impl SupportGroup {
 
     pub fn add_support(&mut self, element: ContactPoint)  {
         self.supports.push(element);
+    }
+
+    pub(crate) fn random_layer(&self, rand: &Random) -> Option<&SupportLayer> {
+        let layer = self.random_layer_id(rand)?;
+        Some(&self.layers[layer])
+    }
+
+    pub(crate) fn random_layer_mut(&mut self, rand: &Random) -> Option<&mut SupportLayer> {
+        let layer = self.random_layer_id(rand)?;
+        Some(&mut self.layers[layer])
+    }
+
+    pub(crate) fn random_layer_id(&self, rand: &Random) -> Option<usize> {
+        let len = self.layers.len();
+        if len == 0 {
+            return None;
+        }
+        Some(rand.next_in_range_usize(0, len))
     }
 }
 

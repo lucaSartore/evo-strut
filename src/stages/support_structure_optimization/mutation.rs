@@ -53,9 +53,9 @@ impl<'a> Mutator<CompressedSupportGene, SupportStructureMutatorSettings<'a>> for
         }
         const OPTIONS: &[MK] = &[
             MK::AddLayer,
-            // MK::AddLayerPoint,
+            MK::AddLayerPoint,
             // MK::CreateNewGroup,
-            // MK::EditLayerConnections,
+            MK::EditLayerConnections,
             MK::MoveContact,
             // MK::MoveLayerHeight,
             // MK::MovePointsInLayer,
