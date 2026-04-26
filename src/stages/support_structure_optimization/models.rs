@@ -1,9 +1,10 @@
+use core::f32;
 use std::fmt::Debug;
 
 use hashbrown::{HashMap, hash_set::Iter};
 use itertools::Itertools;
 use nalgebra::Matrix2;
-use rerun::{demo_util::grid, external::glam::usize};
+use rerun::{demo_util::grid, external::{glam::usize, re_data_loader::lerobot::common::LEROBOT_DATASET_IGNORED_COLUMNS}};
 use smallvec::smallvec;
 
 use crate::{evolution::{Cost, Random}, models::{Point, SurfaceGraph}, stages::support_structure_refinement::{BaseNode, ContactNode, MiddleNode, PositionAnchor, SupportNode, SupportNodeId, SupportStructureGene}};
@@ -54,6 +55,12 @@ impl SupportLayer {
         let Some(to_mutate) = rand.choose_mut(&mut self.nodes) else { return } ;
         to_mutate.mutate_connections(rand);
     }
+
+    fn set_all_connections(&mut self) {
+        for n in &mut self.nodes {
+            n.set_all_connections();
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -64,7 +71,7 @@ pub struct LayerNode {
     pub connections: LayerConnections
 }
 impl LayerNode {
-    pub(crate) fn new_random(covariance: &nalgebra::Matrix2<f32>, rand: &Random) -> Self {
+    pub fn new_random(covariance: &nalgebra::Matrix2<f32>, rand: &Random) -> Self {
         Self {
             offset: Point::random_zero_z(Point::ZERO, covariance, rand),
             connections: LayerConnections::new_random(rand)
@@ -73,6 +80,10 @@ impl LayerNode {
 
     fn mutate_connections(&mut self, rand: &Random) {
         self.connections.mutate_connections(rand)
+    }
+
+    fn set_all_connections(&mut self) {
+        self.connections.set_all();
     }
 }
 
@@ -96,6 +107,12 @@ impl LayerConnections {
         self.connect_to_closest_below_layer_node ^= rand.random_choice(0.3);
         self.connect_to_second_closest_below_layer_node ^= rand.random_choice(0.3);
         self.connect_to_third_closest_below_layer_node ^= rand.random_choice(0.3);
+    }
+
+    fn set_all(&mut self) {
+        self.connect_to_closest_below_layer_node = true;
+        self.connect_to_second_closest_below_layer_node = true;
+        self.connect_to_third_closest_below_layer_node = true;
     }
 }
 
@@ -177,22 +194,60 @@ impl SupportGroup {
         self.supports.push(element);
     }
 
-    pub(crate) fn random_layer(&self, rand: &Random) -> Option<&SupportLayer> {
+    pub fn random_layer(&self, rand: &Random) -> Option<&SupportLayer> {
         let layer = self.random_layer_id(rand)?;
         Some(&self.layers[layer])
     }
 
-    pub(crate) fn random_layer_mut(&mut self, rand: &Random) -> Option<&mut SupportLayer> {
+    pub fn random_layer_mut(&mut self, rand: &Random) -> Option<&mut SupportLayer> {
         let layer = self.random_layer_id(rand)?;
         Some(&mut self.layers[layer])
     }
 
-    pub(crate) fn random_layer_id(&self, rand: &Random) -> Option<usize> {
+    pub fn random_layer_id(&self, rand: &Random) -> Option<usize> {
         let len = self.layers.len();
         if len == 0 {
             return None;
         }
         Some(rand.next_in_range_usize(0, len))
+    }
+
+    pub fn num_points_to_support_above(&self, layer_height: f32) -> usize {
+        let layer_above = self
+            .layers
+            .iter()
+            .filter(|x| x.center.z > layer_height)
+            .min_by_key(|x| Cost::new(x.center.z));
+
+        let mut count = 0;
+        let mut layer_height_top = 10e10;
+
+        if let Some(layer) = layer_above {
+            layer_height_top = layer.center.z;
+            count += layer.nodes_positions().count()
+        }
+
+        count += self
+            .support_positions()
+            .filter(|x| layer_height < x.z && x.z < layer_height_top)
+            .count();
+
+        count
+    }
+
+    pub fn random_support(&self, rand: &Random) -> usize {
+        let len = self.supports.len();
+        rand.next_in_range_usize(0, len)
+    }
+
+    pub(crate) fn empty() -> Self {
+        Self { supports: vec![], layers: vec![] }
+    }
+
+    pub fn set_all_connections(&mut self) {
+        for g in &mut self.layers {
+            g.set_all_connections();
+        }
     }
 }
 
@@ -221,6 +276,9 @@ impl CompressedSupportGene {
     pub fn rand_group(&self, rand: &Random) -> &SupportGroup {
         rand.choose(&self.groups)
             .expect("there shall always be at least a group")
+    }
+    pub fn rand_group_id(&self, rand: &Random) -> usize {
+        rand.next_in_range_usize(0, self.groups.len())
     }
 
     pub(crate) fn get_two_groups_mut(&mut self, g1: usize, g2: usize) -> (&mut SupportGroup, &mut SupportGroup) {

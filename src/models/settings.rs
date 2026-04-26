@@ -169,8 +169,8 @@ impl Default for ContactPointsOptimizationSettings {
             layer_height: 1.,
             critical_angle_clipping_factor: 5.,
             initialization_support_density: RandomDistribution::InRange {
-                low: 0.005,
-                high: 0.0051,
+                low: 0.03,
+                high: 0.031,
             },
             max_support_radius: 4.,
             min_support_radius: 0.5,
@@ -210,6 +210,11 @@ pub struct SupportStructureOptimizationSettings {
     /// multiplier for the number of groups that are initially present in each individual.
     /// number_of_groups = number_os_supports * num_initial_groups_multiplier
     pub num_initial_groups_multiplier: f32,
+    /// how many layer of supports should be present for every mm of height.
+    /// Is used in the first part of the support structure optimization stage to regenerate
+    /// the support structure of a group from scratch.
+    /// unit of measure 1/mm
+    pub layer_density: RandomDistribution,
 }
 
 impl Default for SupportStructureOptimizationSettings {
@@ -222,7 +227,8 @@ impl Default for SupportStructureOptimizationSettings {
             num_elite_individuals: 10,
             num_points_per_layer: RandomDistribution::InRange { low: 1., high: 7. },
             points_sampling_covariance_multiplier: 0.3,
-            num_initial_groups_multiplier: 0.7
+            num_initial_groups_multiplier: 0.7,
+            layer_density: RandomDistribution::InRange { low: 0.015, high: 0.04 }
         }
     }
 }
