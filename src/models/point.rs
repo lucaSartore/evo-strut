@@ -78,6 +78,10 @@ impl Point {
         (a.z * b.z)
     }
 
+    pub fn cross_2d(a: Point, b: Point) -> f32 {
+        a.x * b.y - b.x * a.y
+    }
+
     pub fn cross(a: Point, b: Point) -> Point {
         Point {
             x: (a.y * b.z) - (a.z * b.y),
