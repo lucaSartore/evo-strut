@@ -214,7 +214,21 @@ pub struct SupportStructureOptimizationSettings {
     /// Is used in the first part of the support structure optimization stage to regenerate
     /// the support structure of a group from scratch.
     /// unit of measure 1/mm
-    pub layer_density: RandomDistribution,
+    pub layers_number_density: RandomDistribution,
+    /// how many points there should be in a layer, in relation to the area
+    /// formed by the convex hull of all the points that should be supported
+    /// unit of measure 1/mm^2
+    pub point_in_layer_density: f32,
+    /// how many points there should be in a layer, in relation to the perimeter
+    /// formed by the convex hull of all the points that should be supported
+    /// unit of measure 1/mm
+    pub point_in_layer_perimeter_density: f32,
+    /// minimum number of points that should be allowed to be in one layer
+    pub min_points_in_layer: usize,
+    /// used to create new nodes inside a layer starting from the nodes of the layer above
+    /// is a measure of how far the nodes will be from the node above
+    /// unit of measure: mm
+    pub layer_node_creation_update_step: f32,
 }
 
 impl Default for SupportStructureOptimizationSettings {
@@ -228,7 +242,11 @@ impl Default for SupportStructureOptimizationSettings {
             num_points_per_layer: RandomDistribution::InRange { low: 1., high: 7. },
             points_sampling_covariance_multiplier: 0.3,
             num_initial_groups_multiplier: 0.7,
-            layer_density: RandomDistribution::InRange { low: 0.015, high: 0.04 }
+            layers_number_density: RandomDistribution::InRange { low: 0.015, high: 0.04 },
+            point_in_layer_density: 0.003,
+            point_in_layer_perimeter_density: 0.01,
+            min_points_in_layer: 1,
+            layer_node_creation_update_step: 5.
         }
     }
 }

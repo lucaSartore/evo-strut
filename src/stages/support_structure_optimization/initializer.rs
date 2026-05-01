@@ -1,4 +1,4 @@
-use core::f32;
+use core::{f32, num};
 
 use itertools::{Group, Itertools};
 use rerun::external::glam::usize;
@@ -46,6 +46,7 @@ impl<'a> PopulationInitializer<CompressedSupportGene, SupportStructureInitialize
     fn get_random_individual(&self) -> CompressedSupportGene {
         let mult = self.settings.support_structure_optimization_settings.num_initial_groups_multiplier;
         let num_groups = (mult * self.contact_points.contact_points.len() as f32) as usize;
+        let num_groups = 1;
 
         let groups = self.contact_points
             .contact_points

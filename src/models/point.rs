@@ -69,6 +69,9 @@ impl Point {
     }
     pub fn as_versor(&self) -> Point {
         let norm = self.abs();
+        if norm == 0. {
+            return Point::ZERO;
+        }
         self.to_scaled(1./norm)
     }
 
@@ -177,6 +180,13 @@ impl Point {
             y: mean.y + sample.map(|x| x[1]).unwrap_or(0.),
             z: 0.0
         }
+    }
+
+    pub fn mean(points: &[Point]) -> Point {
+        let sum = points
+            .iter()
+            .fold(Point::ZERO, |acc, p| acc + *p);
+        sum.to_scaled(1.0 / points.len() as f32)
     }
 }
 

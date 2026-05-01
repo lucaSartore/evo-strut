@@ -25,8 +25,10 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut CompressedSupportGen
 
     let Some((mut g1, mut g2)) = result else { return };
 
-    regenerate_group::regenerate_group(mutator, &mut g1);
-    regenerate_group::regenerate_group(mutator, &mut g2);
+    let new_groups = regenerate_group::regenerate_group(mutator, &mut g1);
+    gene.add_groups(new_groups);
+    let new_groups = regenerate_group::regenerate_group(mutator, &mut g2);
+    gene.add_groups(new_groups);
 
     gene.groups[group_id] = g1;
     gene.groups.push(g2);

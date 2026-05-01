@@ -13,10 +13,12 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut CompressedSupportGen
     let element = g1.pop_random_support(rand);
     g2.add_support(element);
 
-    regenerate_group::regenerate_group(mutator, g2);
+    let new_groups_2 = regenerate_group::regenerate_group(mutator, g2);
     if g1.is_empty() {
         gene.remove_group(id1);
     } else {
-        regenerate_group::regenerate_group(mutator, g1);
+        let new_groups_1 = regenerate_group::regenerate_group(mutator, g1);
+        gene.add_groups(new_groups_1);
     }
+    gene.add_groups(new_groups_2);
 }

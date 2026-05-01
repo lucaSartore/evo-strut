@@ -1,6 +1,7 @@
 use core::f32;
 use std::fmt::Debug;
 
+use baby_shark::algo::utils::min;
 use hashbrown::{HashMap, hash_set::Iter};
 use itertools::Itertools;
 use nalgebra::Matrix2;
@@ -71,9 +72,9 @@ pub struct LayerNode {
     pub connections: LayerConnections
 }
 impl LayerNode {
-    pub fn new_random(covariance: &nalgebra::Matrix2<f32>, rand: &Random) -> Self {
+    pub fn new_random(offset: Point, rand: &Random) -> Self {
         Self {
-            offset: Point::random_zero_z(Point::ZERO, covariance, rand),
+            offset,
             connections: LayerConnections::new_random(rand)
         }
     }
@@ -212,27 +213,28 @@ impl SupportGroup {
         Some(rand.next_in_range_usize(0, len))
     }
 
-    pub fn num_points_to_support_above(&self, layer_height: f32) -> usize {
+    pub fn points_to_support_above(&self, layer_height: f32) -> Vec<Point> {
         let layer_above = self
             .layers
             .iter()
             .filter(|x| x.center.z > layer_height)
             .min_by_key(|x| Cost::new(x.center.z));
 
-        let mut count = 0;
+        let mut points = vec![];
         let mut layer_height_top = 10e10;
 
         if let Some(layer) = layer_above {
             layer_height_top = layer.center.z;
-            count += layer.nodes_positions().count()
+            layer
+                .nodes_positions()
+                .for_each(|x| points.push(x));
         }
 
-        count += self
+        self
             .support_positions()
             .filter(|x| layer_height < x.z && x.z < layer_height_top)
-            .count();
-
-        count
+            .for_each(|x| points.push(x));
+        points
     }
 
     pub fn random_support(&self, rand: &Random) -> usize {
@@ -247,6 +249,44 @@ impl SupportGroup {
     pub fn set_all_connections(&mut self) {
         for g in &mut self.layers {
             g.set_all_connections();
+        }
+    }
+
+    pub fn eject_non_participants(&mut self) -> Vec<ContactPoint> {
+        let mut to_return = vec![];
+
+        let lowest_layer_height = self
+            .layers
+            .iter()
+            .min_by_key(|x| Cost::new(x.center.z))
+            .map(|x| x.center.z)
+            .unwrap_or(0.);
+
+        let mut index = 0;
+        loop {
+            if self.supports.len() == 0 {
+                break;
+            }
+            if index == self.supports.len() {
+                break;
+            }
+            let p = &self.supports[index];
+            let should_be_ejected = p.position.z <= lowest_layer_height;
+            if should_be_ejected {
+                let removed = self.supports.swap_remove(index);
+                to_return.push(removed);
+            } else {
+                index += 1;
+            }
+        }
+
+        to_return
+    }
+
+    pub fn from_one(support: ContactPoint) -> Self {
+        Self {
+            supports: vec![support],
+            layers: vec![]
         }
     }
 }
@@ -302,6 +342,10 @@ impl CompressedSupportGene {
     pub fn remove_group(&mut self, id1: usize) {
         self.groups.swap_remove(id1);
     }
+
+    pub fn add_groups(&mut self, mut new_groups: Vec<SupportGroup>) {
+        self.groups.append(&mut new_groups);
+    }
 }
 
 struct RawStructureBuilder {
@@ -315,7 +359,16 @@ impl RawStructureBuilder {
         // node zero is added as a placeholder, so that the we can use it for anchors, and then
         // remove it and repairing the structure
         let mut raw_structure = SupportStructureGene { nodes: Default::default() };
-        raw_structure.nodes.insert(SupportNodeId(0), SupportNode::Base(BaseNode { id: SupportNodeId(0), mesh_contact: None, last_position: Point::ZERO }));
+        raw_structure.nodes.insert(
+            SupportNodeId(0),
+            SupportNode::Base(
+                BaseNode { 
+                    id: SupportNodeId(0),
+                    mesh_contact: None,
+                    last_position: Point::DOWNWARD.to_scaled(10e20) 
+                }
+        ));
+
         Self {
             raw_structure,
             position_to_id: Default::default(),

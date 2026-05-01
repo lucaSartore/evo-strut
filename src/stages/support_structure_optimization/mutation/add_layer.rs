@@ -1,4 +1,7 @@
-use crate::{stages::support_structure_optimization::models::{LayerNode, SupportGroup, SupportLayer}};
+use itertools::Itertools;
+use rerun::external::arrow::datatypes::ArrowNativeType;
+
+use crate::{models::Point, stages::support_structure_optimization::models::{LayerNode, SupportGroup, SupportLayer}, support::convex_hull::ConvexHull};
 
 use super::*;
 
@@ -15,22 +18,38 @@ pub fn add_layer(group: &mut SupportGroup, layer_height: f32, mutator: &SupportS
     let s = &mutator.settings.support_structure_optimization_settings;
     let rand = &mutator.rand;
 
-    let (mut mean, mut covariance) = group.mean_and_cov(layer_height);
 
-    covariance *= s.points_sampling_covariance_multiplier;
-    mean.z = layer_height;
+    let points = group.points_to_support_above(layer_height);
 
+    let random_point = || *rand.choose(&points).expect("the points to support can't be empty");
+
+    let hull = ConvexHull::new(points.clone());
+
+    let num_points = (
+        s.point_in_layer_density * hull.area() +
+        s.point_in_layer_perimeter_density * hull.perimeter()
+    ).as_usize().max(s.min_points_in_layer);
     
-    let num_points_to_support = group.num_points_to_support_above(layer_height);
-    let number_of_points_random = rand.next_distribution(&s.num_points_per_layer) as usize;
-    
-    let number_of_points = num_points_to_support.min(number_of_points_random);
+    let mut center = Point::mean(&points);
+    center.z = layer_height;
 
     let layer = SupportLayer {
-        center: mean,
-        nodes: (0..number_of_points).map(|_| {
-            LayerNode::new_random(&covariance, rand)
-        }).collect()
+        center,
+        nodes: (0..num_points).map(|_| {
+            let base_node = random_point();
+            let direction_one = (random_point() - random_point()).as_versor();
+            let direction_two = (base_node - random_point()).as_versor();
+            let mut direction_three = Point::random(Point::ZERO, 1., rand);
+            direction_three.z = 0.;
+            direction_three = direction_three.as_versor();
+            let new_node = base_node + (direction_one + direction_two + direction_three).to_scaled(s.layer_node_creation_update_step);
+            let mut versor = new_node - center;
+            versor.z = 0.;
+            versor
+        })
+        .unique()
+        .map(|x| LayerNode::new_random(x, rand))
+        .collect()
     };
 
     group.layers.push(layer);

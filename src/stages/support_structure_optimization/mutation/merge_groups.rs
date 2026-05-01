@@ -19,7 +19,8 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut CompressedSupportGen
     new_group.supports.append(&mut g1.supports);
     new_group.supports.append(&mut g2.supports);
 
-    regenerate_group::regenerate_group(mutator, &mut new_group);
+    let new_groups = regenerate_group::regenerate_group(mutator, &mut new_group);
+    gene.add_groups(new_groups);
     gene.groups[id1] = new_group;
     gene.remove_group(id2);
 }
