@@ -1,4 +1,3 @@
-use crate::{stages::support_structure_refinement::evaluation::SupportStructureEvaluator as FullEvaluator, support::convex_hull::ConvexHull};
 pub use crate::stages::support_structure_refinement::evaluation::SupportStructureEvaluatorSettings;
 use crate::{
     evolution::{Cost, Evaluator, Random},
@@ -8,12 +7,16 @@ use crate::{
         contact_points_grouping::models::ContactPointGroupingGene,
     },
 };
+use crate::{
+    stages::visualization::Color,
+    support::convex_hull::ConvexHull,
+};
+use rerun::RecordingStream;
 
 pub struct ContactPointGroupingEvaluatorSettings<'a> {
     settings: &'a Settings,
     graph: &'a SurfaceGraph,
     rand: Random,
-    evaluator: SupportStructureEvaluatorSettings<'a>,
     points: &'a ContactPointsGene,
 }
 
@@ -22,24 +25,23 @@ impl<'a> ContactPointGroupingEvaluatorSettings<'a> {
         settings: &'a Settings,
         graph: &'a SurfaceGraph,
         rand: Random,
-        evaluator: SupportStructureEvaluatorSettings<'a>,
         points: &'a ContactPointsGene,
     ) -> Self {
         Self {
             settings,
             graph,
             rand,
-            evaluator,
             points,
         }
     }
 }
 
 pub struct ContactPointGroupingEvaluator<'a> {
-    evaluator: FullEvaluator<'a>,
     settings: &'a Settings,
     rand: Random,
     points: &'a ContactPointsGene,
+    stream: RecordingStream,
+    graph: &'a SurfaceGraph
 }
 
 impl<'a> Evaluator<ContactPointGroupingGene, ContactPointGroupingEvaluatorSettings<'a>>
@@ -47,28 +49,81 @@ impl<'a> Evaluator<ContactPointGroupingGene, ContactPointGroupingEvaluatorSettin
 {
     fn new(settings: &ContactPointGroupingEvaluatorSettings<'a>) -> Self {
         Self {
-            evaluator: FullEvaluator::new(&settings.evaluator),
             settings: settings.settings,
             rand: settings.rand.seeded_copy(),
             points: settings.points,
+            stream: rerun::RecordingStreamBuilder::new("grouped contact points")
+                .spawn()
+                .expect("failed to build rerun stream"),
+            graph: settings.graph
         }
     }
 
     fn evaluate(&self, gene: &ContactPointGroupingGene) -> Cost {
         let s = &self.settings.contact_points_grouping_settings;
-        let gene = gene.to_compressed_gene(self.points, self.evaluator.graph, self.settings, &self.rand);
-        let size_cost: f32 = gene.groups.iter().map(|g| {
-            let p = g.support_positions();
-            let h = ConvexHull::new(p.collect());
-            let area = h.area();
-            let perimeter = h.perimeter();
-            area * s.area_minimization_weight + perimeter * s.perimeter_minimization_weight
-        }).sum();
-        return Cost::new(size_cost)
+        let gene =
+            gene.to_compressed_gene(self.points, self.graph, self.settings, &self.rand);
+        let size_cost: f32 = gene
+            .groups
+            .iter()
+            .map(|g| {
+                let p = g.support_positions();
+                let h = ConvexHull::new(p.collect());
+                let area = h.area();
+                let perimeter = h.perimeter();
+                let height = g.max_height();
+                area * s.area_minimization_weight +
+                perimeter * s.perimeter_minimization_weight +
+                height * s.group_cost_penalty
+            })
+            .sum();
+
+        Cost::new(size_cost)
     }
 
     fn visualize(&self, gene: &ContactPointGroupingGene) -> anyhow::Result<()> {
-        let gene = gene.to_full_gene(self.points, self.evaluator.graph, self.settings, &self.rand);
-        self.evaluator.visualize(&gene)
+        let compressed =
+            gene.to_compressed_gene(self.points, self.graph, self.settings, &self.rand);
+        let graph = self.graph;
+
+        self.stream.log(
+            "mesh",
+            &rerun::Mesh3D::new(graph.iter_vertices())
+                .with_vertex_normals(graph.vertex_normals(None))
+                .with_vertex_colors(vec![Color::Green; graph.count_vertices()])
+                .with_triangle_indices(graph.iter_triangles(None)),
+        )?;
+
+        let num_groups = compressed.groups.len();
+        let mut centers = Vec::new();
+        let mut radiuses = Vec::new();
+        let mut colors = Vec::new();
+        let mut labels = Vec::new();
+
+        for (group_id, group) in compressed.groups.iter().enumerate() {
+            let hue = if num_groups == 0 {
+                0.0
+            } else {
+                group_id as f32 * 360.0 / num_groups as f32
+            };
+            let color = Color::Hsv(hue, 1.0, 1.0);
+
+            for contact in &group.supports {
+                centers.push(contact.position);
+                radiuses.push(contact.radius);
+                colors.push(color);
+                labels.push(format!("group {}", group_id));
+            }
+        }
+
+        self.stream.log(
+            "contact_groups",
+            &rerun::Cylinders3D::from_lengths_and_radii(vec![0.; centers.len()], radiuses)
+                .with_centers(centers)
+                .with_colors(colors)
+                .with_labels(labels),
+        )?;
+
+        Ok(())
     }
 }

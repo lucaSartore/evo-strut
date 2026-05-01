@@ -36,7 +36,7 @@ impl ContactPointGroupingGene {
             let position = graph.get_triangle(*contact.0).center();
             let values = self
                 .network
-                .evaluate(&[position.x, position.y])
+                .evaluate(&[position.x, position.y, position.z])
                 .expect("network has failed to return a valid result");
             let group = values
                 .into_iter()

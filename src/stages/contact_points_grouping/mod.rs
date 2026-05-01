@@ -76,12 +76,10 @@ impl ContactPointsGrouper for SimpleContactPointsGrouper {
             ElitistNextGenSelectorSettings,
             ContactPointGroupingInitializerSettings<'a>,
         >;
-        let full_evaluator_settings = SupportStructureEvaluatorSettings::new(settings, graph);
         let grouping_evaluator_settings = ContactPointGroupingEvaluatorSettings::new(
             settings,
             graph,
             Random::UnSeededRandom,
-            full_evaluator_settings,
             connection_points,
         );
 

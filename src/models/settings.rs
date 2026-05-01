@@ -198,6 +198,11 @@ impl Default for ContactPointsOptimizationSettings {
 pub struct ContactPointsGroupingSettings {
     pub perimeter_minimization_weight: f32,
     pub area_minimization_weight: f32,
+    /// cost for creating a new group
+    /// the cost is multiplied by the height of the group (taller groups, are more expensive to
+    /// support)
+    /// unit of measure: [cost/mm]
+    pub group_cost_penalty: f32,
     // maximum number of groups produced in the grouping phase
     // this also define the number of neurons in the last layer of the neural network
     pub max_num_groups: usize,
@@ -228,23 +233,22 @@ pub struct ContactPointsGroupingSettings {
 
 impl Default for ContactPointsGroupingSettings {
     fn default() -> Self {
-        let max_num_groups = 10;
+        let max_num_groups = 25;
 
         Self {
-            perimeter_minimization_weight: 10.,
-            area_minimization_weight: 1.,
+            group_cost_penalty: 90.,
+            perimeter_minimization_weight: 90.,
+            area_minimization_weight: 30.,
             num_generations: 2000,
-            patience: 25,
+            patience: 100,
             generation_size: 100,
             tournament_size: 10,
             num_elite_individuals: 10,
             max_num_groups,
             network_topology: NetworkTopology::new(
-                2,
+                3,
                 vec![
-                    LayerTopology::new(16, ActivationFunction::Relu)
-                        .expect("invalid default contact-point grouping hidden layer"),
-                    LayerTopology::new(16, ActivationFunction::Relu)
+                    LayerTopology::new(32, ActivationFunction::Relu)
                         .expect("invalid default contact-point grouping hidden layer"),
                     LayerTopology::new(max_num_groups, ActivationFunction::Sigmoid)
                         .expect("invalid default contact-point grouping output layer"),
@@ -253,6 +257,15 @@ impl Default for ContactPointsGroupingSettings {
             .expect("invalid default contact-point grouping network topology"),
             network_weight_initialization: NetworkWeightInitialization::He,
             valid_mutations: vec![
+                NetworkMutationSettings::new(
+                    NetworkMutationRates::new(1.0, 0.0)
+                        .expect("invalid default contact-point grouping mutation rates"),
+                    RandomDistribution::Normal {
+                        mean: 0.,
+                        std_dev: 0.1,
+                    },
+                    RandomDistribution::InRange { low: -1., high: 1. },
+                ),
                 NetworkMutationSettings::new(
                     NetworkMutationRates::new(0.05, 0.02)
                         .expect("invalid default contact-point grouping mutation rates"),
