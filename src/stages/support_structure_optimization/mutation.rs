@@ -54,8 +54,8 @@ impl<'a> Mutator<SupportGroup, SupportStructureMutatorSettings<'a>> for SupportS
             MK::AddLayerPoint,
             MK::EditLayerConnections,
             MK::MoveLayerHeight,
-            // MK::MovePointsInLayer,
-            // MK::RemoveLayerPoint,
+            MK::MovePointsInLayer,
+            MK::RemoveLayerPoint,
             MK::RegenerateGroup,
         ];
 

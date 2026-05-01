@@ -17,10 +17,7 @@ pub fn add_layer(group: &mut SupportGroup, layer_height: f32, mutator: &SupportS
     let s = &mutator.settings.support_structure_optimization_settings;
     let rand = &mutator.rand;
 
-
     let points = group.points_to_support_above(layer_height);
-
-    let random_point = || *rand.choose(&points).expect("the points to support can't be empty");
 
     let hull = ConvexHull::new(points.clone());
 
@@ -34,18 +31,7 @@ pub fn add_layer(group: &mut SupportGroup, layer_height: f32, mutator: &SupportS
 
     let layer = SupportLayer {
         center,
-        nodes: (0..num_points).map(|_| {
-            let base_node = random_point();
-            let direction_one = (random_point() - random_point()).as_versor();
-            let direction_two = (base_node - random_point()).as_versor();
-            let mut direction_three = Point::random(Point::ZERO, 1., rand);
-            direction_three.z = 0.;
-            direction_three = direction_three.as_versor();
-            let new_node = base_node + (direction_one + direction_two + direction_three).to_scaled(s.layer_node_creation_update_step);
-            let mut versor = new_node - center;
-            versor.z = 0.;
-            versor
-        })
+        nodes: (0..num_points).map(|_| SupportLayer::random_point(layer_height, &points, Some(center), rand, s.layer_node_creation_update_step))
         .unique()
         .map(|x| LayerNode::new_random(x, rand))
         .collect()

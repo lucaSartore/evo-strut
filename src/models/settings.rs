@@ -342,6 +342,12 @@ pub struct SupportStructureOptimizationSettings {
     /// is a measure of how far the nodes will be from the node above
     /// unit of measure: mm
     pub layer_node_creation_update_step: f32,
+    /// standard deviation for moving a single point inside a layer.
+    /// unit of measure: mm
+    pub layer_point_motion_std: f32,
+    /// standard deviation for adjusting the height of a layer.
+    /// unit of measure: mm
+    pub layer_height_motion_std: f32,
 }
 
 impl Default for SupportStructureOptimizationSettings {
@@ -359,7 +365,9 @@ impl Default for SupportStructureOptimizationSettings {
             point_in_layer_density: 0.003,
             point_in_layer_perimeter_density: 0.01,
             min_points_in_layer: 1,
-            layer_node_creation_update_step: 5.
+            layer_node_creation_update_step: 5.,
+            layer_point_motion_std: 5.,
+            layer_height_motion_std: 2.5,
         }
     }
 }

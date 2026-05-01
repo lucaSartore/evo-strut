@@ -57,6 +57,28 @@ impl SupportLayer {
             n.set_all_connections();
         }
     }
+
+    pub fn random_point(height: f32, points: &[Point], mean: Option<Point>, rand: &Random, update_size: f32) -> Point {
+
+        let random_point = || *rand.choose(points).expect("the points to support can't be empty");
+
+        let mut mean = mean.unwrap_or_else(|| Point::mean(points));
+        mean.z = height;
+
+        let base_node = random_point();
+        let direction_one = (random_point() - random_point()).as_versor();
+        let direction_two = (base_node - random_point()).as_versor();
+        let mut direction_three = Point::random(Point::ZERO, 1., rand);
+        direction_three.z = 0.;
+        direction_three = direction_three.as_versor();
+        let new_node = base_node + (direction_one + direction_two + direction_three).to_scaled(update_size);
+        let mut versor = new_node - mean;
+        versor.z = 0.;
+        versor
+    }
+    pub fn random_point_in_self(&self, points: &[Point], mean: Option<Point>, rand: &Random, update_size: f32) -> Point {
+        Self::random_point(self.center.z, points, mean, rand, update_size)
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -451,6 +473,8 @@ impl RawStructureBuilder {
         let support = layer_below.closest_point_to_point(contact.position);
         self.add_connection(contact.position, support);
     }
+
+
 }
 
 
