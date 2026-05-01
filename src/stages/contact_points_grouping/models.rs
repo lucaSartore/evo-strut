@@ -1,6 +1,4 @@
-use anyhow::Result;
 use hashbrown::HashMap;
-use rand::random;
 use std::fmt::Debug;
 
 use crate::{
@@ -9,9 +7,8 @@ use crate::{
     stages::{
         contact_point_optimization::ContactPointsGene,
         support_structure_optimization::{
-            mutation::SupportStructureMutator, CompressedSupportGene, ContactPoint, SupportGroup,
-        },
-        support_structure_refinement::SupportStructureGene,
+            mutation::SupportStructureMutator, ContactPoint, SupportGroup,
+        }
     },
     support::neural_network::NeuralNetwork,
 };
@@ -23,13 +20,13 @@ pub struct ContactPointGroupingGene {
 
 impl ContactPointGroupingGene {
 
-    pub fn to_compressed_gene(
+    pub fn to_groups(
         &self,
         points: &ContactPointsGene,
         graph: &SurfaceGraph,
         settings: &Settings,
         rand: &Random,
-    ) -> CompressedSupportGene {
+    ) -> Vec<SupportGroup> {
         let mut grouped = HashMap::<usize, Vec<_>>::default();
 
         for contact in points.iter_contacts() {
@@ -62,26 +59,14 @@ impl ContactPointGroupingGene {
             rand: rand.seeded_copy(),
         };
 
-        CompressedSupportGene {
-            groups: grouped
-                .into_values()
-                .map(|x| {
-                    let mut g = SupportGroup::from_supports(x);
-                    g.regenerate(&mutator);
-                    return g;
-                })
-                .collect(),
-        }
-    }
-
-    pub fn to_full_gene(
-        &self,
-        points: &ContactPointsGene,
-        graph: &SurfaceGraph,
-        settings: &Settings,
-        rand: &Random,
-    ) -> SupportStructureGene {
-        self.to_compressed_gene(points, graph, settings, rand).to_full_gene(graph)
+        grouped
+            .into_values()
+            .map(|x| {
+                let mut g = SupportGroup::from_supports(x);
+                g.regenerate(&mutator);
+                return g;
+            })
+            .collect()
     }
 
     pub fn new(network: NeuralNetwork) -> Self {

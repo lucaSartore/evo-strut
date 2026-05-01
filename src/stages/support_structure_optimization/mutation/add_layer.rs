@@ -5,13 +5,12 @@ use crate::{models::Point, stages::support_structure_optimization::models::{Laye
 
 use super::*;
 
-pub fn mutate(mutator: &SupportStructureMutator, gene: &mut CompressedSupportGene) {
+pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportGroup) {
     let rand = &mutator.rand;
-    let group = gene.rand_group_mut(rand);
-    let max_height = group.max_height();
+    let max_height = gene.max_height();
     let layer_height = rand.next_f32(0., max_height);
 
-    add_layer(group, layer_height, mutator);
+    add_layer(gene, layer_height, mutator);
 }
 
 pub fn add_layer(group: &mut SupportGroup, layer_height: f32, mutator: &SupportStructureMutator) {

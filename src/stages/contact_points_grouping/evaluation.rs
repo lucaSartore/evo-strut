@@ -1,4 +1,3 @@
-pub use crate::stages::support_structure_refinement::evaluation::SupportStructureEvaluatorSettings;
 use crate::{
     evolution::{Cost, Evaluator, Random},
     models::{Settings, SurfaceGraph},
@@ -61,10 +60,9 @@ impl<'a> Evaluator<ContactPointGroupingGene, ContactPointGroupingEvaluatorSettin
 
     fn evaluate(&self, gene: &ContactPointGroupingGene) -> Cost {
         let s = &self.settings.contact_points_grouping_settings;
-        let gene =
-            gene.to_compressed_gene(self.points, self.graph, self.settings, &self.rand);
-        let size_cost: f32 = gene
-            .groups
+        let groups =
+            gene.to_groups(self.points, self.graph, self.settings, &self.rand);
+        let size_cost: f32 = groups
             .iter()
             .map(|g| {
                 let p = g.support_positions();
@@ -82,8 +80,8 @@ impl<'a> Evaluator<ContactPointGroupingGene, ContactPointGroupingEvaluatorSettin
     }
 
     fn visualize(&self, gene: &ContactPointGroupingGene) -> anyhow::Result<()> {
-        let compressed =
-            gene.to_compressed_gene(self.points, self.graph, self.settings, &self.rand);
+        let groups =
+            gene.to_groups(self.points, self.graph, self.settings, &self.rand);
         let graph = self.graph;
 
         self.stream.log(
@@ -94,13 +92,13 @@ impl<'a> Evaluator<ContactPointGroupingGene, ContactPointGroupingEvaluatorSettin
                 .with_triangle_indices(graph.iter_triangles(None)),
         )?;
 
-        let num_groups = compressed.groups.len();
+        let num_groups = groups.len();
         let mut centers = Vec::new();
         let mut radiuses = Vec::new();
         let mut colors = Vec::new();
         let mut labels = Vec::new();
 
-        for (group_id, group) in compressed.groups.iter().enumerate() {
+        for (group_id, group) in groups.iter().enumerate() {
             let hue = if num_groups == 0 {
                 0.0
             } else {

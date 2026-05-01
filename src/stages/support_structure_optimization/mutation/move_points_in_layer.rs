@@ -1,4 +1,4 @@
 use super::*;
 
-pub fn mutate(mutator: &SupportStructureMutator, gene: &mut CompressedSupportGene) {
+pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportGroup) {
 }

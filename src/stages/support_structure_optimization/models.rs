@@ -14,11 +14,6 @@ use crate::{evolution::{Cost, Random}, models::{Point, SurfaceGraph}, stages::{s
 type ContactPointMutPtr<'a> = (&'a mut ContactPoint, usize);
 
 #[derive(Clone, Debug)]
-pub struct CompressedSupportGene {
-    pub groups: Vec<SupportGroup>
-}
-
-#[derive(Clone, Debug)]
 pub struct ContactPoint {
     pub position: Point,
     pub radius: f32,
@@ -122,7 +117,7 @@ pub struct SupportGroup {
     pub supports: Vec<ContactPoint>,
     pub layers: Vec<SupportLayer>
 }
-impl SupportGroup {
+impl SupportGroup{
     pub fn max_height(&self) -> f32 {
         self.support_positions()
             .max_by_key(|x| Cost::new(x.z))
@@ -298,64 +293,13 @@ impl SupportGroup {
     }
 
     pub fn regenerate(&mut self, mutator: &SupportStructureMutator) {
-        super::mutation::regenerate_group::regenerate_group(mutator, self);
+        super::mutation::regenerate_group::mutate(mutator, self);
     }
-}
 
-impl CompressedSupportGene {
-    pub fn to_full_genes(&self, graph: & SurfaceGraph) -> Vec<SupportStructureGene> {
-        let mut to_return = Vec::with_capacity(self.groups.len());
-        for g in &self.groups {
-            let mut builder = RawStructureBuilder::new();
-            builder.add_group(g);
-            to_return.push(builder.build(graph));
-        }
-        to_return
-    }
     pub fn to_full_gene(&self, graph: & SurfaceGraph) -> SupportStructureGene {
         let mut builder = RawStructureBuilder::new();
-        for g in &self.groups {
-            builder.add_group(g);
-        }
+        builder.add_group(self);
         builder.build(graph)
-    }
-
-    pub fn rand_group_mut(&mut self, rand: &Random) -> &mut SupportGroup {
-        rand.choose_mut(&mut self.groups)
-            .expect("there shall always be at least a group")
-    }
-    pub fn rand_group(&self, rand: &Random) -> &SupportGroup {
-        rand.choose(&self.groups)
-            .expect("there shall always be at least a group")
-    }
-    pub fn rand_group_id(&self, rand: &Random) -> usize {
-        rand.next_in_range_usize(0, self.groups.len())
-    }
-
-    pub(crate) fn get_two_groups_mut(&mut self, g1: usize, g2: usize) -> (&mut SupportGroup, &mut SupportGroup) {
-        assert_ne!(g1, g2, "can't get two mutable references");
-        let swap = g1 > g2;
-        let (min, max) = if swap {
-            (g2, g1)
-        } else {
-            (g1, g2)
-        };
-        let (left, right) = self.groups.split_at_mut(max);
-        let ref1 = &mut left[min];
-        let ref2 = &mut right[0];
-        if swap {
-            (ref2, ref1)
-        } else {
-            (ref1, ref2)
-        }
-    }
-
-    pub fn remove_group(&mut self, id1: usize) {
-        self.groups.swap_remove(id1);
-    }
-
-    pub fn add_groups(&mut self, mut new_groups: Vec<SupportGroup>) {
-        self.groups.append(&mut new_groups);
     }
 }
 

@@ -1,4 +1,5 @@
 use anyhow::Result;
+use log::debug;
 use std::{marker::PhantomData};
 
 
@@ -33,7 +34,7 @@ where
     ) -> Result<Pipeline<SupportStructureOptimizedState, TB>> {
         let result = TB::TSupportStructureOptimizer::optimize(&input.state)?;
 
-        let support_structures = result.to_full_genes(&input.state.graph);
+        let support_structures = result.into_iter().map(|x| x.to_full_gene(&input.state.graph)).collect();
         Ok(Pipeline::from_state(SupportStructureOptimizedState{
             settings: input.state.settings,
             graph: input.state.graph,
@@ -44,17 +45,15 @@ where
 }
 
 pub trait SupportStructureOptimizer {
-    fn optimize(status: &ContactPointsGroupedState) -> Result<CompressedSupportGene>;
+    fn optimize(status: &ContactPointsGroupedState) -> Result<Vec<SupportGroup>>;
 }
 
 pub struct SimpleSupportStructureOptimizer {
 }
 
-impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
-    fn optimize<'a>(status: &'a ContactPointsGroupedState) -> Result<CompressedSupportGene> {
+impl SimpleSupportStructureOptimizer {
+    fn optimize_group<'a>(status: &'a ContactPointsGroupedState, group: &'a SupportGroup) -> Result<SupportGroup> {
         let settings = &status.settings;
-        let connection_points = &status.connection_points;
-        let grouper = &status.grouper;
         let graph = &status.graph;
         let s = &settings.support_structure_optimization_settings;
 
@@ -66,7 +65,7 @@ impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
             TournamentBasedCrossoverSelection,
             ElitistNextGenSelector,
             SupportStructureInitializer<'a>,
-            CompressedSupportGene,
+            SupportGroup,
             SupportStructureMutatorSettings<'a>,
             SupportStructureCrossoverSettings<'a>,
             PatienceBasedTerminationStrategySettings,
@@ -90,10 +89,31 @@ impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
                 num_novel_individual: s.generation_size - s.num_elite_individuals,
                 num_elite_individual: s.num_elite_individuals
             },
-            &SupportStructureInitializerSettings::new(settings, connection_points, grouper, graph),
+            &SupportStructureInitializerSettings::new(settings, graph, group),
             Random::UnSeededRandom
         );
 
         evolver.run()
+    }
+}
+
+impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
+    fn optimize<'a>(status: &'a ContactPointsGroupedState) -> Result<Vec<SupportGroup>> {
+
+        let groups = status.grouper.to_groups(
+            &status.connection_points,
+            &status.graph,
+            &status.settings,
+            &Random::UnSeededRandom
+        );
+
+        let mut to_return = vec![];
+
+        for (i,g) in groups.iter().enumerate() {
+            debug!("starting optimization for group {i}");
+            let optimized = Self::optimize_group(status, &g);
+            to_return.push(optimized?);
+        }
+        Ok(to_return)
     }
 }

@@ -1,5 +1,5 @@
 use crate::{evolution::{Crossover, Random}, models::Settings};
-use super::CompressedSupportGene;
+use super::SupportGroup;
 
 
 pub struct SupportStructureCrossoverSettings<'a> {
@@ -19,7 +19,7 @@ pub struct SupportStructureCrossover<'a> {
     rand: Random
 }
 
-impl<'a> Crossover<CompressedSupportGene, SupportStructureCrossoverSettings<'a>> for SupportStructureCrossover<'a> {
+impl<'a> Crossover<SupportGroup, SupportStructureCrossoverSettings<'a>> for SupportStructureCrossover<'a> {
     fn new(settings: &SupportStructureCrossoverSettings<'a>, rand: Random) -> Self {
         Self {
             settings: settings.settings,
@@ -27,7 +27,7 @@ impl<'a> Crossover<CompressedSupportGene, SupportStructureCrossoverSettings<'a>>
         }
     }
 
-    fn crossover(&self, a: &CompressedSupportGene, _b: &CompressedSupportGene) -> CompressedSupportGene {
+    fn crossover(&self, a: &SupportGroup, _b: &SupportGroup) -> SupportGroup {
         // todo: implement real crossover
         a.clone()
     }

@@ -191,9 +191,7 @@ where
         let p = timed!("contact_points_optimization", ContactPointOptimizationStage::<TB>::execute(p))?;
         timed!("visualizing", VisualizationStage::visualize(&p))?;
         let p = timed!("contact_points_grouping", ContactPointsGroupingStage::<TB>::execute(p))?;
-        return Ok(());
         let p = timed!("support_structure_optimization", SupportStructureOptimizationStage::<TB>::execute(p))?;
-        // return Ok(());
         let p = timed!("support_structure_refinement", SupportStructureRefinementStage::<TB>::execute(p))?;
         Ok(())
     }

@@ -347,7 +347,7 @@ pub struct SupportStructureOptimizationSettings {
 impl Default for SupportStructureOptimizationSettings {
     fn default() -> Self {
         Self {
-            num_generations: 1,
+            num_generations: 2000,
             patience: 50,
             generation_size: 100,
             tournament_size: 10,
