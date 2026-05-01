@@ -1,4 +1,10 @@
-use crate::support::random_distribution::RandomDistribution;
+use crate::support::{
+    neural_network::{
+        ActivationFunction, LayerTopology, NetworkCrossoverSettings, NetworkMutationRates,
+        NetworkMutationSettings, NetworkTopology, NetworkWeightInitialization,
+    },
+    random_distribution::RandomDistribution,
+};
 
 #[derive(Default, Debug, Clone)]
 pub struct Settings {
@@ -8,6 +14,9 @@ pub struct Settings {
     /// (i.e. a surface that needs supports)
     pub criticality_settings: CriticalitySettings,
     pub contact_points_optimization_settings: ContactPointsOptimizationSettings,
+    /// parameters used to group the contact points into a disjoint sets that should
+    /// be considered together when optimizing
+    pub contact_points_grouping_settings: ContactPointsGroupingSettings,
     /// parameters that control the optimization of the
     /// contact points. This include cost functions weights as well as
     /// optimization hyper-parameters
@@ -186,6 +195,97 @@ impl Default for ContactPointsOptimizationSettings {
 }
 
 #[derive(Debug, Clone)]
+pub struct ContactPointsGroupingSettings {
+    pub perimeter_minimization_weight: f32,
+    pub area_minimization_weight: f32,
+    // maximum number of groups produced in the grouping phase
+    // this also define the number of neurons in the last layer of the neural network
+    pub max_num_groups: usize,
+    /// Network used to map 2D contact-point coordinates to group scores.
+    /// The input layer is fixed to x/y coordinates, and the output layer has
+    /// one neuron for each possible group.
+    pub network_topology: NetworkTopology,
+    pub network_weight_initialization: NetworkWeightInitialization,
+    pub valid_mutations: Vec<NetworkMutationSettings>,
+    pub valid_crossovers: Vec<NetworkCrossoverSettings>,
+    /// number of generations optimized
+    pub num_generations: usize,
+    /// patience when optimizing (if the score does not improve
+    /// for more than `patience` generations the optimization process will
+    /// be interrupted)
+    pub patience: usize,
+    /// the number of individuals in a generation
+    pub generation_size: usize,
+    /// the size of the tournaments made to select the individuals for crossover.
+    /// The tradeoffs are:
+    ///  - High tournament size => high selection pressure => fast to converge, may lose diversity
+    ///    too early
+    ///  - Small tournament size => slow selection process => slow to converge, preserve diversity
+    pub tournament_size: usize,
+    /// number of individual generated/evaluated in every generation
+    pub num_elite_individuals: usize,
+}
+
+impl Default for ContactPointsGroupingSettings {
+    fn default() -> Self {
+        let max_num_groups = 10;
+
+        Self {
+            perimeter_minimization_weight: 10.,
+            area_minimization_weight: 1.,
+            num_generations: 2000,
+            patience: 25,
+            generation_size: 100,
+            tournament_size: 10,
+            num_elite_individuals: 10,
+            max_num_groups,
+            network_topology: NetworkTopology::new(
+                2,
+                vec![
+                    LayerTopology::new(16, ActivationFunction::Relu)
+                        .expect("invalid default contact-point grouping hidden layer"),
+                    LayerTopology::new(16, ActivationFunction::Relu)
+                        .expect("invalid default contact-point grouping hidden layer"),
+                    LayerTopology::new(max_num_groups, ActivationFunction::Sigmoid)
+                        .expect("invalid default contact-point grouping output layer"),
+                ],
+            )
+            .expect("invalid default contact-point grouping network topology"),
+            network_weight_initialization: NetworkWeightInitialization::He,
+            valid_mutations: vec![
+                NetworkMutationSettings::new(
+                    NetworkMutationRates::new(0.05, 0.02)
+                        .expect("invalid default contact-point grouping mutation rates"),
+                    RandomDistribution::Normal {
+                        mean: 0.,
+                        std_dev: 0.1,
+                    },
+                    RandomDistribution::InRange { low: -1., high: 1. },
+                ),
+                NetworkMutationSettings::new(
+                    NetworkMutationRates::new(0.01, 0.15)
+                        .expect("invalid default contact-point grouping mutation rates"),
+                    RandomDistribution::Normal {
+                        mean: 0.,
+                        std_dev: 0.35,
+                    },
+                    RandomDistribution::InRange {
+                        low: -1.5,
+                        high: 1.5,
+                    },
+                ),
+            ],
+            valid_crossovers: vec![
+                NetworkCrossoverSettings::uniform(),
+                NetworkCrossoverSettings::single_point(),
+                NetworkCrossoverSettings::arithmetic(0.5)
+                    .expect("invalid default contact-point grouping crossover settings"),
+            ],
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct SupportStructureOptimizationSettings {
     /// number of generations optimized
     pub num_generations: usize,
@@ -234,7 +334,7 @@ pub struct SupportStructureOptimizationSettings {
 impl Default for SupportStructureOptimizationSettings {
     fn default() -> Self {
         Self {
-            num_generations: 2000,
+            num_generations: 1,
             patience: 50,
             generation_size: 100,
             tournament_size: 10,

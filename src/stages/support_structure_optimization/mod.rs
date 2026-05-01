@@ -2,19 +2,19 @@ use anyhow::Result;
 use std::{marker::PhantomData};
 
 
-use crate::{evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, stages::{ContactPointsDecidedState, Pipeline, PipelineBehaviourTrait, SupportStructureOptimizedState}};
+use crate::{evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, stages::{ContactPointsDecidedState, ContactPointsGroupedState, Pipeline, PipelineBehaviourTrait, SupportStructureOptimizedState}};
 
 
 mod crossover;
 use crossover::{SupportStructureCrossoverSettings, SupportStructureCrossover};
 mod initializer;
 use initializer::{SupportStructureInitializerSettings, SupportStructureInitializer};
-mod mutation;
+pub mod mutation;
 use mutation::{SupportStructureMutatorSettings, SupportStructureMutator};
 mod evaluation;
 use evaluation::{SupportStructureEvaluatorSettings, SupportStructureEvaluator};
 mod models;
-use models::*;
+pub use models::*;
 
 
 pub struct SupportStructureOptimizationStage<TB>
@@ -29,7 +29,7 @@ where
     TB: PipelineBehaviourTrait,
 {
     pub fn execute(
-        input: Pipeline<ContactPointsDecidedState, TB>,
+        input: Pipeline<ContactPointsGroupedState, TB>,
     ) -> Result<Pipeline<SupportStructureOptimizedState, TB>> {
         let result = TB::TSupportStructureOptimizer::optimize(&input.state)?;
 
@@ -44,16 +44,17 @@ where
 }
 
 pub trait SupportStructureOptimizer {
-    fn optimize(status: &ContactPointsDecidedState) -> Result<CompressedSupportGene>;
+    fn optimize(status: &ContactPointsGroupedState) -> Result<CompressedSupportGene>;
 }
 
 pub struct SimpleSupportStructureOptimizer {
 }
 
 impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
-    fn optimize<'a>(status: &'a ContactPointsDecidedState) -> Result<CompressedSupportGene> {
+    fn optimize<'a>(status: &'a ContactPointsGroupedState) -> Result<CompressedSupportGene> {
         let settings = &status.settings;
         let connection_points = &status.connection_points;
+        let grouper = &status.grouper;
         let graph = &status.graph;
         let s = &settings.support_structure_optimization_settings;
 
@@ -89,7 +90,7 @@ impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
                 num_novel_individual: s.generation_size - s.num_elite_individuals,
                 num_elite_individual: s.num_elite_individuals
             },
-            &SupportStructureInitializerSettings::new(settings, connection_points, graph),
+            &SupportStructureInitializerSettings::new(settings, connection_points, grouper, graph),
             Random::UnSeededRandom
         );
 

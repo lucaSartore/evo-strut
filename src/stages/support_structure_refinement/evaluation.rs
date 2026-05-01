@@ -8,8 +8,8 @@ mod logic;
 mod visualization;
 
 pub struct SupportStructureEvaluatorSettings<'a> {
-    settings: &'a Settings,
-    graph: &'a SurfaceGraph
+    pub settings: &'a Settings,
+    pub graph: &'a SurfaceGraph
 }
 
 impl<'a> SupportStructureEvaluatorSettings<'a> {

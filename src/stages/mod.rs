@@ -6,20 +6,23 @@ pub mod visualization;
 pub mod criticality_detection;
 pub mod criticality_grouping;
 pub mod contact_point_optimization;
+pub mod contact_points_grouping;
 pub mod support_structure_optimization;
 pub mod support_structure_refinement;
+
 
 pub use criticality_detection::{CriticalityDetector, CriticalityDetectionStage, OrientationBasedCriticalityDetector};
 use hashbrown::HashSet;
 use log::info;
 
-use crate::{models::{FaceId, MeshVector, Settings, SurfaceGraph}, stages::{contact_point_optimization::{ContactPointOptimizationStage, ContactPointOptimizer, ContactPointsGene}, criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, loading::LoadingStage, support_structure_optimization::{SupportStructureOptimizationStage, SupportStructureOptimizer}, support_structure_refinement::{SupportStructureGene, SupportStructureRefinementStage, SupportStructureRefiner}}};
+use crate::{models::{FaceId, MeshVector, Settings, SurfaceGraph}, stages::{contact_point_optimization::{ContactPointOptimizationStage, ContactPointOptimizer, ContactPointsGene}, contact_points_grouping::{ContactPointGroupingGene, ContactPointsGrouper, ContactPointsGroupingStage}, criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, loading::LoadingStage, support_structure_optimization::{SupportStructureOptimizationStage, SupportStructureOptimizer}, support_structure_refinement::{SupportStructureGene, SupportStructureRefinementStage, SupportStructureRefiner}}};
 use visualization::{VisualizationStage, Visualizer};
 
 pub trait PipelineBehaviourTrait {
     type TCriticalityDetection: CriticalityDetector;
     type TCriticalityGrouping: CriticalityGrouper;
     type TContactPointOptimizer: ContactPointOptimizer;
+    type TContactPointGrouper: ContactPointsGrouper;
     type TSupportStructureOptimizer: SupportStructureOptimizer;
     type TSupportStructureRefiner: SupportStructureRefiner;
 }
@@ -28,6 +31,7 @@ pub struct PipelineBehaviour<
     TD: CriticalityDetector,
     TG: CriticalityGrouper,
     TCPO: ContactPointOptimizer,
+    TCPG: ContactPointsGrouper,
     TSSO: SupportStructureOptimizer,
     TSSR: SupportStructureRefiner,
 > {
@@ -35,6 +39,7 @@ pub struct PipelineBehaviour<
         TD,
         TG,
         TCPO,
+        TCPG,
         TSSO,
         TSSR
     )>
@@ -44,18 +49,21 @@ impl<
     TCriticalityDetection: CriticalityDetector,
     TCriticalityGrouping: CriticalityGrouper,
     TContactPointOptimizer: ContactPointOptimizer,
+    TContactPointGrouper: ContactPointsGrouper,
     TSupportStructureOptimizer: SupportStructureOptimizer,
     TSupportSTructureRefiner: SupportStructureRefiner
 > PipelineBehaviourTrait for PipelineBehaviour<
     TCriticalityDetection,
     TCriticalityGrouping,
     TContactPointOptimizer,
+    TContactPointGrouper,
     TSupportStructureOptimizer,
     TSupportSTructureRefiner
 > {
     type TCriticalityDetection = TCriticalityDetection;
     type TCriticalityGrouping = TCriticalityGrouping;
     type TContactPointOptimizer = TContactPointOptimizer;
+    type TContactPointGrouper = TContactPointGrouper;
     type TSupportStructureOptimizer = TSupportStructureOptimizer;
     type TSupportStructureRefiner = TSupportSTructureRefiner;
 }
@@ -101,6 +109,14 @@ pub struct ContactPointsDecidedState {
     pub connection_points: ContactPointsGene
 }
 impl PipelineState for ContactPointsDecidedState { }
+
+pub struct ContactPointsGroupedState {
+    pub settings: Settings,
+    pub graph: SurfaceGraph,
+    pub connection_points: ContactPointsGene,
+    pub grouper: ContactPointGroupingGene 
+}
+impl PipelineState for ContactPointsGroupedState { }
 
 pub struct SupportStructureOptimizedState {
     pub settings: Settings,
@@ -174,6 +190,7 @@ where
         timed!("visualizing", VisualizationStage::visualize(&p))?;
         let p = timed!("contact_points_optimization", ContactPointOptimizationStage::<TB>::execute(p))?;
         timed!("visualizing", VisualizationStage::visualize(&p))?;
+        let p = timed!("contact_points_grouping", ContactPointsGroupingStage::<TB>::execute(p))?;
         let p = timed!("support_structure_optimization", SupportStructureOptimizationStage::<TB>::execute(p))?;
         // return Ok(());
         let p = timed!("support_structure_refinement", SupportStructureRefinementStage::<TB>::execute(p))?;

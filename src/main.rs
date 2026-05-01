@@ -8,7 +8,7 @@ use log::{LevelFilter, error};
 
 use crate::{
     models::Settings, stages::{
-        Pipeline, PipelineBehaviour, StartedState, contact_point_optimization::SimpleContactPointOptimizer, criticality_detection::PropagationBasedCriticalityDetector, criticality_grouping::DistanceBasedCriticalityGrouper, support_structure_optimization::SimpleSupportStructureOptimizer, support_structure_refinement::SimpleSupportStructureRefiner
+        Pipeline, PipelineBehaviour, StartedState, contact_point_optimization::SimpleContactPointOptimizer, contact_points_grouping::SimpleContactPointsGrouper, criticality_detection::PropagationBasedCriticalityDetector, criticality_grouping::DistanceBasedCriticalityGrouper, support_structure_optimization::SimpleSupportStructureOptimizer, support_structure_refinement::SimpleSupportStructureRefiner
     }
 };
 
@@ -25,6 +25,7 @@ fn main() {
         PropagationBasedCriticalityDetector,
         DistanceBasedCriticalityGrouper,
         SimpleContactPointOptimizer,
+        SimpleContactPointsGrouper,
         SimpleSupportStructureOptimizer,
         SimpleSupportStructureRefiner
     >;

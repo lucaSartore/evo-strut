@@ -8,7 +8,7 @@ use nalgebra::Matrix2;
 use rerun::{demo_util::grid, external::{glam::usize, re_data_loader::lerobot::common::LEROBOT_DATASET_IGNORED_COLUMNS}};
 use smallvec::smallvec;
 
-use crate::{evolution::{Cost, Random}, models::{Point, SurfaceGraph}, stages::support_structure_refinement::{BaseNode, ContactNode, MiddleNode, PositionAnchor, SupportNode, SupportNodeId, SupportStructureGene}};
+use crate::{evolution::{Cost, Random}, models::{Point, SurfaceGraph}, stages::{support_structure_optimization::mutation::SupportStructureMutator, support_structure_refinement::{BaseNode, ContactNode, MiddleNode, PositionAnchor, SupportNode, SupportNodeId, SupportStructureGene}}};
 
 
 type ContactPointMutPtr<'a> = (&'a mut ContactPoint, usize);
@@ -283,11 +283,22 @@ impl SupportGroup {
         to_return
     }
 
+    pub fn from_supports(supports: Vec<ContactPoint>) -> Self {
+        Self {
+            supports,
+            layers: vec![]
+        }
+    }
+
     pub fn from_one(support: ContactPoint) -> Self {
         Self {
             supports: vec![support],
             layers: vec![]
         }
+    }
+
+    pub fn regenerate(&mut self, mutator: &SupportStructureMutator) {
+        super::mutation::regenerate_group::regenerate_group(mutator, self);
     }
 }
 
