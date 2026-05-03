@@ -7,7 +7,11 @@ use crate::{
         PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random,
         TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings,
     },
-    stages::{ContactPointsDecidedState, ContactPointsGroupedState, Pipeline, PipelineBehaviourTrait, SupportStructureOptimizedState, support_structure_refinement::evaluation::SupportStructureEvaluatorSettings},
+    stages::{
+        support_structure_refinement::evaluation::SupportStructureEvaluatorSettings,
+        ContactPointsDecidedState, ContactPointsGroupedState, Pipeline, PipelineBehaviourTrait,
+        SupportStructureOptimizedState,
+    },
 };
 
 mod crossover;
@@ -41,7 +45,7 @@ where
             settings: input.state.settings,
             graph: input.state.graph,
             connection_points: input.state.connection_points,
-            grouper: result
+            grouper: result,
         }))
     }
 }

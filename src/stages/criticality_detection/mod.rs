@@ -1,13 +1,19 @@
-use std::marker::PhantomData;
 use hashbrown::{HashMap, HashSet};
 use itertools::Itertools;
-use smallvec::{SmallVec, smallvec};
+use smallvec::{smallvec, SmallVec};
+use std::marker::PhantomData;
 
-use crate::{evolution::Cost, models::{FaceId, Point, PointId, Settings, SurfaceGraph, Triangle}, stages::{CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait, criticality_detection::propagation::KnownCosts }};
+use crate::{
+    evolution::Cost,
+    models::{FaceId, Point, PointId, Settings, SurfaceGraph, Triangle},
+    stages::{
+        criticality_detection::propagation::KnownCosts, CriticalityDetectedState, LoadedState,
+        Pipeline, PipelineBehaviourTrait,
+    },
+};
 
 pub mod propagation;
 use propagation::PropagationEvaluator;
-
 
 pub struct CriticalityDetectionStage<TB>
 where
@@ -20,21 +26,17 @@ impl<TB> CriticalityDetectionStage<TB>
 where
     TB: PipelineBehaviourTrait,
 {
-    pub fn execute(
-        input: Pipeline<LoadedState, TB>
-    ) -> Pipeline<CriticalityDetectedState, TB> {
+    pub fn execute(input: Pipeline<LoadedState, TB>) -> Pipeline<CriticalityDetectedState, TB> {
         let graph = &input.state.graph;
         let settings = &input.state.settings;
         let critical_nodes = TB::TCriticalityDetection::detect_criticality(graph, settings);
         Pipeline::from_state(CriticalityDetectedState {
             settings: input.state.settings,
             graph: input.state.graph,
-            critical: critical_nodes
+            critical: critical_nodes,
         })
     }
 }
-
-
 
 /// trait that given a particular mesh detect which polygons are "critical"
 pub trait CriticalityDetector {
@@ -87,7 +89,6 @@ impl CriticalityDetector for OrientationBasedCriticalityDetector {
     }
 }
 
-
 pub struct PropagationBasedCriticalityDetector {}
 
 impl PropagationBasedCriticalityDetector {
@@ -97,7 +98,8 @@ impl PropagationBasedCriticalityDetector {
     // if not for the surface normals. So we need to find them in order to
     // calculate their criticality properly
     fn find_concavity(graph: &SurfaceGraph) -> HashSet<FaceId> {
-        let mut point_to_triangles: HashMap<PointId, SmallVec<[Triangle<'_>; 4]>> = Default::default();
+        let mut point_to_triangles: HashMap<PointId, SmallVec<[Triangle<'_>; 4]>> =
+            Default::default();
 
         for t in graph.iter_triangles(None) {
             for p in t.vertexes_index() {
@@ -111,12 +113,8 @@ impl PropagationBasedCriticalityDetector {
         //  2) the point is the lowest among all of hist neighbor
         let points: HashSet<_> = point_to_triangles
             .iter()
-            .filter(|(_,triangles)|{
-                triangles
-                    .iter()
-                    .all(|t| t.normal().is_facing_upward())
-            })
-            .filter(|(point_id,triangles)|{
+            .filter(|(_, triangles)| triangles.iter().all(|t| t.normal().is_facing_upward()))
+            .filter(|(point_id, triangles)| {
                 let point = graph.get_point(**point_id);
                 triangles
                     .iter()
@@ -125,13 +123,13 @@ impl PropagationBasedCriticalityDetector {
                     .unique()
                     .all(|new_p| point.is_lower_or_equal_than(&new_p))
             })
-            .map(|(p,_)| *p)
+            .map(|(p, _)| *p)
             .collect();
 
         point_to_triangles
             .iter()
-            .filter(|(p,_)| points.contains(*p))
-            .map(|(_,t)| t)
+            .filter(|(p, _)| points.contains(*p))
+            .map(|(_, t)| t)
             .flatten()
             .map(|t| t.index)
             .collect()
@@ -140,7 +138,7 @@ impl PropagationBasedCriticalityDetector {
 
 struct HeightBasedKnownCost<'a> {
     graph: &'a SurfaceGraph,
-    settings: &'a Settings
+    settings: &'a Settings,
 }
 impl<'a> KnownCosts for HeightBasedKnownCost<'a> {
     fn cost_of(&self, id: FaceId) -> Option<Cost> {
@@ -160,16 +158,17 @@ impl CriticalityDetector for PropagationBasedCriticalityDetector {
             .map(|x| (x.index, Cost::ZERO))
             .collect();
 
-        let area: Vec<_> = graph.iter_triangles(None)
+        let area: Vec<_> = graph
+            .iter_triangles(None)
             .map(|x| x.index)
             .filter(|x| !known_costs.contains_key(x))
             .collect();
 
-        let pm =  PropagationEvaluator::new(
+        let pm = PropagationEvaluator::new(
             graph,
             settings,
-            &area, 
-            HeightBasedKnownCost{ graph, settings }
+            &area,
+            HeightBasedKnownCost { graph, settings },
         );
 
         let supported = Self::find_concavity(graph);
@@ -177,9 +176,8 @@ impl CriticalityDetector for PropagationBasedCriticalityDetector {
 
         costs
             .iter()
-            .filter(|(_,c)| c.unit_cost != Cost::ZERO)
-            .map(|(k,_)| *k)
+            .filter(|(_, c)| c.unit_cost != Cost::ZERO)
+            .map(|(k, _)| *k)
             .collect()
     }
 }
-

@@ -1,40 +1,40 @@
-use std::{ops::DerefMut, sync::Mutex};
 use super::*;
-
+use std::{ops::DerefMut, sync::Mutex};
 
 #[derive(Copy, Clone, Debug)]
-pub struct  PatienceBasedTerminationStrategySettings {
+pub struct PatienceBasedTerminationStrategySettings {
     pub max_generations: usize,
-    pub patience: usize
+    pub patience: usize,
 }
 
 struct State {
     pub best_so_far: Cost,
     pub best_so_far_generation: usize,
-    pub current_generation: usize
+    pub current_generation: usize,
 }
 
 pub struct PatienceBasedTerminationStrategy {
     settings: PatienceBasedTerminationStrategySettings,
-    state: Mutex<State>
+    state: Mutex<State>,
 }
 
-impl TerminationStrategy<PatienceBasedTerminationStrategySettings> for PatienceBasedTerminationStrategy{
+impl TerminationStrategy<PatienceBasedTerminationStrategySettings>
+    for PatienceBasedTerminationStrategy
+{
     fn new(settings: &PatienceBasedTerminationStrategySettings) -> Self {
         Self {
             settings: *settings,
             state: State {
                 best_so_far: Cost::MAX,
                 best_so_far_generation: 0,
-                current_generation: 0
-            }.into()
+                current_generation: 0,
+            }
+            .into(),
         }
     }
 
     fn should_terminate(&self, best_score: Cost) -> bool {
-        let mut lock = self.state
-            .lock()
-            .expect("another thread has panic");
+        let mut lock = self.state.lock().expect("another thread has panic");
         let state = lock.deref_mut();
 
         state.current_generation += 1;

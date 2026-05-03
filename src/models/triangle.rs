@@ -1,30 +1,30 @@
+use super::*;
+use crate::models::{FaceId, PointId};
 use log::warn;
 use rerun::TriangleIndices;
-use crate::models::{PointId, FaceId};
-use super::*;
 
 #[derive(Copy, Clone)]
 pub struct Triangle<'a> {
     pub graph: &'a SurfaceGraph,
-    pub index: FaceId
+    pub index: FaceId,
 }
 
 impl Triangle<'_> {
-    pub fn center(&self) -> Point{
-        let [a ,b ,c ] = self.vertexes();
+    pub fn center(&self) -> Point {
+        let [a, b, c] = self.vertexes();
         let mut p = a + b + c;
-        p.scale(1./3.);
+        p.scale(1. / 3.);
         p
     }
-    pub fn vertexes(&self) -> [Point;3]{
+    pub fn vertexes(&self) -> [Point; 3] {
         let t = self.as_raw_indexed();
         [
             self.graph.get_point(t.vertexes[0].into()),
             self.graph.get_point(t.vertexes[1].into()),
-            self.graph.get_point(t.vertexes[2].into())
+            self.graph.get_point(t.vertexes[2].into()),
         ]
     }
-    pub fn vertexes_index(&self) -> [PointId;3]{
+    pub fn vertexes_index(&self) -> [PointId; 3] {
         let t = self.as_raw_indexed();
         [
             t.vertexes[0].into(),
@@ -32,23 +32,23 @@ impl Triangle<'_> {
             t.vertexes[2].into(),
         ]
     }
-    pub fn vertex_a(&self) -> Point{
+    pub fn vertex_a(&self) -> Point {
         let t = self.as_raw_indexed();
         self.graph.get_point(t.vertexes[0].into())
     }
-    pub fn vertex_b(&self) -> Point{
+    pub fn vertex_b(&self) -> Point {
         let t = self.as_raw_indexed();
         self.graph.get_point(t.vertexes[1].into())
     }
-    pub fn vertex_c(&self) -> Point{
+    pub fn vertex_c(&self) -> Point {
         let t = self.as_raw_indexed();
         self.graph.get_point(t.vertexes[2].into())
     }
-    pub fn normal(&self) -> Point{
+    pub fn normal(&self) -> Point {
         let t = self.as_raw_indexed();
         t.normal.into()
     }
-    pub fn as_raw_indexed(&self) -> Face{
+    pub fn as_raw_indexed(&self) -> Face {
         self.graph.mesh.faces[self.index]
     }
 
@@ -77,7 +77,7 @@ impl Triangle<'_> {
         let a = v2 - v1;
         let b = v3 - v1;
 
-        let c = Point::cross(a,b);
+        let c = Point::cross(a, b);
 
         c.abs() / 2.0
     }
@@ -104,7 +104,6 @@ impl Triangle<'_> {
     }
 
     pub fn find_z(&self, x: f32, y: f32) -> f32 {
-
         let [v1, v2, v3] = self.vertexes();
 
         // two vectors on the triangle's plane
@@ -114,7 +113,7 @@ impl Triangle<'_> {
         // normal vector (identify a plane)
         let n = Point::cross(a, b);
 
-        // The triangle is vertical; the line X=x, Y=y might not intersect 
+        // The triangle is vertical; the line X=x, Y=y might not intersect
         if n.z.abs() < f32::EPSILON {
             warn!("trying to find the z coordinate of a vertical rectangle");
             // fallback value
@@ -127,14 +126,9 @@ impl Triangle<'_> {
     }
 }
 
-
 impl<'a> From<Triangle<'a>> for TriangleIndices {
     fn from(value: Triangle) -> Self {
         let v = value.graph.mesh.faces[value.index].vertexes;
-        [
-            v[0].0,
-            v[1].0,
-            v[2].0
-        ].into()
+        [v[0].0, v[1].0, v[2].0].into()
     }
 }

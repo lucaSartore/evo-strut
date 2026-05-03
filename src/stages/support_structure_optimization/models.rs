@@ -2,14 +2,26 @@ use core::f32;
 use std::fmt::Debug;
 
 use baby_shark::algo::utils::min;
-use hashbrown::{HashMap, hash_set::Iter};
+use hashbrown::{hash_set::Iter, HashMap};
 use itertools::Itertools;
 use nalgebra::Matrix2;
-use rerun::{demo_util::grid, external::{glam::usize, re_data_loader::lerobot::common::LEROBOT_DATASET_IGNORED_COLUMNS}};
+use rerun::{
+    demo_util::grid,
+    external::{glam::usize, re_data_loader::lerobot::common::LEROBOT_DATASET_IGNORED_COLUMNS},
+};
 use smallvec::smallvec;
 
-use crate::{evolution::{Cost, Random}, models::{Point, SurfaceGraph}, stages::{support_structure_optimization::mutation::SupportStructureMutator, support_structure_refinement::{BaseNode, ContactNode, MiddleNode, PositionAnchor, SupportNode, SupportNodeId, SupportStructureGene}}};
-
+use crate::{
+    evolution::{Cost, Random},
+    models::{Point, SurfaceGraph},
+    stages::{
+        support_structure_optimization::mutation::SupportStructureMutator,
+        support_structure_refinement::{
+            BaseNode, ContactNode, MiddleNode, PositionAnchor, SupportNode, SupportNodeId,
+            SupportStructureGene,
+        },
+    },
+};
 
 type ContactPointMutPtr<'a> = (&'a mut ContactPoint, usize);
 
@@ -22,7 +34,7 @@ pub struct ContactPoint {
 #[derive(Clone, Debug)]
 pub struct SupportLayer {
     pub center: Point,
-    pub nodes: Vec<LayerNode>
+    pub nodes: Vec<LayerNode>,
 }
 
 impl SupportLayer {
@@ -41,10 +53,7 @@ impl SupportLayer {
     }
 
     pub fn nodes_positions(&self) -> impl Iterator<Item = Point> {
-        self
-            .nodes
-            .iter()
-            .map(|x| self.center + x.offset)
+        self.nodes.iter().map(|x| self.center + x.offset)
     }
 
     pub(crate) fn mutate_random_connection(&mut self, rand: &Random) {
@@ -58,9 +67,18 @@ impl SupportLayer {
         }
     }
 
-    pub fn random_point(height: f32, points: &[Point], mean: Option<Point>, rand: &Random, update_size: f32) -> Point {
-
-        let random_point = || *rand.choose(points).expect("the points to support can't be empty");
+    pub fn random_point(
+        height: f32,
+        points: &[Point],
+        mean: Option<Point>,
+        rand: &Random,
+        update_size: f32,
+    ) -> Point {
+        let random_point = || {
+            *rand
+                .choose(points)
+                .expect("the points to support can't be empty")
+        };
 
         let mut mean = mean.unwrap_or_else(|| Point::mean(points));
         mean.z = height;
@@ -71,12 +89,19 @@ impl SupportLayer {
         let mut direction_three = Point::random(Point::ZERO, 1., rand);
         direction_three.z = 0.;
         direction_three = direction_three.as_versor();
-        let new_node = base_node + (direction_one + direction_two + direction_three).to_scaled(update_size);
+        let new_node =
+            base_node + (direction_one + direction_two + direction_three).to_scaled(update_size);
         let mut versor = new_node - mean;
         versor.z = 0.;
         versor
     }
-    pub fn random_point_in_self(&self, points: &[Point], mean: Option<Point>, rand: &Random, update_size: f32) -> Point {
+    pub fn random_point_in_self(
+        &self,
+        points: &[Point],
+        mean: Option<Point>,
+        rand: &Random,
+        update_size: f32,
+    ) -> Point {
         Self::random_point(self.center.z, points, mean, rand, update_size)
     }
 }
@@ -86,13 +111,13 @@ pub struct LayerNode {
     /// position offset w.r.t. the center of the layer.
     /// the z index should always be zero
     pub offset: Point,
-    pub connections: LayerConnections
+    pub connections: LayerConnections,
 }
 impl LayerNode {
     pub fn new_random(offset: Point, rand: &Random) -> Self {
         Self {
             offset,
-            connections: LayerConnections::new_random(rand)
+            connections: LayerConnections::new_random(rand),
         }
     }
 
@@ -110,14 +135,14 @@ pub struct LayerConnections {
     // pub connect_to_closest_surface: bool,
     pub connect_to_closest_below_layer_node: bool,
     pub connect_to_second_closest_below_layer_node: bool,
-    pub connect_to_third_closest_below_layer_node: bool
+    pub connect_to_third_closest_below_layer_node: bool,
 }
 impl LayerConnections {
     pub fn new_random(rand: &Random) -> LayerConnections {
         Self {
             connect_to_closest_below_layer_node: rand.random_choice(0.5),
             connect_to_second_closest_below_layer_node: rand.random_choice(0.5),
-            connect_to_third_closest_below_layer_node: rand.random_choice(0.5)
+            connect_to_third_closest_below_layer_node: rand.random_choice(0.5),
         }
     }
 
@@ -137,9 +162,9 @@ impl LayerConnections {
 #[derive(Clone, Debug)]
 pub struct SupportGroup {
     pub supports: Vec<ContactPoint>,
-    pub layers: Vec<SupportLayer>
+    pub layers: Vec<SupportLayer>,
 }
-impl SupportGroup{
+impl SupportGroup {
     pub fn max_height(&self) -> f32 {
         self.support_positions()
             .max_by_key(|x| Cost::new(x.z))
@@ -158,14 +183,20 @@ impl SupportGroup{
             .flat_map(|x| x.nodes_positions())
             .chain(self.support_positions())
             .filter(|x| x.z > height)
-            .map(|mut x| {x.z = 0.; x})
+            .map(|mut x| {
+                x.z = 0.;
+                x
+            })
             .collect();
         let n = points.len() as f32;
 
-        assert_ne!(n, 0., "there shall always be at least a point above the height");
+        assert_ne!(
+            n, 0.,
+            "there shall always be at least a point above the height"
+        );
 
         let sum_point = points.iter().fold(Point::ZERO, |acc, p| acc + *p);
-        let mean = sum_point.to_scaled(1./n);
+        let mean = sum_point.to_scaled(1. / n);
 
         let mut cov_xx = 0.0;
         let mut cov_yy = 0.0;
@@ -174,16 +205,13 @@ impl SupportGroup{
         for p in &points {
             let dx = p.x - mean.x;
             let dy = p.y - mean.y;
-            
+
             cov_xx += dx * dx;
             cov_yy += dy * dy;
             cov_xy += dx * dy;
         }
 
-        let covariance_matrix = Matrix2::new(
-            cov_xx / n, cov_xy / n,
-            cov_xy / n, cov_yy / n,
-        );
+        let covariance_matrix = Matrix2::new(cov_xx / n, cov_xy / n, cov_xy / n, cov_yy / n);
 
         (mean, covariance_matrix)
     }
@@ -194,9 +222,7 @@ impl SupportGroup{
     }
 
     pub fn support_positions(&self) -> impl Iterator<Item = Point> {
-        self.supports
-            .iter()
-            .map(|x| x.position)
+        self.supports.iter().map(|x| x.position)
     }
 
     pub fn pop_random_support(&mut self, rand: &Random) -> ContactPoint {
@@ -208,7 +234,7 @@ impl SupportGroup{
         self.supports.is_empty()
     }
 
-    pub fn add_support(&mut self, element: ContactPoint)  {
+    pub fn add_support(&mut self, element: ContactPoint) {
         self.supports.push(element);
     }
 
@@ -242,13 +268,10 @@ impl SupportGroup{
 
         if let Some(layer) = layer_above {
             layer_height_top = layer.center.z;
-            layer
-                .nodes_positions()
-                .for_each(|x| points.push(x));
+            layer.nodes_positions().for_each(|x| points.push(x));
         }
 
-        self
-            .support_positions()
+        self.support_positions()
             .filter(|x| layer_height < x.z && x.z < layer_height_top)
             .for_each(|x| points.push(x));
         points
@@ -260,7 +283,10 @@ impl SupportGroup{
     }
 
     pub(crate) fn empty() -> Self {
-        Self { supports: vec![], layers: vec![] }
+        Self {
+            supports: vec![],
+            layers: vec![],
+        }
     }
 
     pub fn set_all_connections(&mut self) {
@@ -303,14 +329,14 @@ impl SupportGroup{
     pub fn from_supports(supports: Vec<ContactPoint>) -> Self {
         Self {
             supports,
-            layers: vec![]
+            layers: vec![],
         }
     }
 
     pub fn from_one(support: ContactPoint) -> Self {
         Self {
             supports: vec![support],
-            layers: vec![]
+            layers: vec![],
         }
     }
 
@@ -318,7 +344,7 @@ impl SupportGroup{
         super::mutation::regenerate_group::mutate(mutator, self);
     }
 
-    pub fn to_full_gene(&self, graph: & SurfaceGraph) -> SupportStructureGene {
+    pub fn to_full_gene(&self, graph: &SurfaceGraph) -> SupportStructureGene {
         let mut builder = RawStructureBuilder::new();
         builder.add_group(self);
         builder.build(graph)
@@ -328,34 +354,35 @@ impl SupportGroup{
 struct RawStructureBuilder {
     pub raw_structure: SupportStructureGene,
     pub position_to_id: HashMap<Point, SupportNodeId>,
-    pub random: Random
+    pub random: Random,
 }
 
 impl RawStructureBuilder {
     pub fn new() -> Self {
         // node zero is added as a placeholder, so that the we can use it for anchors, and then
         // remove it and repairing the structure
-        let mut raw_structure = SupportStructureGene { nodes: Default::default() };
+        let mut raw_structure = SupportStructureGene {
+            nodes: Default::default(),
+        };
         raw_structure.nodes.insert(
             SupportNodeId(0),
-            SupportNode::Base(
-                BaseNode { 
-                    id: SupportNodeId(0),
-                    mesh_contact: None,
-                    last_position: Point::DOWNWARD.to_scaled(10e20) 
-                }
-        ));
+            SupportNode::Base(BaseNode {
+                id: SupportNodeId(0),
+                mesh_contact: None,
+                last_position: Point::DOWNWARD.to_scaled(10e20),
+            }),
+        );
 
         Self {
             raw_structure,
             position_to_id: Default::default(),
             // random has no actual effect on the shape of the created structure
             // it only effect IDs, so we can put an unseeded value here
-            random: Random::UnSeededRandom
+            random: Random::UnSeededRandom,
         }
     }
 
-    pub fn build(mut self, graph: & SurfaceGraph) -> SupportStructureGene {
+    pub fn build(mut self, graph: &SurfaceGraph) -> SupportStructureGene {
         self.raw_structure.nodes.remove(&SupportNodeId(0));
         // the structure passed will already be completed, so the random will
         // have no effects. The repair will only fix-up the contacts
@@ -364,17 +391,16 @@ impl RawStructureBuilder {
         self.raw_structure
     }
 
-
     pub fn add_group(&mut self, group: &SupportGroup) {
         enum ListElement<'a> {
             Layer(&'a SupportLayer),
-            Point(&'a ContactPoint)
+            Point(&'a ContactPoint),
         }
         impl<'a> ListElement<'a> {
             pub fn height(&self) -> f32 {
                 match self {
                     ListElement::Layer(support_layer) => support_layer.center.z,
-                    ListElement::Point(contact_point) => contact_point.position.z
+                    ListElement::Point(contact_point) => contact_point.position.z,
                 }
             }
         }
@@ -404,26 +430,26 @@ impl RawStructureBuilder {
 
     pub fn create_node(&mut self, position: Point, node_kind: NodeKind) -> SupportNodeId {
         if let Some(k) = self.position_to_id.get(&position) {
-            return *k
+            return *k;
         }
         let id = self.raw_structure.new_random_id(&self.random);
         let n = match node_kind {
             NodeKind::Contact { radius } => {
-                let n = ContactNode{
+                let n = ContactNode {
                     id,
                     position,
                     radius,
-                    leans_on: smallvec![]
+                    leans_on: smallvec![],
                 };
                 SupportNode::Contact(n)
-            },
+            }
             NodeKind::Middle => {
-                let n = MiddleNode{
+                let n = MiddleNode {
                     id,
                     // we put a random anchor
                     anchor: PositionAnchor::new(SupportNodeId(0), Point::ZERO, Point::ZERO),
                     last_position: position,
-                    leans_on: smallvec![]
+                    leans_on: smallvec![],
                 };
                 SupportNode::Middle(n)
             }
@@ -445,14 +471,13 @@ impl RawStructureBuilder {
     }
 
     pub fn add_layer(&mut self, layer: &SupportLayer, layer_below: Option<&SupportLayer>) {
-        layer.nodes_positions()
-            .for_each(|x| { 
-                let _ = self.create_node(x, NodeKind::Middle); 
-            });
+        layer.nodes_positions().for_each(|x| {
+            let _ = self.create_node(x, NodeKind::Middle);
+        });
         let Some(layer_below) = layer_below else { return };
         layer.nodes
             .iter()
-            .for_each(|x| { 
+            .for_each(|x| {
                 let x_position = layer.center + x.offset;
                 let closest = layer_below.closest_points_to_point(x_position);
                 if x.connections.connect_to_closest_below_layer_node && let Some(below) = closest.first() {
@@ -468,17 +493,19 @@ impl RawStructureBuilder {
     }
 
     pub fn add_contact(&mut self, contact: &ContactPoint, layer_below: Option<&SupportLayer>) {
-        let _ = self.create_node(contact.position, NodeKind::Contact { radius: contact.radius });
+        let _ = self.create_node(
+            contact.position,
+            NodeKind::Contact {
+                radius: contact.radius,
+            },
+        );
         let Some(layer_below) = layer_below else { return };
         let support = layer_below.closest_point_to_point(contact.position);
         self.add_connection(contact.position, support);
     }
-
-
 }
 
-
 enum NodeKind {
-    Contact{radius: f32},
-    Middle
+    Contact { radius: f32 },
+    Middle,
 }

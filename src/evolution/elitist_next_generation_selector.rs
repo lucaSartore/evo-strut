@@ -1,20 +1,24 @@
+use super::*;
 use itertools::Itertools;
 use log::{self, warn};
-use super::*;
 
 #[derive(Debug, Clone, Copy)]
 pub struct ElitistNextGenSelectorSettings {
     pub num_elite_individual: usize,
-    pub num_novel_individual: usize
+    pub num_novel_individual: usize,
 }
 
 pub struct ElitistNextGenSelector {
-    settings: ElitistNextGenSelectorSettings
+    settings: ElitistNextGenSelectorSettings,
 }
 
 impl ElitistNextGenSelector {
     fn n_best<T>(individuals: Vec<T>, costs: Vec<Cost>, mut n: usize) -> Vec<(T, Cost)> {
-        assert_eq!(individuals.len(), costs.len(), "costs and individuals must have the same length");
+        assert_eq!(
+            individuals.len(),
+            costs.len(),
+            "costs and individuals must have the same length"
+        );
         let mut sorted: Vec<_> = individuals
             .into_iter()
             .zip(costs)
@@ -35,10 +39,10 @@ impl ElitistNextGenSelector {
     }
 }
 
-impl<T> NextGenerationSelector<T, ElitistNextGenSelectorSettings> for ElitistNextGenSelector  {
+impl<T> NextGenerationSelector<T, ElitistNextGenSelectorSettings> for ElitistNextGenSelector {
     fn new(settings: &ElitistNextGenSelectorSettings, _rand: Random) -> Self {
-        Self{
-            settings: *settings
+        Self {
+            settings: *settings,
         }
     }
 
@@ -51,13 +55,14 @@ impl<T> NextGenerationSelector<T, ElitistNextGenSelectorSettings> for ElitistNex
         current_gen: Vec<T>,
         current_gen_costs: Vec<Cost>,
         next_gen: Vec<T>,
-        next_gen_costs: Vec<Cost>
+        next_gen_costs: Vec<Cost>,
     ) -> (Vec<T>, Vec<Cost>) {
-        let elite = Self::n_best(current_gen, current_gen_costs, self.settings.num_elite_individual);
+        let elite = Self::n_best(
+            current_gen,
+            current_gen_costs,
+            self.settings.num_elite_individual,
+        );
         let novel = Self::n_best(next_gen, next_gen_costs, self.settings.num_novel_individual);
-        elite
-            .into_iter()
-            .chain(novel)
-            .unzip()
+        elite.into_iter().chain(novel).unzip()
     }
 }

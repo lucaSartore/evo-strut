@@ -1,13 +1,18 @@
-use crate::{models::{FaceId, MeshId, SurfaceGraph}, stages::{ContactPointsDecidedState, CriticalityDetectedState, CriticalityGroupedState, LoadedState, Pipeline, PipelineBehaviourTrait, PipelineState}};
+use crate::{
+    models::{FaceId, MeshId, SurfaceGraph},
+    stages::{
+        ContactPointsDecidedState, CriticalityDetectedState, CriticalityGroupedState, LoadedState,
+        Pipeline, PipelineBehaviourTrait, PipelineState,
+    },
+};
 use anyhow::Result;
 
 mod color;
 pub use color::Color;
 
-
 pub trait Visualizer<TS>
-where 
-    TS: PipelineState
+where
+    TS: PipelineState,
 {
     fn visualize<TB: PipelineBehaviourTrait>(pipeline: &Pipeline<TS, TB>) -> Result<()>;
 }
@@ -22,7 +27,9 @@ impl Visualizer<LoadedState> for VisualizationStage {
 }
 
 impl Visualizer<CriticalityDetectedState> for VisualizationStage {
-    fn visualize<TB: PipelineBehaviourTrait>(pipeline: &Pipeline<CriticalityDetectedState, TB>) -> Result<()> {
+    fn visualize<TB: PipelineBehaviourTrait>(
+        pipeline: &Pipeline<CriticalityDetectedState, TB>,
+    ) -> Result<()> {
         let graph = &pipeline.state.graph;
 
         let mut colors = vec![Color::Green; graph.count_vertices()];
@@ -40,9 +47,10 @@ impl Visualizer<CriticalityDetectedState> for VisualizationStage {
     }
 }
 
-
 impl Visualizer<CriticalityGroupedState> for VisualizationStage {
-    fn visualize<TB: PipelineBehaviourTrait>(pipeline: &Pipeline<CriticalityGroupedState, TB>) -> Result<()> {
+    fn visualize<TB: PipelineBehaviourTrait>(
+        pipeline: &Pipeline<CriticalityGroupedState, TB>,
+    ) -> Result<()> {
         let graph = &pipeline.state.graph;
 
         let mut colors = vec![Color::White; graph.count_vertices()];
@@ -64,9 +72,10 @@ impl Visualizer<CriticalityGroupedState> for VisualizationStage {
     }
 }
 
-
 impl Visualizer<ContactPointsDecidedState> for VisualizationStage {
-    fn visualize<TB: PipelineBehaviourTrait>(pipeline: &Pipeline<ContactPointsDecidedState, TB>) -> Result<()> {
+    fn visualize<TB: PipelineBehaviourTrait>(
+        pipeline: &Pipeline<ContactPointsDecidedState, TB>,
+    ) -> Result<()> {
         let graph = &pipeline.state.graph;
 
         let mut colors = vec![Color::Green; graph.count_vertices()];
@@ -76,8 +85,8 @@ impl Visualizer<ContactPointsDecidedState> for VisualizationStage {
             .critical
             .iter()
             .enumerate()
-            .filter(|(_,x)| **x)
-            .for_each(|(id,_)| {
+            .filter(|(_, x)| **x)
+            .for_each(|(id, _)| {
                 pipeline
                     .state
                     .graph
@@ -88,7 +97,6 @@ impl Visualizer<ContactPointsDecidedState> for VisualizationStage {
             });
 
         let rec = rerun::RecordingStreamBuilder::new("decided contact points").spawn()?;
-
 
         rec.log(
             "mesh",
@@ -106,14 +114,13 @@ impl Visualizer<ContactPointsDecidedState> for VisualizationStage {
                 let center = graph.get_triangle(*x.0).center();
                 let radius = x.1.radius;
                 (center, radius)
-            }).unzip();
+            })
+            .unzip();
 
         rec.log(
-            "support_points", 
-            &rerun::Cylinders3D::from_lengths_and_radii(
-                vec![0.; centers.len()],
-                radiuses
-            ).with_centers(centers)
+            "support_points",
+            &rerun::Cylinders3D::from_lengths_and_radii(vec![0.; centers.len()], radiuses)
+                .with_centers(centers),
         )?;
 
         Ok(())
@@ -124,13 +131,10 @@ pub fn visualize_mesh(graph: &SurfaceGraph, name: &str, colors: Option<Vec<Color
 
     let colors = match colors {
         Some(e) => e,
-        None => vec![Color::Green; graph.count_vertices()]
+        None => vec![Color::Green; graph.count_vertices()],
     };
 
-    rec.log(
-        "vertexes", 
-        &rerun::Points3D::new(graph.iter_vertices())
-    )?;
+    rec.log("vertexes", &rerun::Points3D::new(graph.iter_vertices()))?;
 
     rec.log(
         name,

@@ -361,7 +361,10 @@ impl Default for SupportStructureOptimizationSettings {
             num_points_per_layer: RandomDistribution::InRange { low: 1., high: 7. },
             points_sampling_covariance_multiplier: 0.3,
             num_initial_groups_multiplier: 0.7,
-            layers_number_density: RandomDistribution::InRange { low: 0.015, high: 0.04 },
+            layers_number_density: RandomDistribution::InRange {
+                low: 0.015,
+                high: 0.04,
+            },
             point_in_layer_density: 0.003,
             point_in_layer_perimeter_density: 0.01,
             min_points_in_layer: 1,

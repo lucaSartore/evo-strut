@@ -1,58 +1,65 @@
-use std::collections::BinaryHeap;
-use std::collections::HashSet;
 use crate::models::Triangle;
-use crate::{evolution::Cost, models::{ Point, Settings, SurfaceGraph, FaceId}};
+use crate::{
+    evolution::Cost,
+    models::{FaceId, Point, Settings, SurfaceGraph},
+};
 use hashbrown::HashMap;
 use itertools::Itertools;
 use smallvec::SmallVec;
-
-
+use std::collections::BinaryHeap;
+use std::collections::HashSet;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct QueuedElement<T>
-where T: Clone + PartialEq + Eq{
+where
+    T: Clone + PartialEq + Eq,
+{
     pub id: T,
-    pub value: Cost
+    pub value: Cost,
 }
 #[allow(clippy::non_canonical_partial_ord_impl)]
-impl<T> PartialOrd for QueuedElement<T> 
-where T: Clone + PartialEq + Eq {
+impl<T> PartialOrd for QueuedElement<T>
+where
+    T: Clone + PartialEq + Eq,
+{
     // order is inverted in order to use the std "max-heap" (instead of haveing
     // to create a custom min-heap)
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         other.value.partial_cmp(&self.value)
     }
 }
-impl<T> Ord for QueuedElement<T> 
-where T: Clone + PartialEq + Eq {
+impl<T> Ord for QueuedElement<T>
+where
+    T: Clone + PartialEq + Eq,
+{
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.value.cmp(&other.value)
     }
 }
 impl<T> QueuedElement<T>
-where T: Clone + PartialEq + Eq {
+where
+    T: Clone + PartialEq + Eq,
+{
     pub fn new_from_value(id: T, value: f32) -> Self {
         Self {
-            id, value: Cost::new(value)
+            id,
+            value: Cost::new(value),
         }
     }
     pub fn new(id: T, cost: Cost) -> Self {
-        Self {
-            id, value: cost
-        }
+        Self { id, value: cost }
     }
 }
 
 pub struct CostWithArea {
     pub unit_cost: Cost,
-    pub area: f32
+    pub area: f32,
 }
 impl CostWithArea {
     pub fn absolute_cost(&self) -> Cost {
         self.unit_cost.times(self.area)
     }
 }
-
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Neighbor {
@@ -61,7 +68,7 @@ struct Neighbor {
     /// cost added to navigate from myself to the neighbor
     cost_surplus_forward: Cost,
     /// cost added to navigate from the neighbor to myself
-    cost_surplus_backward: Cost
+    cost_surplus_backward: Cost,
 }
 
 struct EvaluatedTriangle {
@@ -80,40 +87,42 @@ struct EvaluatedTriangle {
     /// or a small value if the surface has a non critical neighbor
     pub base_cost: Cost,
     // area of the triangle evaluated
-    pub area: f32
+    pub area: f32,
 }
-
 
 struct EvaluatedLayer {
     /// list of the triangles part of this layer
-    triangles: HashMap<FaceId, EvaluatedTriangle>
+    triangles: HashMap<FaceId, EvaluatedTriangle>,
 }
 
 impl EvaluatedLayer {
-    pub fn new<T> (
+    pub fn new<T>(
         graph: &SurfaceGraph,
         known_costs: &T,
         current_layer: &[FaceId],
         in_below_layers: &HashSet<FaceId>,
-        settings: &Settings
-    ) -> Self 
-        where T: KnownCosts
+        settings: &Settings,
+    ) -> Self
+    where
+        T: KnownCosts,
     {
         let mut e = Self {
             triangles: current_layer
                 .iter()
                 .filter(|x| known_costs.cost_of(**x).is_none())
-                .map(|x| (
-                    *x,
-                    EvaluatedTriangle{
-                        base_cost: Cost::MAX,
-                        id: *x,
-                        same_layer_neighbors: Default::default(),
-                        lower_layers_neighbors: Default::default(),
-                        area: graph.get_triangle(*x).area()
-                    }
-                ))
-                .collect()
+                .map(|x| {
+                    (
+                        *x,
+                        EvaluatedTriangle {
+                            base_cost: Cost::MAX,
+                            id: *x,
+                            same_layer_neighbors: Default::default(),
+                            lower_layers_neighbors: Default::default(),
+                            area: graph.get_triangle(*x).area(),
+                        },
+                    )
+                })
+                .collect(),
         };
         e.fill_base_cost(graph, known_costs, settings);
         e.fill_same_layer_neighbors(graph, current_layer, settings);
@@ -125,9 +134,11 @@ impl EvaluatedLayer {
     /// surfaces with center in p1 and p2)
     fn evaluate_cost_surplus(from: &Triangle<'_>, to: &Triangle<'_>, settings: &Settings) -> Cost {
         let from_center = from.center();
-        let to_center= to.center();
+        let to_center = to.center();
         let distance = (from_center - to_center).abs();
-        let propagation_factor = settings.contact_points_optimization_settings.cost_surplus_propagation_factor;
+        let propagation_factor = settings
+            .contact_points_optimization_settings
+            .cost_surplus_propagation_factor;
 
         let angle = Point::angle_between(&Point::DOWNWARD, &to.normal())
             .to_degrees()
@@ -138,10 +149,13 @@ impl EvaluatedLayer {
 
         // is positive if cost should increase, negative if cost should decrease
         let angle_difference = (angle_threshold - angle).clamp(
-            -settings.contact_points_optimization_settings.critical_angle_clipping_factor,
-            settings.contact_points_optimization_settings.critical_angle_clipping_factor
+            -settings
+                .contact_points_optimization_settings
+                .critical_angle_clipping_factor,
+            settings
+                .contact_points_optimization_settings
+                .critical_angle_clipping_factor,
         );
-
 
         let c = propagation_factor * distance * angle_difference;
         Cost::new(c)
@@ -175,10 +189,11 @@ impl EvaluatedLayer {
     //     Cost::new(c)
     // }
 
-    fn fill_base_cost<T>(&mut self, graph: &SurfaceGraph, known_costs: &T, settings: &Settings) 
-        where T: KnownCosts
+    fn fill_base_cost<T>(&mut self, graph: &SurfaceGraph, known_costs: &T, settings: &Settings)
+    where
+        T: KnownCosts,
     {
-        for (_,t) in self.triangles.iter_mut() {
+        for (_, t) in self.triangles.iter_mut() {
             let this = graph.get_triangle(t.id);
             let this_layer = this.center().layer(settings);
             t.base_cost = graph
@@ -186,53 +201,81 @@ impl EvaluatedLayer {
                 .filter(|x| x.center().layer(settings) <= this_layer)
                 .flat_map(|x| known_costs.cost_of(x.index))
                 .min()
-                .unwrap_or(Cost::new(settings.contact_points_optimization_settings.non_supported_base_cost));
+                .unwrap_or(Cost::new(
+                    settings
+                        .contact_points_optimization_settings
+                        .non_supported_base_cost,
+                ));
         }
     }
 
-    fn fill_same_layer_neighbors(&mut self, graph: &SurfaceGraph, current_layer: &[FaceId], settings: &Settings) {
+    fn fill_same_layer_neighbors(
+        &mut self,
+        graph: &SurfaceGraph,
+        current_layer: &[FaceId],
+        settings: &Settings,
+    ) {
         let current_layer_set: HashSet<_> = current_layer.iter().collect();
         for (current_id, triangle) in self.triangles.iter_mut() {
             let current_triangle = graph.get_triangle(*current_id);
-            graph.iter_adjacent(*current_id) 
+            graph
+                .iter_adjacent(*current_id)
                 .filter(|adj| current_layer_set.contains(&adj.index))
                 .for_each(|adj| {
-                    let cost_surplus_forward = Self::evaluate_cost_surplus(&current_triangle, &adj, settings);
-                    let cost_surplus_backward = Self::evaluate_cost_surplus(&adj, &current_triangle, settings);
-                    let n = Neighbor{ 
+                    let cost_surplus_forward =
+                        Self::evaluate_cost_surplus(&current_triangle, &adj, settings);
+                    let cost_surplus_backward =
+                        Self::evaluate_cost_surplus(&adj, &current_triangle, settings);
+                    let n = Neighbor {
                         cost_surplus_forward,
                         cost_surplus_backward,
-                        id: adj.index
+                        id: adj.index,
                     };
                     triangle.same_layer_neighbors.push(n);
                 });
         }
     }
 
-    fn fill_lower_layers_neighbors(&mut self, graph: &SurfaceGraph, in_below_layers: &HashSet<FaceId>, settings: &Settings) {
+    fn fill_lower_layers_neighbors(
+        &mut self,
+        graph: &SurfaceGraph,
+        in_below_layers: &HashSet<FaceId>,
+        settings: &Settings,
+    ) {
         for (current_id, triangle) in self.triangles.iter_mut() {
             let current_triangle = graph.get_triangle(*current_id);
-            graph.iter_adjacent(*current_id) 
+            graph
+                .iter_adjacent(*current_id)
                 .filter(|adj| in_below_layers.contains(&adj.index))
                 .for_each(|adj| {
-                    let cost_surplus_forward = Self::evaluate_cost_surplus(&current_triangle, &adj, settings);
-                    let cost_surplus_backward = Self::evaluate_cost_surplus(&adj, &current_triangle, settings);
-                    let n = Neighbor{ 
+                    let cost_surplus_forward =
+                        Self::evaluate_cost_surplus(&current_triangle, &adj, settings);
+                    let cost_surplus_backward =
+                        Self::evaluate_cost_surplus(&adj, &current_triangle, settings);
+                    let n = Neighbor {
                         cost_surplus_forward,
                         cost_surplus_backward,
-                        id: adj.index
+                        id: adj.index,
                     };
                     triangle.lower_layers_neighbors.push(n);
                 });
         }
     }
 
-    pub fn evaluate(&self, costs: &mut HashMap<FaceId, CostWithArea>, is_supported: &impl Fn(FaceId) -> bool) {
+    pub fn evaluate(
+        &self,
+        costs: &mut HashMap<FaceId, CostWithArea>,
+        is_supported: &impl Fn(FaceId) -> bool,
+    ) {
         let mut to_evaluate = self.triangles.len();
         let mut queue = BinaryHeap::new();
         let mut id_to_current_cost = HashMap::new();
         for t in self.triangles.values() {
-            let base_cost = if is_supported(t.id) { Cost::ZERO } else { t.base_cost };
+            let base_cost = if is_supported(t.id) {
+                Cost::ZERO
+            } else {
+                t.base_cost
+            };
             let cost = t
                 .lower_layers_neighbors
                 .iter()
@@ -246,21 +289,30 @@ impl EvaluatedLayer {
         }
 
         while to_evaluate != 0 {
-            let popped = queue.pop().expect("queue should never empty before to_evaluate is zero");
+            let popped = queue
+                .pop()
+                .expect("queue should never empty before to_evaluate is zero");
             // point has already being evaluated
             if costs.contains_key(&popped.id) {
-                continue
+                continue;
             }
             // adding the point to the known costs
             to_evaluate -= 1;
             // _ = costs.insert(popped.id, popped.cost.times(self.triangles[&popped.id].area));
-            let cwa = CostWithArea { unit_cost: popped.value, area: self.triangles[&popped.id].area };
-            _ = costs.insert(popped.id, cwa );
+            let cwa = CostWithArea {
+                unit_cost: popped.value,
+                area: self.triangles[&popped.id].area,
+            };
+            _ = costs.insert(popped.id, cwa);
 
             // publishing recurrent cost for neighbor
-            let triangle = self.triangles.get(&popped.id).expect("triangle should always be found");
+            let triangle = self
+                .triangles
+                .get(&popped.id)
+                .expect("triangle should always be found");
             for n in &triangle.same_layer_neighbors {
-                let neighbor_recursive_cost = (popped.value + n.cost_surplus_forward).max(Cost::ZERO);
+                let neighbor_recursive_cost =
+                    (popped.value + n.cost_surplus_forward).max(Cost::ZERO);
                 let neighbor_current_cost = *id_to_current_cost.get(&n.id).unwrap_or(&Cost::MAX);
                 if neighbor_recursive_cost < neighbor_current_cost {
                     _ = id_to_current_cost.insert(n.id, neighbor_recursive_cost);
@@ -275,39 +327,41 @@ pub trait KnownCosts {
     fn cost_of(&self, id: FaceId) -> Option<Cost>;
 }
 
-pub struct PropagationEvaluator<'a,T>
-where T: KnownCosts
+pub struct PropagationEvaluator<'a, T>
+where
+    T: KnownCosts,
 {
     graph: &'a SurfaceGraph,
     settings: &'a Settings,
     pub area: &'a [FaceId],
     pub known_costs: T,
-    layers: Vec<EvaluatedLayer>
+    layers: Vec<EvaluatedLayer>,
 }
 
 impl<'a, T> PropagationEvaluator<'a, T>
-where T: KnownCosts
+where
+    T: KnownCosts,
 {
-
     pub fn new(
         graph: &'a SurfaceGraph,
         settings: &'a Settings,
         area: &'a [FaceId],
-        known_costs: T
+        known_costs: T,
     ) -> Self {
         let mut to_return = Self {
             graph,
             settings,
             area,
             known_costs,
-            layers: vec![]
+            layers: vec![],
         };
         to_return.fill_evaluation_layers();
         to_return
     }
 
     fn fill_evaluation_layers(&mut self) {
-        let layers = self.area
+        let layers = self
+            .area
             .iter()
             .filter(|x| self.known_costs.cost_of(**x).is_none())
             .copied()
@@ -326,7 +380,7 @@ where T: KnownCosts
                 &self.known_costs,
                 layer.as_slice(),
                 &in_below_layers,
-                self.settings
+                self.settings,
             );
             self.layers.push(el);
 
@@ -336,11 +390,14 @@ where T: KnownCosts
         }
     }
 
-    pub fn evaluate(&self, is_supported: &impl Fn(FaceId) -> bool) -> HashMap<FaceId, CostWithArea> {
+    pub fn evaluate(
+        &self,
+        is_supported: &impl Fn(FaceId) -> bool,
+    ) -> HashMap<FaceId, CostWithArea> {
         let mut costs = HashMap::new();
         for l in &self.layers {
             l.evaluate(&mut costs, is_supported);
         }
         costs
     }
-} 
+}

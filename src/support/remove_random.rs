@@ -1,19 +1,23 @@
-use hashbrown::{HashMap, HashSet, raw::{Bucket, RawTable}};
-use std::hash::Hash;
 use crate::evolution::Random;
+use hashbrown::{
+    raw::{Bucket, RawTable},
+    HashMap, HashSet,
+};
+use std::hash::Hash;
 
-pub trait RemoveRandom<TReturn>
-{
+pub trait RemoveRandom<TReturn> {
     fn choose_random(&mut self, rng: &Random) -> Option<&TReturn>;
     fn remove_random(&mut self, rng: &Random) -> Option<TReturn>;
 }
 
-
-
 /// the the caller must ensure that the raw-table of the hash set outlives the bucket
 /// credit: https://stackoverflow.com/a/77508258
-unsafe fn rand_bucket<'a, T>(set: &'a mut HashSet<T>, rng: &Random) -> Option<(Bucket<(T,())>, &'a mut RawTable<(T,())>)> 
-    where T: Eq + PartialEq + Hash
+unsafe fn rand_bucket<'a, T>(
+    set: &'a mut HashSet<T>,
+    rng: &Random,
+) -> Option<(Bucket<(T, ())>, &'a mut RawTable<(T, ())>)>
+where
+    T: Eq + PartialEq + Hash,
 {
     if set.is_empty() {
         return None;
@@ -44,8 +48,12 @@ unsafe fn rand_bucket<'a, T>(set: &'a mut HashSet<T>, rng: &Random) -> Option<(B
         }
     }
 }
-unsafe fn rand_bucket_map<'a, T,E>(set: &'a mut HashMap<T,E>, rng: &Random) -> Option<(Bucket<(T,E)>, &'a mut RawTable<(T,E)>)> 
-    where T: Eq + PartialEq + Hash
+unsafe fn rand_bucket_map<'a, T, E>(
+    set: &'a mut HashMap<T, E>,
+    rng: &Random,
+) -> Option<(Bucket<(T, E)>, &'a mut RawTable<(T, E)>)>
+where
+    T: Eq + PartialEq + Hash,
 {
     if set.is_empty() {
         return None;
@@ -78,7 +86,8 @@ unsafe fn rand_bucket_map<'a, T,E>(set: &'a mut HashMap<T,E>, rng: &Random) -> O
 }
 
 impl<T> RemoveRandom<T> for HashSet<T>
-where T: Eq + PartialEq + Hash
+where
+    T: Eq + PartialEq + Hash,
 {
     fn choose_random(&mut self, rng: &Random) -> Option<&T> {
         unsafe {
@@ -96,8 +105,9 @@ where T: Eq + PartialEq + Hash
     }
 }
 
-impl<T,E> RemoveRandom<(T,E)> for HashMap<T,E>
-where T: Eq + PartialEq + Hash
+impl<T, E> RemoveRandom<(T, E)> for HashMap<T, E>
+where
+    T: Eq + PartialEq + Hash,
 {
     fn choose_random(&mut self, rng: &Random) -> Option<&(T, E)> {
         unsafe {
@@ -106,7 +116,7 @@ where T: Eq + PartialEq + Hash
         }
     }
 
-    fn remove_random(&mut self, rng: &Random) -> Option<(T,E)> {
+    fn remove_random(&mut self, rng: &Random) -> Option<(T, E)> {
         unsafe {
             let (bucket, raw_table) = rand_bucket_map(self, rng)?;
             let (element, _insert_slot) = raw_table.remove(bucket);

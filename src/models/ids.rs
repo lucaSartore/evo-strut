@@ -1,8 +1,5 @@
 use rerun::external::glam::usize;
 
-
-
-
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct PointId(pub u32);
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -14,7 +11,7 @@ impl From<u32> for FaceId {
     }
 }
 
-impl From<u32> for PointId  {
+impl From<u32> for PointId {
     fn from(value: u32) -> Self {
         Self(value)
     }
@@ -26,7 +23,7 @@ impl From<usize> for FaceId {
     }
 }
 
-impl From<usize> for PointId  {
+impl From<usize> for PointId {
     fn from(value: usize) -> Self {
         Self(value as u32)
     }

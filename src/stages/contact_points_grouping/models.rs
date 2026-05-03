@@ -8,7 +8,7 @@ use crate::{
         contact_point_optimization::ContactPointsGene,
         support_structure_optimization::{
             mutation::SupportStructureMutator, ContactPoint, SupportGroup,
-        }
+        },
     },
     support::neural_network::NeuralNetwork,
 };
@@ -19,7 +19,6 @@ pub struct ContactPointGroupingGene {
 }
 
 impl ContactPointGroupingGene {
-
     pub fn to_groups(
         &self,
         points: &ContactPointsGene,

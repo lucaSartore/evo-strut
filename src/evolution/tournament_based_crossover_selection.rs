@@ -1,25 +1,22 @@
 use log::error;
 
-use crate::evolution::Random;
 use super::*;
+use crate::evolution::Random;
 
 #[derive(Copy, Clone, Debug)]
 pub struct TournamentBasedCrossoverSelectionSettings {
-    pub k: usize
+    pub k: usize,
 }
 
 pub struct TournamentBasedCrossoverSelection {
     settings: TournamentBasedCrossoverSelectionSettings,
-    rand: Random
+    rand: Random,
 }
 
 impl TournamentBasedCrossoverSelection {
-    fn tournament_selection(&self, scores: &[Cost],) -> Option<usize> {
+    fn tournament_selection(&self, scores: &[Cost]) -> Option<usize> {
         let options = self.rand.choose_many(self.settings.k, scores);
-        let element = options
-            .iter()
-            .enumerate()
-            .min_by_key(|x| x.1);
+        let element = options.iter().enumerate().min_by_key(|x| x.1);
         if element.is_none() {
             error!("TournamentBasedCrossoverSelection: trying to make tournament with empty size");
         }
@@ -27,11 +24,13 @@ impl TournamentBasedCrossoverSelection {
     }
 }
 
-impl CrossoverSelector<TournamentBasedCrossoverSelectionSettings> for TournamentBasedCrossoverSelection {
+impl CrossoverSelector<TournamentBasedCrossoverSelectionSettings>
+    for TournamentBasedCrossoverSelection
+{
     fn new(settings: &TournamentBasedCrossoverSelectionSettings, rand: Random) -> Self {
         TournamentBasedCrossoverSelection {
             settings: *settings,
-            rand
+            rand,
         }
     }
 

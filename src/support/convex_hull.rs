@@ -2,7 +2,7 @@ use crate::{evolution::Cost, models::Point};
 
 #[derive(Clone, Debug)]
 pub struct ConvexHull {
-    pub vertexes: Vec<Point>
+    pub vertexes: Vec<Point>,
 }
 
 impl ConvexHull {
@@ -16,8 +16,14 @@ impl ConvexHull {
             .copied()
             .enumerate()
             .min_by(|a, b| {
-                a.1.y.partial_cmp(&b.1.y).unwrap_or(std::cmp::Ordering::Equal)
-                    .then_with(|| a.1.x.partial_cmp(&b.1.x).unwrap_or(std::cmp::Ordering::Equal))
+                a.1.y
+                    .partial_cmp(&b.1.y)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+                    .then_with(|| {
+                        a.1.x
+                            .partial_cmp(&b.1.x)
+                            .unwrap_or(std::cmp::Ordering::Equal)
+                    })
             })
             .expect("there should always be a point");
 
@@ -51,7 +57,7 @@ impl ConvexHull {
 
     pub fn area(&self) -> f32 {
         let points = &self.vertexes;
-        
+
         if points.len() < 3 {
             return 0.0;
         }
@@ -68,7 +74,7 @@ impl ConvexHull {
 
     pub fn perimeter(&self) -> f32 {
         let points = &self.vertexes;
-        
+
         if points.len() < 2 {
             return 0.0;
         }
@@ -92,9 +98,21 @@ mod tests {
     #[test]
     fn test_triangle_convex_hull() {
         let points = vec![
-            Point { x: 0.0, y: 0.0, z: 0.0 },
-            Point { x: 4.0, y: 0.0, z: 0.0 },
-            Point { x: 2.0, y: 3.0, z: 0.0 },
+            Point {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Point {
+                x: 4.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Point {
+                x: 2.0,
+                y: 3.0,
+                z: 0.0,
+            },
         ];
         let hull = ConvexHull::new(points);
         assert_eq!(hull.vertexes.len(), 3);
@@ -103,11 +121,31 @@ mod tests {
     #[test]
     fn test_square_convex_hull() {
         let points = vec![
-            Point { x: 0.0, y: 0.0, z: 0.0 },
-            Point { x: 1.0, y: 0.0, z: 0.0 },
-            Point { x: 1.0, y: 1.0, z: 0.0 },
-            Point { x: 0.0, y: 1.0, z: 0.0 },
-            Point { x: 0.5, y: 0.5, z: 0.0 }, // Interior point
+            Point {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Point {
+                x: 1.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Point {
+                x: 1.0,
+                y: 1.0,
+                z: 0.0,
+            },
+            Point {
+                x: 0.0,
+                y: 1.0,
+                z: 0.0,
+            },
+            Point {
+                x: 0.5,
+                y: 0.5,
+                z: 0.0,
+            }, // Interior point
         ];
         let hull = ConvexHull::new(points);
         assert_eq!(hull.vertexes.len(), 4);
@@ -116,9 +154,21 @@ mod tests {
     #[test]
     fn test_convex_hull_ignores_z() {
         let points = vec![
-            Point { x: 0.0, y: 0.0, z: 100.0 },
-            Point { x: 1.0, y: 0.0, z: -50.0 },
-            Point { x: 0.5, y: 1.0, z: 0.0 },
+            Point {
+                x: 0.0,
+                y: 0.0,
+                z: 100.0,
+            },
+            Point {
+                x: 1.0,
+                y: 0.0,
+                z: -50.0,
+            },
+            Point {
+                x: 0.5,
+                y: 1.0,
+                z: 0.0,
+            },
         ];
         let hull = ConvexHull::new(points);
         assert_eq!(hull.vertexes.len(), 3);
@@ -126,7 +176,11 @@ mod tests {
 
     #[test]
     fn test_single_point_hull() {
-        let points = vec![Point { x: 5.0, y: 5.0, z: 0.0 }];
+        let points = vec![Point {
+            x: 5.0,
+            y: 5.0,
+            z: 0.0,
+        }];
         let hull = ConvexHull::new(points);
         assert_eq!(hull.vertexes.len(), 1);
     }
@@ -134,8 +188,16 @@ mod tests {
     #[test]
     fn test_two_points_hull() {
         let points = vec![
-            Point { x: 0.0, y: 0.0, z: 0.0 },
-            Point { x: 1.0, y: 1.0, z: 0.0 },
+            Point {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Point {
+                x: 1.0,
+                y: 1.0,
+                z: 0.0,
+            },
         ];
         let hull = ConvexHull::new(points);
         assert_eq!(hull.vertexes.len(), 2);
@@ -144,9 +206,21 @@ mod tests {
     #[test]
     fn test_triangle_area() {
         let points = vec![
-            Point { x: 0.0, y: 0.0, z: 0.0 },
-            Point { x: 4.0, y: 0.0, z: 0.0 },
-            Point { x: 0.0, y: 3.0, z: 0.0 },
+            Point {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Point {
+                x: 4.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Point {
+                x: 0.0,
+                y: 3.0,
+                z: 0.0,
+            },
         ];
         let hull = ConvexHull::new(points);
         let area = hull.area();
@@ -156,12 +230,36 @@ mod tests {
     #[test]
     fn test_square_area() {
         let points = vec![
-            Point { x: 0.0, y: 0.0, z: 0.0 },
-            Point { x: 2.0, y: 0.0, z: 0.0 },
-            Point { x: 2.0, y: 2.0, z: 0.0 },
-            Point { x: 0.0, y: 2.0, z: 0.0 },
-            Point { x: 1.0, y: 1.0, z: 1.0 },
-            Point { x: 1.1, y: 0.3, z: 1.0 },
+            Point {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Point {
+                x: 2.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Point {
+                x: 2.0,
+                y: 2.0,
+                z: 0.0,
+            },
+            Point {
+                x: 0.0,
+                y: 2.0,
+                z: 0.0,
+            },
+            Point {
+                x: 1.0,
+                y: 1.0,
+                z: 1.0,
+            },
+            Point {
+                x: 1.1,
+                y: 0.3,
+                z: 1.0,
+            },
         ];
         let hull = ConvexHull::new(points);
         let area = hull.area();
@@ -178,7 +276,11 @@ mod tests {
     #[test]
     fn test_single_point_area() {
         let shape = ConvexHull {
-            vertexes: vec![Point { x: 1.0, y: 1.0, z: 0.0 }],
+            vertexes: vec![Point {
+                x: 1.0,
+                y: 1.0,
+                z: 0.0,
+            }],
         };
         let area = shape.area();
         assert_eq!(area, 0.0);
@@ -188,8 +290,16 @@ mod tests {
     fn test_two_point_area() {
         let shape = ConvexHull {
             vertexes: vec![
-                Point { x: 0.0, y: 0.0, z: 0.0 },
-                Point { x: 1.0, y: 1.0, z: 0.0 },
+                Point {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                },
+                Point {
+                    x: 1.0,
+                    y: 1.0,
+                    z: 0.0,
+                },
             ],
         };
         let area = shape.area();
@@ -199,11 +309,31 @@ mod tests {
     #[test]
     fn test_pentagon_area() {
         let points = vec![
-            Point { x: 1.0, y: 0.0, z: 0.0 },
-            Point { x: 0.309, y: 0.951, z: 0.0 },
-            Point { x: -0.809, y: 0.588, z: 0.0 },
-            Point { x: -0.809, y: -0.588, z: 0.0 },
-            Point { x: 0.309, y: -0.951, z: 0.0 },
+            Point {
+                x: 1.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Point {
+                x: 0.309,
+                y: 0.951,
+                z: 0.0,
+            },
+            Point {
+                x: -0.809,
+                y: 0.588,
+                z: 0.0,
+            },
+            Point {
+                x: -0.809,
+                y: -0.588,
+                z: 0.0,
+            },
+            Point {
+                x: 0.309,
+                y: -0.951,
+                z: 0.0,
+            },
         ];
         let hull = ConvexHull::new(points);
         let area = hull.area();
@@ -213,10 +343,26 @@ mod tests {
     #[test]
     fn test_square_perimeter() {
         let points = vec![
-            Point { x: 0.0, y: 0.0, z: 0.0 },
-            Point { x: 1.0, y: 0.0, z: 0.0 },
-            Point { x: 1.0, y: 1.0, z: 0.0 },
-            Point { x: 0.0, y: 1.0, z: 0.0 },
+            Point {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Point {
+                x: 1.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Point {
+                x: 1.0,
+                y: 1.0,
+                z: 0.0,
+            },
+            Point {
+                x: 0.0,
+                y: 1.0,
+                z: 0.0,
+            },
         ];
         let hull = ConvexHull::new(points);
         let perimeter = hull.perimeter();
@@ -226,9 +372,21 @@ mod tests {
     #[test]
     fn test_triangle_perimeter() {
         let points = vec![
-            Point { x: 0.0, y: 0.0, z: 0.0 },
-            Point { x: 3.0, y: 0.0, z: 0.0 },
-            Point { x: 0.0, y: 4.0, z: 0.0 },
+            Point {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Point {
+                x: 3.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Point {
+                x: 0.0,
+                y: 4.0,
+                z: 0.0,
+            },
         ];
         let hull = ConvexHull::new(points);
         let perimeter = hull.perimeter();
@@ -246,7 +404,11 @@ mod tests {
     #[test]
     fn test_single_point_perimeter() {
         let shape = ConvexHull {
-            vertexes: vec![Point { x: 1.0, y: 1.0, z: 0.0 }],
+            vertexes: vec![Point {
+                x: 1.0,
+                y: 1.0,
+                z: 0.0,
+            }],
         };
         let perimeter = shape.perimeter();
         assert_eq!(perimeter, 0.0);
@@ -256,8 +418,16 @@ mod tests {
     fn test_two_point_perimeter() {
         let shape = ConvexHull {
             vertexes: vec![
-                Point { x: 0.0, y: 0.0, z: 0.0 },
-                Point { x: 3.0, y: 4.0, z: 0.0 },
+                Point {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                },
+                Point {
+                    x: 3.0,
+                    y: 4.0,
+                    z: 0.0,
+                },
             ],
         };
         let perimeter = shape.perimeter();

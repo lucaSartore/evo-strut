@@ -1,4 +1,7 @@
-use crate::{models::Point, stages::support_structure_optimization::models::{LayerConnections, LayerNode}};
+use crate::{
+    models::Point,
+    stages::support_structure_optimization::models::{LayerConnections, LayerNode},
+};
 
 use super::*;
 
@@ -15,6 +18,6 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportGroup) {
     let offset = layer.random_point_in_self(&points, None, rand, s.layer_node_creation_update_step);
     layer.nodes.push(LayerNode {
         offset,
-        connections: LayerConnections::new_random(rand)
+        connections: LayerConnections::new_random(rand),
     });
 }

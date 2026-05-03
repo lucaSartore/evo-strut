@@ -1,40 +1,43 @@
 use rerun::RecordingStream;
 
-use crate::{evolution::Evaluator, models::{Settings, SurfaceGraph}, stages::support_structure_refinement::SupportStructureGene};
+use crate::{
+    evolution::Evaluator,
+    models::{Settings, SurfaceGraph},
+    stages::support_structure_refinement::SupportStructureGene,
+};
 
-mod stiffness;
 mod graph;
 mod logic;
+mod stiffness;
 mod visualization;
 
 pub struct SupportStructureEvaluatorSettings<'a> {
     pub settings: &'a Settings,
-    pub graph: &'a SurfaceGraph
+    pub graph: &'a SurfaceGraph,
 }
 
 impl<'a> SupportStructureEvaluatorSettings<'a> {
     pub fn new(settings: &'a Settings, graph: &'a SurfaceGraph) -> Self {
-        Self {
-            settings,
-            graph
-        }
+        Self { settings, graph }
     }
 }
 
 pub struct SupportStructureEvaluator<'a> {
     settings: &'a Settings,
     pub graph: &'a SurfaceGraph,
-    stream: RecordingStream
+    stream: RecordingStream,
 }
 
-impl<'a> Evaluator<SupportStructureGene, SupportStructureEvaluatorSettings<'a>> for SupportStructureEvaluator<'a> {
+impl<'a> Evaluator<SupportStructureGene, SupportStructureEvaluatorSettings<'a>>
+    for SupportStructureEvaluator<'a>
+{
     fn new(settings: &SupportStructureEvaluatorSettings<'a>) -> Self {
         Self {
             settings: settings.settings,
             graph: settings.graph,
             stream: rerun::RecordingStreamBuilder::new("contact points structure optimization")
                 .spawn()
-                .expect("fail to build rerun stream")
+                .expect("fail to build rerun stream"),
         }
     }
 

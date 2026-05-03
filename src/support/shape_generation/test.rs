@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use baby_shark::mesh::corner_table::CornerTableF;
 
-use crate::{models::{Point, SurfaceGraph}, stages::visualization::visualize_mesh};
+use crate::{
+    models::{Point, SurfaceGraph},
+    stages::visualization::visualize_mesh,
+};
 
 use super::*;
 

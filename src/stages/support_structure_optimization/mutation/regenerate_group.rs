@@ -9,7 +9,6 @@ pub fn mutate(mutator: &SupportStructureMutator, group: &mut SupportGroup) {
     let max_height = group.max_height();
     let num_layers = (max_height * layer_density) as usize;
 
-
     // reset all layers
     group.layers = vec![];
 

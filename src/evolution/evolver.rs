@@ -1,7 +1,7 @@
 use super::*;
+use anyhow::{anyhow, Result};
 use log::info;
 use rayon::prelude::*;
-use anyhow::{Result, anyhow};
 
 pub trait EvolverBehaviourTrait {
     // behaviour of the various components of teh GA
@@ -131,7 +131,7 @@ where
             let (best, best_cost) = current_gen
                 .iter()
                 .zip(current_gen_costs.iter())
-                .min_by_key(|(_,c)| **c)
+                .min_by_key(|(_, c)| **c)
                 .ok_or(anyhow!("Unable to find best individual for evaluation"))?;
 
             counter += 1;
@@ -145,34 +145,85 @@ where
         let x = current_gen
             .into_iter()
             .zip(current_gen_costs.iter())
-            .min_by_key(|(_,c)| **c)
-            .ok_or(anyhow!("Unable to find best individual, the list was empty"))?;
+            .min_by_key(|(_, c)| **c)
+            .ok_or(anyhow!(
+                "Unable to find best individual, the list was empty"
+            ))?;
         self.evaluator.visualize(&x.0)?;
         Ok(x.0)
     }
 }
 
 pub struct EvolverBehaviour<
-    TMutator, TCrossover, TTermination, TEvaluator, TCrossoverSelector, 
-    TNextGenSelector, TPopulationInitializer, TGene, SMut, SCross, 
-    STerm, SEval, SCrossSel, SNextSel, SInit
+    TMutator,
+    TCrossover,
+    TTermination,
+    TEvaluator,
+    TCrossoverSelector,
+    TNextGenSelector,
+    TPopulationInitializer,
+    TGene,
+    SMut,
+    SCross,
+    STerm,
+    SEval,
+    SCrossSel,
+    SNextSel,
+    SInit,
 > {
     _marker: PhantomData<(
-        TMutator, TCrossover, TTermination, TEvaluator, TCrossoverSelector, 
-        TNextGenSelector, TPopulationInitializer, TGene, SMut, SCross, 
-        STerm, SEval, SCrossSel, SNextSel, SInit
+        TMutator,
+        TCrossover,
+        TTermination,
+        TEvaluator,
+        TCrossoverSelector,
+        TNextGenSelector,
+        TPopulationInitializer,
+        TGene,
+        SMut,
+        SCross,
+        STerm,
+        SEval,
+        SCrossSel,
+        SNextSel,
+        SInit,
     )>,
 }
 
 impl<
-    TMutator, TCrossover, TTermination, TEvaluator, TCrossoverSelector, 
-    TNextGenSelector, TPopulationInitializer, TGene, SMut, SCross, 
-    STerm, SEval, SCrossSel, SNextSel, SInit
-> EvolverBehaviourTrait for EvolverBehaviour<
-    TMutator, TCrossover, TTermination, TEvaluator, TCrossoverSelector, 
-    TNextGenSelector, TPopulationInitializer, TGene, SMut, SCross, 
-    STerm, SEval, SCrossSel, SNextSel, SInit
-> 
+        TMutator,
+        TCrossover,
+        TTermination,
+        TEvaluator,
+        TCrossoverSelector,
+        TNextGenSelector,
+        TPopulationInitializer,
+        TGene,
+        SMut,
+        SCross,
+        STerm,
+        SEval,
+        SCrossSel,
+        SNextSel,
+        SInit,
+    > EvolverBehaviourTrait
+    for EvolverBehaviour<
+        TMutator,
+        TCrossover,
+        TTermination,
+        TEvaluator,
+        TCrossoverSelector,
+        TNextGenSelector,
+        TPopulationInitializer,
+        TGene,
+        SMut,
+        SCross,
+        STerm,
+        SEval,
+        SCrossSel,
+        SNextSel,
+        SInit,
+    >
 where
     TMutator: Mutator<TGene, SMut>,
     TCrossover: Crossover<TGene, SCross>,
@@ -181,7 +232,7 @@ where
     TCrossoverSelector: CrossoverSelector<SCrossSel>,
     TNextGenSelector: NextGenerationSelector<TGene, SNextSel>,
     TPopulationInitializer: PopulationInitializer<TGene, SInit>,
-    TGene: Clone + 'static
+    TGene: Clone + 'static,
 {
     type TMutator = TMutator;
     type TCrossover = TCrossover;
@@ -190,9 +241,9 @@ where
     type TCrossoverSelector = TCrossoverSelector;
     type TNextGenSelector = TNextGenSelector;
     type TPopulationInitializer = TPopulationInitializer;
-    
+
     type TGene = TGene;
-    
+
     type SMut = SMut;
     type SCross = SCross;
     type STerm = STerm;

@@ -1,21 +1,28 @@
 use core::f32;
 
-use crate::{evolution::Random, models::{FaceId, Settings, SurfaceGraph}, support::graph_circle::find_circle};
+use crate::{
+    evolution::Random,
+    models::{FaceId, Settings, SurfaceGraph},
+    support::graph_circle::find_circle,
+};
 use hashbrown::{HashMap, HashSet};
-
 
 #[derive(Debug, Copy, Clone, Default)]
 pub struct ContactPointShape {
-    pub radius: f32
+    pub radius: f32,
 }
 
 impl ContactPointShape {
     pub fn random(rand: &Random, settings: &Settings) -> Self {
         Self {
             radius: rand.next_f32(
-                settings.contact_points_optimization_settings.min_support_radius,
-                settings.contact_points_optimization_settings.max_support_radius
-            )
+                settings
+                    .contact_points_optimization_settings
+                    .min_support_radius,
+                settings
+                    .contact_points_optimization_settings
+                    .max_support_radius,
+            ),
         }
     }
 
@@ -24,17 +31,22 @@ impl ContactPointShape {
     }
 
     pub fn mutate(&mut self, rand: &Random, settings: &Settings) {
-        let range = settings.contact_points_optimization_settings.change_support_radius_mutation_intensity;
-        let min = settings.contact_points_optimization_settings.min_support_radius;
-        let max = settings.contact_points_optimization_settings.max_support_radius;
-        self.radius = (self.radius + rand.next_f32(-range, range))
-            .clamp(min, max);
+        let range = settings
+            .contact_points_optimization_settings
+            .change_support_radius_mutation_intensity;
+        let min = settings
+            .contact_points_optimization_settings
+            .min_support_radius;
+        let max = settings
+            .contact_points_optimization_settings
+            .max_support_radius;
+        self.radius = (self.radius + rand.next_f32(-range, range)).clamp(min, max);
     }
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct ContactPointsGene {
-    pub contact_points: HashMap<FaceId, ContactPointShape>
+    pub contact_points: HashMap<FaceId, ContactPointShape>,
 }
 
 impl ContactPointsGene {
@@ -57,7 +69,7 @@ impl ContactPointsGene {
     // pub fn is_supported(&self, id: FaceId) -> bool {
     //     self.contact_points.contains(&id)
     // }
-    
+
     pub fn get_supported(&self, graph: &SurfaceGraph) -> HashSet<FaceId> {
         let mut to_return = HashSet::new();
         for (center, shape) in self.contact_points.iter() {
@@ -74,5 +86,4 @@ impl ContactPointsGene {
     pub fn num_contacts(&self) -> usize {
         self.contact_points.len()
     }
-
 }

@@ -6,10 +6,7 @@ use crate::{
         contact_points_grouping::models::ContactPointGroupingGene,
     },
 };
-use crate::{
-    stages::visualization::Color,
-    support::convex_hull::ConvexHull,
-};
+use crate::{stages::visualization::Color, support::convex_hull::ConvexHull};
 use rerun::RecordingStream;
 
 pub struct ContactPointGroupingEvaluatorSettings<'a> {
@@ -40,7 +37,7 @@ pub struct ContactPointGroupingEvaluator<'a> {
     rand: Random,
     points: &'a ContactPointsGene,
     stream: RecordingStream,
-    graph: &'a SurfaceGraph
+    graph: &'a SurfaceGraph,
 }
 
 impl<'a> Evaluator<ContactPointGroupingGene, ContactPointGroupingEvaluatorSettings<'a>>
@@ -54,14 +51,13 @@ impl<'a> Evaluator<ContactPointGroupingGene, ContactPointGroupingEvaluatorSettin
             stream: rerun::RecordingStreamBuilder::new("grouped contact points")
                 .spawn()
                 .expect("failed to build rerun stream"),
-            graph: settings.graph
+            graph: settings.graph,
         }
     }
 
     fn evaluate(&self, gene: &ContactPointGroupingGene) -> Cost {
         let s = &self.settings.contact_points_grouping_settings;
-        let groups =
-            gene.to_groups(self.points, self.graph, self.settings, &self.rand);
+        let groups = gene.to_groups(self.points, self.graph, self.settings, &self.rand);
         let size_cost: f32 = groups
             .iter()
             .map(|g| {
@@ -70,9 +66,9 @@ impl<'a> Evaluator<ContactPointGroupingGene, ContactPointGroupingEvaluatorSettin
                 let area = h.area();
                 let perimeter = h.perimeter();
                 let height = g.max_height();
-                area * s.area_minimization_weight +
-                perimeter * s.perimeter_minimization_weight +
-                height * s.group_cost_penalty
+                area * s.area_minimization_weight
+                    + perimeter * s.perimeter_minimization_weight
+                    + height * s.group_cost_penalty
             })
             .sum();
 
@@ -80,8 +76,7 @@ impl<'a> Evaluator<ContactPointGroupingGene, ContactPointGroupingEvaluatorSettin
     }
 
     fn visualize(&self, gene: &ContactPointGroupingGene) -> anyhow::Result<()> {
-        let groups =
-            gene.to_groups(self.points, self.graph, self.settings, &self.rand);
+        let groups = gene.to_groups(self.points, self.graph, self.settings, &self.rand);
         let graph = self.graph;
 
         self.stream.log(

@@ -1,48 +1,64 @@
-use hashbrown::HashMap;
-use smallvec::{SmallVec, smallvec};
 use crate::models::MaterialStiffnessSettings;
+use hashbrown::HashMap;
+use smallvec::{smallvec, SmallVec};
 
-use crate::{evolution::Cost, models::Point, stages::support_structure_refinement::{SupportNode, SupportNodeId, evaluation::{graph::Graph, stiffness::{ Stiffness, stiffness_parallel, stiffness_series}}}};
+use crate::{
+    evolution::Cost,
+    models::Point,
+    stages::support_structure_refinement::{
+        evaluation::{
+            graph::Graph,
+            stiffness::{stiffness_parallel, stiffness_series, Stiffness},
+        },
+        SupportNode, SupportNodeId,
+    },
+};
 
 use super::*;
-
 
 pub struct GraphDescriptor {
     /// nodes with relative position ordered by height
     pub nodes: Vec<SupportNodeId>,
     pub positions: HashMap<SupportNodeId, Point>,
-    pub edges: HashMap<SupportNodeId, SmallVec<[SupportNodeId;4]>>
+    pub edges: HashMap<SupportNodeId, SmallVec<[SupportNodeId; 4]>>,
 }
 
 pub fn genome_to_graph_descriptor(gene: &SupportStructureGene) -> GraphDescriptor {
     let mut nodes = vec![];
     let mut positions = HashMap::new();
     let mut edges = HashMap::new();
-    for (_,g) in gene.nodes.iter() {
+    for (_, g) in gene.nodes.iter() {
         let (node_id, position, adj) = match g {
             SupportNode::Contact(n) => (n.id, n.position, &n.leans_on),
             SupportNode::Base(n) => (n.id, n.last_position, &smallvec![]),
-            SupportNode::Middle(n) => (n.id, n.last_position, &n.leans_on)
+            SupportNode::Middle(n) => (n.id, n.last_position, &n.leans_on),
         };
         nodes.push(node_id);
         positions.insert(node_id, position);
         for n in adj {
-            edges.entry(*n)
-                .or_insert(smallvec![])
-                .push(node_id);
+            edges.entry(*n).or_insert(smallvec![]).push(node_id);
         }
-        edges.entry(node_id)
+        edges
+            .entry(node_id)
             .or_insert(smallvec![])
             .append(&mut adj.clone());
     }
 
     nodes.sort_by_key(|x| Cost::new(positions[x].z));
 
-    GraphDescriptor { nodes, positions, edges }
+    GraphDescriptor {
+        nodes,
+        positions,
+        edges,
+    }
 }
 
-
-fn cost_of_single_cone(base: Point, circle_center: Point, circle_radius: f32, settings: &Settings) -> f32 {
+fn cost_of_single_cone(
+    base: Point,
+    circle_center: Point,
+    circle_radius: f32,
+    settings: &Settings,
+) -> f32 {
     let s = &settings.support_structure_refinement_settings;
     if base.z >= circle_center.z {
         return s.cost_of_un_feasible_cone;
@@ -51,8 +67,8 @@ fn cost_of_single_cone(base: Point, circle_center: Point, circle_radius: f32, se
     let height = vec.z.abs();
 
     let base_offset = (vec.x.powi(2) + vec.y.powi(2)).sqrt();
-    
-    //approximated area of the cone 
+
+    //approximated area of the cone
     let side = ((base_offset + circle_radius).powi(2) + height.powi(2)).sqrt();
     let area = side * circle_radius * std::f32::consts::PI;
 
@@ -70,11 +86,15 @@ fn cost_of_single_cone(base: Point, circle_center: Point, circle_radius: f32, se
     cost
 }
 
-fn evaluate_cones_cost(gene: &SupportStructureGene, descriptor: &GraphDescriptor, settings: &Settings) -> Cost {
+fn evaluate_cones_cost(
+    gene: &SupportStructureGene,
+    descriptor: &GraphDescriptor,
+    settings: &Settings,
+) -> Cost {
     let cost: f32 = gene
         .nodes
         .iter()
-        .flat_map(|(_,n)| {
+        .flat_map(|(_, n)| {
             if let SupportNode::Contact(c) = n {
                 Some(c)
             } else {
@@ -82,17 +102,11 @@ fn evaluate_cones_cost(gene: &SupportStructureGene, descriptor: &GraphDescriptor
             }
         })
         .flat_map(|x| {
-            x.leans_on
-                .iter()
-                .map(|y| {
-                    cost_of_single_cone(
-                        descriptor.positions[y],
-                        x.position,
-                        x.radius,
-                        settings
-                    )
-                })
-        }).sum();
+            x.leans_on.iter().map(|y| {
+                cost_of_single_cone(descriptor.positions[y], x.position, x.radius, settings)
+            })
+        })
+        .sum();
     Cost::new(cost)
 }
 
@@ -108,17 +122,26 @@ fn evaluate_steepness_cost(descriptor: &GraphDescriptor, settings: &Settings) ->
                 .filter(|neighbour| **neighbour < *node)
                 .map(|neighbour| {
                     let neighbour_position = descriptor.positions[neighbour];
-                    let angle = Point::horizon_angle(node_position, neighbour_position).to_degrees().abs();
+                    let angle = Point::horizon_angle(node_position, neighbour_position)
+                        .to_degrees()
+                        .abs();
                     let distance = (node_position - neighbour_position).abs();
                     let surplus = threshold - angle;
                     if surplus > 0. {
                         return surplus * distance;
                     }
                     0.0
-                }).sum();
+                })
+                .sum();
             len
-        }).sum();
-    Cost::new(distance_times_angle * settings.support_structure_refinement_settings.cost_for_support_too_steep)
+        })
+        .sum();
+    Cost::new(
+        distance_times_angle
+            * settings
+                .support_structure_refinement_settings
+                .cost_for_support_too_steep,
+    )
 }
 
 fn evaluate_length_cost(descriptor: &GraphDescriptor, settings: &Settings) -> Cost {
@@ -133,13 +156,25 @@ fn evaluate_length_cost(descriptor: &GraphDescriptor, settings: &Settings) -> Co
                 .map(|neighbour| {
                     let neighbour_position = descriptor.positions[neighbour];
                     (node_position - neighbour_position).abs()
-                }).sum();
+                })
+                .sum();
             len
-        }).sum();
-    Cost::new(distance * settings.support_structure_refinement_settings.cost_for_unit_of_length)
+        })
+        .sum();
+    Cost::new(
+        distance
+            * settings
+                .support_structure_refinement_settings
+                .cost_for_unit_of_length,
+    )
 }
 
-fn evaluate_single_support_stiffness(base_stiffness: &Stiffness, from: Point, to: Point, settings: &Settings) -> f32 {
+fn evaluate_single_support_stiffness(
+    base_stiffness: &Stiffness,
+    from: Point,
+    to: Point,
+    settings: &Settings,
+) -> f32 {
     let s = &settings.support_structure_refinement_settings;
     let to_integrate = Point::interpolate(from, to, s.stiffness_cost_integration_size);
     let vector = to - from;
@@ -147,7 +182,8 @@ fn evaluate_single_support_stiffness(base_stiffness: &Stiffness, from: Point, to
     for i in 1..to_integrate.len() {
         let scalar = i as f32 / (to_integrate.len() - 1) as f32;
         let new_to = from + vector.to_scaled(scalar);
-        let stiffness = stiffness_series(base_stiffness, from, new_to, &s.material_stiffness_settings);
+        let stiffness =
+            stiffness_series(base_stiffness, from, new_to, &s.material_stiffness_settings);
         let Some(compliance) = stiffness.0.try_inverse() else {
             // zero matrix mean node is somehow floating, we need
             // to add maximum cost
@@ -157,16 +193,21 @@ fn evaluate_single_support_stiffness(base_stiffness: &Stiffness, from: Point, to
             }
             panic!("fail to invert stiffness matrix: {:?}", stiffness)
         };
-        let cxx = compliance[(0,0)];
-        let cyy = compliance[(1,1)];
+        let cxx = compliance[(0, 0)];
+        let cyy = compliance[(1, 1)];
         cost += s.non_stiffness_cost * cxx + s.non_stiffness_cost * cyy
     }
     cost
 }
 
-fn evaluate_stiffness<'b, 'a: 'b>(point: SupportNodeId, graph: &Graph, cache: &'a mut HashMap<SupportNodeId, Stiffness>, settings: &MaterialStiffnessSettings) {
+fn evaluate_stiffness<'b, 'a: 'b>(
+    point: SupportNodeId,
+    graph: &Graph,
+    cache: &'a mut HashMap<SupportNodeId, Stiffness>,
+    settings: &MaterialStiffnessSettings,
+) {
     if cache.contains_key(&point) {
-        return
+        return;
     }
     let node = &graph.nodes[&point];
 
@@ -183,28 +224,29 @@ fn evaluate_stiffness<'b, 'a: 'b>(point: SupportNodeId, graph: &Graph, cache: &'
         evaluate_stiffness(support, graph, cache, settings);
         let stiffness = &cache[&support];
         let weighted_stiffness = Stiffness(stiffness.0 * weight);
-        stiffness_to_combine.push(
-            stiffness_series(
-                &weighted_stiffness,
-                graph.nodes[&support].position,
-                node_position,
-                settings
-            )
-        );
+        stiffness_to_combine.push(stiffness_series(
+            &weighted_stiffness,
+            graph.nodes[&support].position,
+            node_position,
+            settings,
+        ));
     }
     let final_stiffness = stiffness_parallel(&stiffness_to_combine);
 
     cache.insert(point, final_stiffness);
 }
 
-fn evaluate_stiffness_cost(gene: &SupportStructureGene, descriptor: &GraphDescriptor, settings: &Settings) -> Cost {
+fn evaluate_stiffness_cost(
+    gene: &SupportStructureGene,
+    descriptor: &GraphDescriptor,
+    settings: &Settings,
+) -> Cost {
     let s = &settings.support_structure_refinement_settings;
     let mut cost = 0.;
     let mut graph = Graph::new();
     for node in &descriptor.nodes {
         let node_position = descriptor.positions[node];
-        let supporters: Vec<_> = descriptor
-            .edges[node]
+        let supporters: Vec<_> = descriptor.edges[node]
             .iter()
             .filter(|x| graph.nodes.contains_key(*x))
             .collect();
@@ -212,16 +254,26 @@ fn evaluate_stiffness_cost(gene: &SupportStructureGene, descriptor: &GraphDescri
             let supporter_position = descriptor.positions[supporter];
             let visited_nodes = graph.mark_distances(*supporter);
             let mut cache = HashMap::default();
-            evaluate_stiffness(*supporter, &graph, &mut cache, &s.material_stiffness_settings);
+            evaluate_stiffness(
+                *supporter,
+                &graph,
+                &mut cache,
+                &s.material_stiffness_settings,
+            );
             let base_stiffness = &cache[supporter];
-            cost += evaluate_single_support_stiffness(base_stiffness, supporter_position, node_position, settings);
+            cost += evaluate_single_support_stiffness(
+                base_stiffness,
+                supporter_position,
+                node_position,
+                settings,
+            );
             graph.reset_some_nodes(&visited_nodes);
         }
         graph.add_node(
             *node,
             descriptor.positions[node],
             &descriptor.edges[node],
-            gene.is_supported(*node)
+            gene.is_supported(*node),
         );
     }
     Cost::new(cost)
@@ -233,7 +285,6 @@ pub fn evaluate_cost(gene: &SupportStructureGene, settings: &Settings) -> Cost {
     let steepness_cost = evaluate_steepness_cost(&descriptor, settings);
     let length_cost = evaluate_length_cost(&descriptor, settings);
     let stiffness_cost = evaluate_stiffness_cost(gene, &descriptor, settings);
-
 
     // println!(
     //     "cone_cost: {}, steepness_cost: {}, length_cost: {}, stiffness_cost: {}",

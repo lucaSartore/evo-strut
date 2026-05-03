@@ -1,4 +1,3 @@
-
 use crate::stages::support_structure_refinement::SupportNode;
 
 use super::*;
@@ -9,7 +8,7 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureGene
     let node = gene.nodes.get_mut(&n1).expect("node must be present");
     let leans_on = match node {
         SupportNode::Base(_) => panic!("node can't be a base one"),
-        SupportNode::Middle(middle_node)  => &mut middle_node.leans_on,
+        SupportNode::Middle(middle_node) => &mut middle_node.leans_on,
         SupportNode::Contact(contact_node) => &mut contact_node.leans_on,
     };
 

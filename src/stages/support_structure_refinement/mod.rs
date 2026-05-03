@@ -3,21 +3,28 @@ use log::debug;
 pub use models::*;
 
 use anyhow::Result;
-use std::{marker::PhantomData};
+use std::marker::PhantomData;
 
-
-use crate::{evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, stages::{Pipeline, PipelineBehaviourTrait, SupportStructureOptimizedState, SupportStructureRefinedState}};
-
+use crate::{
+    evolution::{
+        ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour,
+        PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random,
+        TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings,
+    },
+    stages::{
+        Pipeline, PipelineBehaviourTrait, SupportStructureOptimizedState,
+        SupportStructureRefinedState,
+    },
+};
 
 mod crossover;
-use crossover::{SupportStructureCrossoverSettings, SupportStructureCrossover};
+use crossover::{SupportStructureCrossover, SupportStructureCrossoverSettings};
 mod initializer;
-use initializer::{SupportStructureInitializerSettings, SupportStructureInitializer};
+use initializer::{SupportStructureInitializer, SupportStructureInitializerSettings};
 mod mutation;
-use mutation::{SupportStructureMutatorSettings, SupportStructureMutator};
+use mutation::{SupportStructureMutator, SupportStructureMutatorSettings};
 pub mod evaluation;
-use evaluation::{SupportStructureEvaluatorSettings, SupportStructureEvaluator};
-
+use evaluation::{SupportStructureEvaluator, SupportStructureEvaluatorSettings};
 
 pub struct SupportStructureRefinementStage<TB>
 where
@@ -34,27 +41,31 @@ where
         input: Pipeline<SupportStructureOptimizedState, TB>,
     ) -> Result<Pipeline<SupportStructureRefinedState, TB>> {
         let results: Result<Vec<_>> = (0..input.state.support_structures.len())
-            .map(|i| {
-                TB::TSupportStructureRefiner::optimize(&input.state, i)
-            })
+            .map(|i| TB::TSupportStructureRefiner::optimize(&input.state, i))
             .collect();
-        Ok(Pipeline::from_state(SupportStructureRefinedState{
+        Ok(Pipeline::from_state(SupportStructureRefinedState {
             settings: input.state.settings,
             graph: input.state.graph,
             connection_points: input.state.connection_points,
-            support_structures: results?
+            support_structures: results?,
         }))
     }
 }
 
 pub trait SupportStructureRefiner {
-    fn optimize<'a>(status: &'a SupportStructureOptimizedState, structure_index: usize) -> Result<SupportStructureGene>;
+    fn optimize<'a>(
+        status: &'a SupportStructureOptimizedState,
+        structure_index: usize,
+    ) -> Result<SupportStructureGene>;
 }
 
-pub struct SimpleSupportStructureRefiner { }
+pub struct SimpleSupportStructureRefiner {}
 
 impl SupportStructureRefiner for SimpleSupportStructureRefiner {
-    fn optimize<'a>(status: &'a SupportStructureOptimizedState, structure_index: usize) -> Result<SupportStructureGene> {
+    fn optimize<'a>(
+        status: &'a SupportStructureOptimizedState,
+        structure_index: usize,
+    ) -> Result<SupportStructureGene> {
         debug!("starting optimization for structure {structure_index}");
         let settings = &status.settings;
         let graph = &status.graph;
@@ -76,25 +87,25 @@ impl SupportStructureRefiner for SimpleSupportStructureRefiner {
             SupportStructureEvaluatorSettings<'a>,
             TournamentBasedCrossoverSelectionSettings,
             ElitistNextGenSelectorSettings,
-            SupportStructureInitializerSettings<'a>
+            SupportStructureInitializerSettings<'a>,
         >;
         let evolver = Evolver::<Behaviour<'a>>::new(
             &SupportStructureMutatorSettings::new(settings, graph),
             &SupportStructureCrossoverSettings::new(settings),
-            &PatienceBasedTerminationStrategySettings{
+            &PatienceBasedTerminationStrategySettings {
                 max_generations: s.num_generations,
-                patience: s.patience
+                patience: s.patience,
             },
             &SupportStructureEvaluatorSettings::new(settings, graph),
-            &TournamentBasedCrossoverSelectionSettings{
-                k: s.tournament_size
+            &TournamentBasedCrossoverSelectionSettings {
+                k: s.tournament_size,
             },
-            &ElitistNextGenSelectorSettings{
+            &ElitistNextGenSelectorSettings {
                 num_novel_individual: s.generation_size - s.num_elite_individuals,
-                num_elite_individual: s.num_elite_individuals
+                num_elite_individual: s.num_elite_individuals,
             },
             &SupportStructureInitializerSettings::new(settings, structure),
-            Random::UnSeededRandom
+            Random::UnSeededRandom,
         );
 
         evolver.run()

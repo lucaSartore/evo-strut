@@ -1,40 +1,42 @@
-use crate::{evolution::{Mutator, Random}, models::{Settings, SurfaceGraph}, stages::support_structure_refinement::SupportStructureGene};
+use crate::{
+    evolution::{Mutator, Random},
+    models::{Settings, SurfaceGraph},
+    stages::support_structure_refinement::SupportStructureGene,
+};
 
-mod merge_two;
-mod move_one;
-mod remove_one_node;
-mod remove_one_leans_on;
 mod add_one_leans_on;
 mod create_one_more_leans_on;
+mod merge_two;
+mod move_one;
+mod remove_one_leans_on;
+mod remove_one_node;
 mod shorten_cone;
 
 pub struct SupportStructureMutatorSettings<'a> {
     settings: &'a Settings,
-    graph: &'a SurfaceGraph
+    graph: &'a SurfaceGraph,
 }
 
 impl<'a> SupportStructureMutatorSettings<'a> {
     pub fn new(settings: &'a Settings, graph: &'a SurfaceGraph) -> Self {
-        Self {
-            settings,
-            graph
-        }
+        Self { settings, graph }
     }
 }
-
 
 pub struct SupportStructureMutator<'a> {
     settings: &'a Settings,
     graph: &'a SurfaceGraph,
-    rand: Random
+    rand: Random,
 }
 
-impl<'a> Mutator<SupportStructureGene, SupportStructureMutatorSettings<'a>> for SupportStructureMutator<'a> {
+impl<'a> Mutator<SupportStructureGene, SupportStructureMutatorSettings<'a>>
+    for SupportStructureMutator<'a>
+{
     fn new(settings: &SupportStructureMutatorSettings<'a>, rand: Random) -> Self {
         Self {
             settings: settings.settings,
             graph: settings.graph,
-            rand
+            rand,
         }
     }
 
@@ -55,7 +57,7 @@ impl<'a> Mutator<SupportStructureGene, SupportStructureMutatorSettings<'a>> for 
             MK::MoveOne,
             MK::RemoveOneLeansOn,
             MK::RemoveOneNode,
-            MK::ShortenCone
+            MK::ShortenCone,
         ];
 
         for _ in 0..5 {

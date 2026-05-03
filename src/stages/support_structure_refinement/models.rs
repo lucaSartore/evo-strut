@@ -1,31 +1,33 @@
-
 use crate::support::remove_random::RemoveRandom;
 use hashbrown::{HashMap, HashSet};
 use smallvec::SmallVec;
 
-use crate::{evolution::Random, models::{FaceId, Point, SurfaceGraph}};
-
-
+use crate::{
+    evolution::Random,
+    models::{FaceId, Point, SurfaceGraph},
+};
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
 pub struct SupportNodeId(pub u32);
 
-
 #[derive(Clone, Debug)]
 pub struct PositionAnchor {
     pub to: SupportNodeId,
-    pub offset: Point
+    pub offset: Point,
 }
 
 impl PositionAnchor {
-    pub fn new(node_to: SupportNodeId, node_to_position: Point, anchored_node_position: Point) -> Self {
+    pub fn new(
+        node_to: SupportNodeId,
+        node_to_position: Point,
+        anchored_node_position: Point,
+    ) -> Self {
         Self {
             to: node_to,
-            offset: anchored_node_position - node_to_position
+            offset: anchored_node_position - node_to_position,
         }
     }
 }
-
 
 /// represent a base point (i.e. a point that is connected either to the ground,
 /// or to the printed mesh itself, and provide "support to the support structure")
@@ -35,7 +37,7 @@ pub struct BaseNode {
     // select the face that the current node leans on.
     // if None, then the current node leans to the ground.
     pub mesh_contact: Option<FaceId>,
-    pub last_position: Point
+    pub last_position: Point,
 }
 
 impl BaseNode {
@@ -43,14 +45,14 @@ impl BaseNode {
         Self {
             id,
             mesh_contact: None,
-            last_position: position
+            last_position: position,
         }
     }
     pub fn new_mesh_contact(id: SupportNodeId, contact: FaceId, graph: &SurfaceGraph) -> Self {
         Self {
             id,
             mesh_contact: Some(contact),
-            last_position: graph.get_triangle(contact).center()
+            last_position: graph.get_triangle(contact).center(),
         }
     }
     pub fn repair_position(&self, prev_point: &NodeReference, graph: &SurfaceGraph) -> Self {
@@ -74,21 +76,24 @@ pub struct MiddleNode {
     pub anchor: PositionAnchor,
     // kept to re-construct the position in case node we ar anchoring to
     // is deleted
-    pub last_position: Point, 
-    pub leans_on: SmallVec<[SupportNodeId; 4]>
+    pub last_position: Point,
+    pub leans_on: SmallVec<[SupportNodeId; 4]>,
 }
 
 #[derive(Clone, Debug)]
 pub struct NodeReference {
     id: SupportNodeId,
-    position: Point
+    position: Point,
 }
-
 
 impl MiddleNode {
     // repair the anchor by building a new one if the node i'm anchored to has being
     // deleted (or no longer depends on me)
-    pub fn repair_position(&self, genome: &SupportStructureGene, prev_point: &NodeReference) -> Self {
+    pub fn repair_position(
+        &self,
+        genome: &SupportStructureGene,
+        prev_point: &NodeReference,
+    ) -> Self {
         let mut to_return = self.clone();
         // anchor still present
         if let Some(g) = genome.try_get_gene(self.anchor.to) && g.leans_on(self.id) {
@@ -102,9 +107,9 @@ impl MiddleNode {
     }
 
     pub fn as_node_reference(&self) -> NodeReference {
-        NodeReference { 
+        NodeReference {
             id: self.id,
-            position: self.last_position
+            position: self.last_position,
         }
     }
     pub fn remove_random_support(&mut self, rand: &Random) {
@@ -122,14 +127,14 @@ pub struct ContactNode {
     pub id: SupportNodeId,
     pub position: Point,
     pub radius: f32,
-    pub leans_on: SmallVec<[SupportNodeId; 4]>
+    pub leans_on: SmallVec<[SupportNodeId; 4]>,
 }
 
 impl ContactNode {
     pub fn as_node_reference(&self) -> NodeReference {
-        NodeReference { 
+        NodeReference {
             id: self.id,
-            position: self.position
+            position: self.position,
         }
     }
 
@@ -145,7 +150,7 @@ impl ContactNode {
 pub enum SupportNode {
     Base(BaseNode),
     Middle(MiddleNode),
-    Contact(ContactNode)
+    Contact(ContactNode),
 }
 
 impl SupportNode {
@@ -153,7 +158,7 @@ impl SupportNode {
         match self {
             SupportNode::Base(_) => false,
             SupportNode::Middle(n) => n.leans_on.contains(&id),
-            SupportNode::Contact(n) => n.leans_on.contains(&id)
+            SupportNode::Contact(n) => n.leans_on.contains(&id),
         }
     }
 
@@ -161,7 +166,7 @@ impl SupportNode {
         match self {
             SupportNode::Base(_) => (),
             SupportNode::Middle(n) => n.leans_on.push(id),
-            SupportNode::Contact(n) => n.leans_on.push(id)
+            SupportNode::Contact(n) => n.leans_on.push(id),
         };
     }
 
@@ -169,7 +174,7 @@ impl SupportNode {
         match self {
             SupportNode::Base(n) => n.id,
             SupportNode::Middle(n) => n.id,
-            SupportNode::Contact(n) => n.id
+            SupportNode::Contact(n) => n.id,
         }
     }
 
@@ -177,7 +182,7 @@ impl SupportNode {
         match self {
             SupportNode::Base(n) => n.last_position,
             SupportNode::Middle(n) => n.last_position,
-            SupportNode::Contact(n) => n.position
+            SupportNode::Contact(n) => n.position,
         }
     }
 
@@ -211,7 +216,7 @@ impl SupportNode {
         match self {
             SupportNode::Base(_) => (),
             SupportNode::Middle(n) => n.remove_random_support(rand),
-            SupportNode::Contact(n) => n.remove_random_support(rand)
+            SupportNode::Contact(n) => n.remove_random_support(rand),
         }
     }
 }
@@ -241,7 +246,10 @@ impl SupportStructureGene {
 
     pub fn random_non_base_node(&mut self, rand: &Random) -> SupportNodeId {
         loop {
-            let v = self.nodes.choose_random(rand).expect("can't execute random selection on an empty graph");
+            let v = self
+                .nodes
+                .choose_random(rand)
+                .expect("can't execute random selection on an empty graph");
             if !v.1.is_base() {
                 return v.0;
             }
@@ -250,7 +258,10 @@ impl SupportStructureGene {
 
     pub fn random_non_contact_node(&mut self, rand: &Random) -> SupportNodeId {
         loop {
-            let v = self.nodes.choose_random(rand).expect("can't execute random selection on an empty graph");
+            let v = self
+                .nodes
+                .choose_random(rand)
+                .expect("can't execute random selection on an empty graph");
             if !v.1.is_contact() {
                 return v.0;
             }
@@ -259,7 +270,10 @@ impl SupportStructureGene {
 
     pub fn random_contact_node(&mut self, rand: &Random) -> SupportNodeId {
         loop {
-            let v = self.nodes.choose_random(rand).expect("can't execute random selection on an empty graph");
+            let v = self
+                .nodes
+                .choose_random(rand)
+                .expect("can't execute random selection on an empty graph");
             if v.1.is_contact() {
                 return v.0;
             }
@@ -268,7 +282,9 @@ impl SupportStructureGene {
 
     pub fn random_middle_node(&mut self, rand: &Random) -> Option<SupportNodeId> {
         for _ in 0..5 {
-            let v = self.nodes.choose_random(rand)
+            let v = self
+                .nodes
+                .choose_random(rand)
                 .expect("can't execute random selection on an empty graph");
             if v.1.is_middle() {
                 return Some(v.0);
@@ -291,31 +307,23 @@ impl SupportStructureGene {
 
     pub fn repair(&mut self, graph: &SurfaceGraph, rand: &Random) {
         let mut repaired = Default::default();
-            
+
         let ids: Vec<SupportNodeId> = self
             .nodes
             .values()
-            .filter_map(|x| {
-                match x {
-                    SupportNode::Contact(n) => Some(n.id),
-                    _ => None,
-                }
+            .filter_map(|x| match x {
+                SupportNode::Contact(n) => Some(n.id),
+                _ => None,
             })
             .collect();
 
         // repair all the nodes
         for id in ids {
             let mut visited = Default::default();
-            self.repair_node_position(
-                id,
-                None,
-                &mut repaired,
-                &mut visited,
-                graph
-            );
+            self.repair_node_position(id, None, &mut repaired, &mut visited, graph);
         }
         // remove nodes that were not repaired
-        self.nodes.retain(|x,_| repaired.contains(x));
+        self.nodes.retain(|x, _| repaired.contains(x));
 
         // fix the nodes that are floating
         self.repair_floating_nodes(rand);
@@ -336,9 +344,10 @@ impl SupportStructureGene {
             node.add_support(support);
             let mut position = node.get_position();
             position.z = 0.;
-            self.nodes.insert(support, SupportNode::Base(
-                BaseNode::new_ground(support, position)
-            ));
+            self.nodes.insert(
+                support,
+                SupportNode::Base(BaseNode::new_ground(support, position)),
+            );
         }
     }
 
@@ -349,7 +358,7 @@ impl SupportStructureGene {
         prev_point: Option<&NodeReference>,
         repaired_nodes: &mut HashSet<SupportNodeId>,
         visited: &mut HashSet<SupportNodeId>,
-        graph: &SurfaceGraph
+        graph: &SurfaceGraph,
     ) -> bool {
         // we return false if the node has already being visited in this repair
         // loop. This is done to avoid creating circular support structure
@@ -360,40 +369,40 @@ impl SupportStructureGene {
         match self.nodes.get(&id) {
             None => {
                 // node is not present... can't be repaired
-                return false
+                return false;
             }
             Some(SupportNode::Base(n)) => {
                 let pp = prev_point.expect("only contact nodes can have prev_point = none");
                 let repaired = n.repair_position(pp, graph);
                 self.nodes.insert(id, SupportNode::Base(repaired));
                 repaired_nodes.insert(id);
-            },
+            }
             Some(SupportNode::Contact(n)) => {
                 let this_point = n.as_node_reference();
                 let mut lean_on = n.leans_on.clone();
 
-                lean_on.retain(|x|
+                lean_on.retain(|x| {
                     self.repair_node_position(*x, Some(&this_point), repaired_nodes, visited, graph)
-                );
+                });
 
                 let Some(SupportNode::Contact(n)) = self.nodes.get_mut(&id) else { panic!() };
                 n.leans_on = lean_on;
                 repaired_nodes.insert(id);
-            },
+            }
             Some(SupportNode::Middle(n)) => {
                 let this_point = n.as_node_reference();
                 let pp = prev_point.expect("only contact nodes can have prev_point = none");
 
-                // repairing current 
+                // repairing current
                 let mut repaired = n.repair_position(self, pp);
 
                 // update the last position of self, before progressing on the downward nodes
                 let Some(SupportNode::Middle(n)) = self.nodes.get_mut(&id) else { panic!() };
                 n.last_position = repaired.last_position;
 
-                repaired.leans_on.retain(|x|
+                repaired.leans_on.retain(|x| {
                     self.repair_node_position(*x, Some(&this_point), repaired_nodes, visited, graph)
-                );
+                });
 
                 self.nodes.insert(id, SupportNode::Middle(repaired));
                 repaired_nodes.insert(id);

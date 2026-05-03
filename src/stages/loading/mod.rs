@@ -1,42 +1,42 @@
-use std::sync::Arc;
-use anyhow::{Result, anyhow};
 use super::*;
 use crate::models::{IoSettings, SurfaceGraph};
+use anyhow::{anyhow, Result};
 use baby_shark::{
-    io::{read_from_file, write_to_file}, 
-    mesh::corner_table::CornerTableF, remeshing::incremental::IncrementalRemesher
+    io::{read_from_file, write_to_file},
+    mesh::corner_table::CornerTableF,
+    remeshing::incremental::IncrementalRemesher,
 };
 use std::path::Path;
+use std::sync::Arc;
 
 pub fn read(name: &str) -> Result<CornerTableF> {
     let r = read_from_file::<CornerTableF>(Path::new(name));
     let mesh = match r {
         Ok(m) => m,
-        Err(e) =>  return Err(anyhow!("error while loading file \"{}\"\n{:?}", name, e))
+        Err(e) => return Err(anyhow!("error while loading file \"{}\"\n{:?}", name, e)),
     };
     Ok(mesh)
 }
 
-pub struct LoadingStage<TB> 
+pub struct LoadingStage<TB>
 where
     TB: PipelineBehaviourTrait,
 {
-    _b: PhantomData<TB>
+    _b: PhantomData<TB>,
 }
 
-impl<TB> LoadingStage<TB> 
+impl<TB> LoadingStage<TB>
 where
     TB: PipelineBehaviourTrait,
 {
     fn remesh(mut mesh: CornerTableF, settings: &IoSettings) -> Result<CornerTableF> {
-
         let remesher = IncrementalRemesher::default();
 
-        if settings.target_edge_length != 0.  {
+        if settings.target_edge_length != 0. {
             remesher.remesh(&mut mesh, settings.target_edge_length);
         }
         Ok(mesh)
-        
+
         // let mut remesher = VoxelRemesher::default()
         //     .with_voxel_size(settings.voxel_size);
         // let mesh = match remesher.remesh(&mesh) {
@@ -45,26 +45,25 @@ where
         // };
         // Ok(mesh)
     }
-    
 }
 
-
-
 impl<TB> LoadingStage<TB>
-where 
+where
     TB: PipelineBehaviourTrait,
 {
-    pub fn execute(
-        input: Pipeline<StartedState, TB>
-    ) -> Result<Pipeline<LoadedState, TB>> {
+    pub fn execute(input: Pipeline<StartedState, TB>) -> Result<Pipeline<LoadedState, TB>> {
         let settings = &input.state.settings.io_settings;
         let mesh = read(&settings.input_file_path)?;
         let mesh = Self::remesh(mesh, settings)?;
 
         if let Some(path) = &settings.re_meshed_input_file_path {
             let r = write_to_file(&mesh, Path::new(path));
-            if let Err(e) = r { 
-                return Err(anyhow!("error while loading writing file \"{}\"\n{:?}", path, e))
+            if let Err(e) = r {
+                return Err(anyhow!(
+                    "error while loading writing file \"{}\"\n{:?}",
+                    path,
+                    e
+                ));
             };
         }
 
@@ -73,7 +72,7 @@ where
         let graph = SurfaceGraph::new(&mesh_rc);
         let state = LoadedState {
             settings: input.state.settings,
-            graph
+            graph,
         };
         let pipeline = Pipeline::from_state(state);
         Ok(pipeline)

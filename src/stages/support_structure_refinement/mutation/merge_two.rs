@@ -3,8 +3,8 @@ use smallvec::smallvec;
 use crate::models::Point;
 use crate::stages::support_structure_refinement::{MiddleNode, SupportNode};
 
-use super::*;
 use super::super::models;
+use super::*;
 
 pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureGene) {
     let rand = &mutator.rand;
@@ -39,19 +39,18 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureGene
     }
     support_position.z = z;
 
-    
-
     let new_node = MiddleNode {
         id,
         anchor: models::PositionAnchor::new(n1.id(), p1, support_position),
         last_position: support_position,
-        leans_on: smallvec![]
+        leans_on: smallvec![],
     };
 
     n1.add_support(new_node.id);
     n2.add_support(new_node.id);
 
-    gene.nodes.insert(new_node.id, SupportNode::Middle(new_node));
+    gene.nodes
+        .insert(new_node.id, SupportNode::Middle(new_node));
     gene.nodes.insert(n1.id(), n1);
     gene.nodes.insert(n2.id(), n2);
 }

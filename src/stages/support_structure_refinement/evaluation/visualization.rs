@@ -1,8 +1,20 @@
-use crate::{models::{Point, SurfaceGraph}, stages::{support_structure_refinement::{SupportNode, SupportStructureGene, evaluation::logic::genome_to_graph_descriptor}, visualization::Color}};
+use crate::{
+    models::{Point, SurfaceGraph},
+    stages::{
+        support_structure_refinement::{
+            evaluation::logic::genome_to_graph_descriptor, SupportNode, SupportStructureGene,
+        },
+        visualization::Color,
+    },
+};
 use anyhow::Result;
 use rerun::RecordingStream;
 
-pub fn visualize(rec: &RecordingStream, gene: &SupportStructureGene, mesh: & SurfaceGraph) -> Result<()> {
+pub fn visualize(
+    rec: &RecordingStream,
+    gene: &SupportStructureGene,
+    mesh: &SurfaceGraph,
+) -> Result<()> {
     let descriptor = genome_to_graph_descriptor(gene);
     let colors = vec![Color::Green; mesh.count_vertices()];
 
@@ -24,30 +36,25 @@ pub fn visualize(rec: &RecordingStream, gene: &SupportStructureGene, mesh: & Sur
                 .filter(|x| **x < *id)
                 .map(|x| [p, descriptor.positions[x]])
                 .collect::<Vec<_>>()
-        }).collect();
+        })
+        .collect();
 
-    rec.log(
-        "support_structure",
-        &rerun::LineStrips3D::new(lines)
-    )?;
+    rec.log("support_structure", &rerun::LineStrips3D::new(lines))?;
 
-    let cones: Vec<[Point;2]> = gene
+    let cones: Vec<[Point; 2]> = gene
         .nodes
         .iter()
-        .flat_map(|(_,x)| {
+        .flat_map(|(_, x)| {
             if let SupportNode::Contact(n) = x {
-                Some(n
-                    .leans_on
-                    .iter()
-                    .map(|support| {
-                        let sp = descriptor.positions[support];
-                        [
-                            [sp, n.position + Point::new(0., n.radius, 0.)],
-                            [sp, n.position + Point::new(0., -n.radius, 0.)],
-                            [sp, n.position + Point::new(n.radius, 0., 0.)],
-                            [sp, n.position + Point::new(-n.radius, 0., 0.)]
-                        ]
-                    }))
+                Some(n.leans_on.iter().map(|support| {
+                    let sp = descriptor.positions[support];
+                    [
+                        [sp, n.position + Point::new(0., n.radius, 0.)],
+                        [sp, n.position + Point::new(0., -n.radius, 0.)],
+                        [sp, n.position + Point::new(n.radius, 0., 0.)],
+                        [sp, n.position + Point::new(-n.radius, 0., 0.)],
+                    ]
+                }))
             } else {
                 None
             }
@@ -55,12 +62,8 @@ pub fn visualize(rec: &RecordingStream, gene: &SupportStructureGene, mesh: & Sur
         .flatten()
         .flatten()
         .collect();
-        
 
-    rec.log(
-        "support_cones",
-        &rerun::LineStrips3D::new(cones)
-    )?;
+    rec.log("support_cones", &rerun::LineStrips3D::new(cones))?;
 
     Ok(())
 }

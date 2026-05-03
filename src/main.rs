@@ -1,20 +1,25 @@
+mod evolution;
 mod models;
 mod stages;
-mod evolution;
 mod support;
 
 use env_logger::Builder;
-use log::{LevelFilter, error};
+use log::{error, LevelFilter};
 
 use crate::{
-    models::Settings, stages::{
-        Pipeline, PipelineBehaviour, StartedState, contact_point_optimization::SimpleContactPointOptimizer, contact_points_grouping::SimpleContactPointsGrouper, criticality_detection::PropagationBasedCriticalityDetector, criticality_grouping::DistanceBasedCriticalityGrouper, support_structure_optimization::SimpleSupportStructureOptimizer, support_structure_refinement::SimpleSupportStructureRefiner
-    }
+    models::Settings,
+    stages::{
+        contact_point_optimization::SimpleContactPointOptimizer,
+        contact_points_grouping::SimpleContactPointsGrouper,
+        criticality_detection::PropagationBasedCriticalityDetector,
+        criticality_grouping::DistanceBasedCriticalityGrouper,
+        support_structure_optimization::SimpleSupportStructureOptimizer,
+        support_structure_refinement::SimpleSupportStructureRefiner, Pipeline, PipelineBehaviour,
+        StartedState,
+    },
 };
 
-
 fn main() {
-
     Builder::new()
         .filter_level(LevelFilter::Error)
         .filter_module("evo_strut", LevelFilter::Info)
@@ -27,7 +32,7 @@ fn main() {
         SimpleContactPointOptimizer,
         SimpleContactPointsGrouper,
         SimpleSupportStructureOptimizer,
-        SimpleSupportStructureRefiner
+        SimpleSupportStructureRefiner,
     >;
     let value = Pipeline::<StartedState, Behaviour>::run(settings);
 

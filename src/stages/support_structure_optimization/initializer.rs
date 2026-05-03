@@ -1,23 +1,25 @@
-
-use crate::{evolution::{PopulationInitializer}, models::{Settings, SurfaceGraph}, stages::support_structure_optimization::{SupportGroup, mutation::SupportStructureMutator}};
-
+use crate::{
+    evolution::PopulationInitializer,
+    models::{Settings, SurfaceGraph},
+    stages::support_structure_optimization::{mutation::SupportStructureMutator, SupportGroup},
+};
 
 pub struct SupportStructureInitializerSettings<'a> {
     settings: &'a Settings,
     graph: &'a SurfaceGraph,
-    group_template: &'a SupportGroup
+    group_template: &'a SupportGroup,
 }
 
 impl<'a> SupportStructureInitializerSettings<'a> {
     pub fn new(
         settings: &'a Settings,
         graph: &'a SurfaceGraph,
-        group_template: &'a SupportGroup
+        group_template: &'a SupportGroup,
     ) -> Self {
         Self {
             settings,
             graph,
-            group_template
+            group_template,
         }
     }
 }
@@ -25,24 +27,31 @@ impl<'a> SupportStructureInitializerSettings<'a> {
 pub struct SupportStructureInitializer<'a> {
     settings: &'a Settings,
     group_template: &'a SupportGroup,
-    mutator: SupportStructureMutator<'a>
+    mutator: SupportStructureMutator<'a>,
 }
 
-impl<'a> PopulationInitializer<SupportGroup, SupportStructureInitializerSettings<'a>> for SupportStructureInitializer<'a> {
-    fn new(settings: &SupportStructureInitializerSettings<'a>, rand: crate::evolution::Random) -> Self {
+impl<'a> PopulationInitializer<SupportGroup, SupportStructureInitializerSettings<'a>>
+    for SupportStructureInitializer<'a>
+{
+    fn new(
+        settings: &SupportStructureInitializerSettings<'a>,
+        rand: crate::evolution::Random,
+    ) -> Self {
         Self {
             settings: settings.settings,
             group_template: settings.group_template,
-            mutator: SupportStructureMutator{
+            mutator: SupportStructureMutator {
                 settings: settings.settings,
                 graph: settings.graph,
-                rand
-            }
+                rand,
+            },
         }
     }
 
     fn get_initial_individuals(&self) -> usize {
-        self.settings.support_structure_optimization_settings.generation_size
+        self.settings
+            .support_structure_optimization_settings
+            .generation_size
     }
 
     fn get_random_individual(&self) -> SupportGroup {

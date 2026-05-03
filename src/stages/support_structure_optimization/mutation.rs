@@ -1,17 +1,17 @@
-
-use crate::{evolution::{Mutator, Random}, models::{Settings, SurfaceGraph}, stages::support_structure_optimization::SupportGroup};
+use crate::{
+    evolution::{Mutator, Random},
+    models::{Settings, SurfaceGraph},
+    stages::support_structure_optimization::SupportGroup,
+};
 
 pub struct SupportStructureMutatorSettings<'a> {
     settings: &'a Settings,
-    graph: &'a SurfaceGraph
+    graph: &'a SurfaceGraph,
 }
 
 impl<'a> SupportStructureMutatorSettings<'a> {
     pub fn new(settings: &'a Settings, graph: &'a SurfaceGraph) -> Self {
-        Self {
-            settings,
-            graph
-        }
+        Self { settings, graph }
     }
 }
 
@@ -20,22 +20,23 @@ pub mod add_layer_point;
 pub mod edit_layer_connections;
 pub mod move_layer_height;
 pub mod move_points_in_layer;
-pub mod remove_layer_point;
 pub mod regenerate_group;
-
+pub mod remove_layer_point;
 
 pub struct SupportStructureMutator<'a> {
     pub settings: &'a Settings,
     pub graph: &'a SurfaceGraph,
-    pub rand: Random
+    pub rand: Random,
 }
 
-impl<'a> Mutator<SupportGroup, SupportStructureMutatorSettings<'a>> for SupportStructureMutator<'a> {
+impl<'a> Mutator<SupportGroup, SupportStructureMutatorSettings<'a>>
+    for SupportStructureMutator<'a>
+{
     fn new(settings: &SupportStructureMutatorSettings<'a>, rand: Random) -> Self {
         Self {
             settings: settings.settings,
             graph: settings.graph,
-            rand
+            rand,
         }
     }
 

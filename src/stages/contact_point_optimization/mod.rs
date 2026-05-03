@@ -1,7 +1,18 @@
 use crate::{
-    evolution::{ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings}, stages::{ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait, contact_point_optimization::{corssover::ContactPointCrossoverSettings, evaluation::ContactPointEvaluatorSettings, initializer::ContactPointsInitializerSettings, mutation::ContactPointsMutatorSettings}}
+    evolution::{
+        ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour,
+        PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random,
+        TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings,
+    },
+    stages::{
+        contact_point_optimization::{
+            corssover::ContactPointCrossoverSettings, evaluation::ContactPointEvaluatorSettings,
+            initializer::ContactPointsInitializerSettings, mutation::ContactPointsMutatorSettings,
+        },
+        ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait,
+    },
 };
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use log::debug;
 use std::marker::PhantomData;
 
@@ -30,7 +41,6 @@ where
     pub fn execute(
         input: Pipeline<CriticalityGroupedState, TB>,
     ) -> Result<Pipeline<ContactPointsDecidedState, TB>> {
-
         // let merged = TB::TContactPointOptimizer::optimize(&input.state, 0)?;
         println!("num grouped areas: {}", input.state.grouped_areas.len());
         let results: Result<Vec<_>> = (0..input.state.grouped_areas.len())
@@ -42,11 +52,11 @@ where
         let merged = ContactPointsGene::merge_many(results?)
             .ok_or(anyhow!("merging of multiple genes failed"))?;
 
-        Ok(Pipeline::from_state(ContactPointsDecidedState{
+        Ok(Pipeline::from_state(ContactPointsDecidedState {
             settings: input.state.settings,
             graph: input.state.graph,
             connection_points: merged,
-            critical: input.state.critical
+            critical: input.state.critical,
         }))
     }
 }
@@ -55,12 +65,13 @@ pub trait ContactPointOptimizer {
     fn optimize(status: &CriticalityGroupedState, area_id: usize) -> Result<ContactPointsGene>;
 }
 
-pub struct SimpleContactPointOptimizer {
-    
-}
+pub struct SimpleContactPointOptimizer {}
 
 impl ContactPointOptimizer for SimpleContactPointOptimizer {
-    fn optimize<'a>(status: &'a CriticalityGroupedState, area_id: usize) -> Result<ContactPointsGene> {
+    fn optimize<'a>(
+        status: &'a CriticalityGroupedState,
+        area_id: usize,
+    ) -> Result<ContactPointsGene> {
         debug!("starting optimization for area {area_id}");
         let area = &status.grouped_areas[area_id];
         let area_hash = &status.grouped_areas_hashes[area_id];
@@ -83,25 +94,25 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
             ContactPointEvaluatorSettings<'a>,
             TournamentBasedCrossoverSelectionSettings,
             ElitistNextGenSelectorSettings,
-            ContactPointsInitializerSettings<'a>
+            ContactPointsInitializerSettings<'a>,
         >;
         let evolver = Evolver::<Behaviour<'a>>::new(
             &ContactPointsMutatorSettings::new(settings, graph, area, area_hash),
             &ContactPointCrossoverSettings::new(settings, area, graph),
-            &PatienceBasedTerminationStrategySettings{
+            &PatienceBasedTerminationStrategySettings {
                 max_generations: s.num_generations,
-                patience: s.patience
+                patience: s.patience,
             },
             &ContactPointEvaluatorSettings::new(graph, settings, area, critical, area_id),
-            &TournamentBasedCrossoverSelectionSettings{
-                k: s.tournament_size
+            &TournamentBasedCrossoverSelectionSettings {
+                k: s.tournament_size,
             },
-            &ElitistNextGenSelectorSettings{
+            &ElitistNextGenSelectorSettings {
                 num_novel_individual: s.generation_size - s.num_elite_individuals,
-                num_elite_individual: s.num_elite_individuals
+                num_elite_individual: s.num_elite_individuals,
             },
             &ContactPointsInitializerSettings::new(settings, graph, area, area_hash),
-            Random::UnSeededRandom
+            Random::UnSeededRandom,
         );
 
         evolver.run()
