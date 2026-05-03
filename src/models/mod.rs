@@ -6,7 +6,7 @@ use std::{
 };
 
 mod settings;
-pub use settings::{IoSettings, MaterialStiffnessSettings, Settings};
+pub use settings::{IoSettings, MaterialStiffnessSettings, Settings, SupportSettings};
 
 mod point;
 pub use point::Point;

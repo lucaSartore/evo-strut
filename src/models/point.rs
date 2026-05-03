@@ -1,5 +1,6 @@
-use nalgebra::{ArrayStorage, Const, Matrix, Matrix2};
+use nalgebra::{ArrayStorage, Const, Matrix, Matrix2, Vector3};
 use rand::seq::index::sample;
+use core::f32;
 use std::{
     hash::{Hash, Hasher},
     ops::{Add, Sub},
@@ -211,7 +212,13 @@ impl Point {
 
 impl Into<[f32; 3]> for Point {
     fn into(self) -> [f32; 3] {
-        return [self.x, self.y, self.z];
+        [self.x, self.y, self.z]
+    }
+}
+
+impl Into<Vector3<f32>> for Point {
+    fn into(self) -> Vector3<f32> {
+        [self.x, self.y, self.z].into()
     }
 }
 

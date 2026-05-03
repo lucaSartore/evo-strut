@@ -24,6 +24,8 @@ pub struct Settings {
     /// parameters that control the optimization of the
     /// support structure.
     pub support_structure_refinement_settings: SupportStructureRefinementSettings,
+    /// settings that define how the support structure is generated
+    pub support_settings: SupportSettings
 }
 
 #[derive(Debug, Clone)]
@@ -353,7 +355,7 @@ pub struct SupportStructureOptimizationSettings {
 impl Default for SupportStructureOptimizationSettings {
     fn default() -> Self {
         Self {
-            num_generations: 2000,
+            num_generations: 20,
             patience: 50,
             generation_size: 100,
             tournament_size: 10,
@@ -430,7 +432,7 @@ pub struct SupportStructureRefinementSettings {
 impl Default for SupportStructureRefinementSettings {
     fn default() -> Self {
         Self {
-            num_generations: 2000,
+            num_generations: 1,
             patience: 50,
             generation_size: 100,
             tournament_size: 10,
@@ -468,6 +470,23 @@ impl Default for MaterialStiffnessSettings {
             jxx: 6.0,
             iy: 3.0,
             iz: 3.0,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct SupportSettings {
+    pub voxel_size: f32,
+    pub beam_radius: f32,
+    pub cones_width: f32
+}
+
+impl Default for SupportSettings {
+    fn default() -> Self {
+        Self { 
+            voxel_size: 0.3,
+            beam_radius: 1.5,
+            cones_width: 0.1
         }
     }
 }

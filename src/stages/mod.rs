@@ -12,6 +12,7 @@ pub mod loading;
 pub mod support_structure_optimization;
 pub mod support_structure_refinement;
 pub mod visualization;
+pub mod exporting;
 
 pub use criticality_detection::{
     CriticalityDetectionStage, CriticalityDetector, OrientationBasedCriticalityDetector,
@@ -24,18 +25,13 @@ use crate::{
     stages::{
         contact_point_optimization::{
             ContactPointOptimizationStage, ContactPointOptimizer, ContactPointsGene,
-        },
-        contact_points_grouping::{
+        }, contact_points_grouping::{
             ContactPointGroupingGene, ContactPointsGrouper, ContactPointsGroupingStage,
-        },
-        criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage},
-        loading::LoadingStage,
-        support_structure_optimization::{
+        }, criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, exporting::ExportingStage, loading::LoadingStage, support_structure_optimization::{
             SupportStructureOptimizationStage, SupportStructureOptimizer,
-        },
-        support_structure_refinement::{
+        }, support_structure_refinement::{
             SupportStructureGene, SupportStructureRefinementStage, SupportStructureRefiner,
-        },
+        }
     },
 };
 use visualization::{VisualizationStage, Visualizer};
@@ -151,6 +147,9 @@ pub struct SupportStructureRefinedState {
 }
 impl PipelineState for SupportStructureRefinedState {}
 
+pub struct MeshExportedState {}
+impl PipelineState for MeshExportedState {}
+
 pub struct Pipeline<TS, TB>
 where
     TS: PipelineState,
@@ -224,6 +223,8 @@ where
             "support_structure_refinement",
             SupportStructureRefinementStage::<TB>::execute(p)
         )?;
+
+        let _ = timed!("exporting", ExportingStage::execute(p))?;
         Ok(())
     }
 }

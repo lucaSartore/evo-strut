@@ -1,8 +1,7 @@
-use super::map_err;
 use anyhow::anyhow;
-use baby_shark::io::{Builder, IndexedBuilder};
+use baby_shark::io::Builder;
 
-use crate::{models::Point, support::shape_generation::ShapeGenerator};
+use crate::{models::Point, support::shape_generation::{ShapeGenerator, builder_wrapper::BuilderWrapper}};
 
 pub struct Sphere {
     pub center: Point,
@@ -13,6 +12,7 @@ impl Sphere {
         Self { center, radius }
     }
 }
+
 
 impl<TMesh> ShapeGenerator<TMesh> for Sphere
 where
@@ -26,7 +26,7 @@ where
             return Err(anyhow!("Vertex size must be positive"));
         }
 
-        let mut builder = TMesh::builder_indexed();
+        let mut builder = BuilderWrapper::new(TMesh::builder_indexed(), self.center);
         let latitude_segments = ((std::f32::consts::PI * self.radius) / vertex_size)
             .ceil()
             .max(2.) as usize;
@@ -34,9 +34,9 @@ where
             .ceil()
             .max(3.) as usize;
 
-        let top = map_err(builder.add_vertex(self.center + Point::UPWARD.to_scaled(self.radius)))?;
+        let top = builder.add_vertex(self.center + Point::UPWARD.to_scaled(self.radius))?;
         let bottom =
-            map_err(builder.add_vertex(self.center + Point::DOWNWARD.to_scaled(self.radius)))?;
+            builder.add_vertex(self.center + Point::DOWNWARD.to_scaled(self.radius))?;
 
         let mut rings = Vec::with_capacity(latitude_segments - 1);
         for latitude in 1..latitude_segments {
@@ -49,7 +49,7 @@ where
                 let phi = 2. * std::f32::consts::PI * longitude as f32 / longitude_segments as f32;
                 let point =
                     self.center + Point::new(ring_radius * phi.cos(), ring_radius * phi.sin(), z);
-                ring.push(map_err(builder.add_vertex(point))?);
+                ring.push(builder.add_vertex(point)?);
             }
 
             rings.push(ring);
@@ -57,7 +57,7 @@ where
 
         for longitude in 0..longitude_segments {
             let next_longitude = (longitude + 1) % longitude_segments;
-            map_err(builder.add_face(top, rings[0][longitude], rings[0][next_longitude]))?;
+            builder.add_face(top, rings[0][longitude], rings[0][next_longitude])?;
         }
 
         for latitude in 0..rings.len() - 1 {
@@ -66,25 +66,25 @@ where
                 let current = &rings[latitude];
                 let next = &rings[latitude + 1];
 
-                map_err(builder.add_face(
+                builder.add_face(
                     current[longitude],
                     next[longitude],
                     next[next_longitude],
-                ))?;
-                map_err(builder.add_face(
+                )?;
+                builder.add_face(
                     current[longitude],
                     next[next_longitude],
                     current[next_longitude],
-                ))?;
+                )?;
             }
         }
 
         let last_ring = &rings[rings.len() - 1];
         for longitude in 0..longitude_segments {
             let next_longitude = (longitude + 1) % longitude_segments;
-            map_err(builder.add_face(last_ring[longitude], bottom, last_ring[next_longitude]))?;
+            builder.add_face(last_ring[longitude], bottom, last_ring[next_longitude])?;
         }
 
-        map_err(builder.finish())
+        builder.finish()
     }
 }

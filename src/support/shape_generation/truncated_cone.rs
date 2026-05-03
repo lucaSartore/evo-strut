@@ -1,8 +1,7 @@
-use super::map_err;
 use anyhow::anyhow;
 use baby_shark::io::{Builder, IndexedBuilder};
 
-use crate::{models::Point, support::shape_generation::ShapeGenerator};
+use crate::{models::Point, support::shape_generation::{ShapeGenerator, builder_wrapper::BuilderWrapper}};
 
 pub struct Circle {
     pub center: Point,
@@ -69,36 +68,6 @@ fn circle_points(circle: &Circle, segments: usize) -> anyhow::Result<Vec<Point>>
     Ok(points)
 }
 
-impl<TMesh> ShapeGenerator<TMesh> for Circle
-where
-    TMesh: Builder<Mesh = TMesh, Scalar = f32>,
-{
-    fn build(&self, vertex_size: f32) -> anyhow::Result<TMesh> {
-        if self.radius <= 0. {
-            return Err(anyhow!("Circle radius must be positive"));
-        }
-        if vertex_size <= 0. {
-            return Err(anyhow!("Vertex size must be positive"));
-        }
-
-        let mut builder = TMesh::builder_indexed();
-        let segments = circle_segments(self.radius, vertex_size);
-        let center = map_err(builder.add_vertex(self.center))?;
-        let ring_points = circle_points(self, segments)?;
-        let mut ring = Vec::with_capacity(segments);
-
-        for point in ring_points {
-            ring.push(map_err(builder.add_vertex(point))?);
-        }
-
-        for segment in 0..segments {
-            let next_segment = (segment + 1) % segments;
-            map_err(builder.add_face(center, ring[segment], ring[next_segment]))?;
-        }
-
-        map_err(builder.finish())
-    }
-}
 
 impl<TMesh> ShapeGenerator<TMesh> for TruncatedCone
 where
@@ -124,9 +93,10 @@ where
             .ceil()
             .max(1.) as usize;
 
-        let mut builder = TMesh::builder_indexed();
-        let bottom_center = map_err(builder.add_vertex(self.bottom.center))?;
-        let top_center = map_err(builder.add_vertex(self.top.center))?;
+        let center = (self.bottom.center + self.top.center).to_scaled(0.5);
+        let mut builder = BuilderWrapper::new(TMesh::builder_indexed(), center);
+        let bottom_center = builder.add_vertex(self.bottom.center)?;
+        let top_center = builder.add_vertex(self.top.center)?;
         let mut rings = Vec::with_capacity(axial_segments + 1);
 
         for axial_segment in 0..=axial_segments {
@@ -136,7 +106,7 @@ where
             for segment in 0..segments {
                 let point = bottom_points[segment]
                     + (top_points[segment] - bottom_points[segment]).to_scaled(t);
-                ring.push(map_err(builder.add_vertex(point))?);
+                ring.push(builder.add_vertex(point)?);
             }
 
             rings.push(ring);
@@ -153,31 +123,31 @@ where
         for segment in 0..segments {
             let next_segment = (segment + 1) % segments;
             if bottom_outward {
-                map_err(builder.add_face(
+                builder.add_face(
                     bottom_center,
                     rings[0][segment],
                     rings[0][next_segment],
-                ))?;
+                )?;
             } else {
-                map_err(builder.add_face(
+                builder.add_face(
                     bottom_center,
                     rings[0][next_segment],
                     rings[0][segment],
-                ))?;
+                )?;
             }
 
             if top_outward {
-                map_err(builder.add_face(
+                builder.add_face(
                     top_center,
                     rings[axial_segments][segment],
                     rings[axial_segments][next_segment],
-                ))?;
+                )?;
             } else {
-                map_err(builder.add_face(
+                builder.add_face(
                     top_center,
                     rings[axial_segments][next_segment],
                     rings[axial_segments][segment],
-                ))?;
+                )?;
             }
         }
 
@@ -187,15 +157,15 @@ where
                 let current = &rings[axial_segment];
                 let next = &rings[axial_segment + 1];
 
-                map_err(builder.add_face(current[segment], next[next_segment], next[segment]))?;
-                map_err(builder.add_face(
+                builder.add_face(current[segment], next[next_segment], next[segment])?;
+                builder.add_face(
                     current[segment],
                     current[next_segment],
                     next[next_segment],
-                ))?;
+                )?;
             }
         }
 
-        map_err(builder.finish())
+        builder.finish()
     }
 }

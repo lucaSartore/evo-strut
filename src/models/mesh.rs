@@ -37,8 +37,10 @@ impl From<CornerTableF> for Mesh {
         let faces = value
             .triangles()
             .map(|t| {
+                // println!("{t:?}");
                 let n = t
                     .get_normal()
+                    // .unwrap_or_default()
                     .expect("Got malformed triangle, that does not have valid surface normal");
                 let (p1, p2, p3) = (*t.p1(), *t.p2(), *t.p3());
                 Face {

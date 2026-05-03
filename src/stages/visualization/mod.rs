@@ -137,6 +137,15 @@ pub fn visualize_mesh(graph: &SurfaceGraph, name: &str, colors: Option<Vec<Color
     rec.log("vertexes", &rerun::Points3D::new(graph.iter_vertices()))?;
 
     rec.log(
+        "normals",
+        &rerun::Arrows3D::from_vectors(
+            graph.iter_triangles(None).map(|x| x.normal())
+        ).with_origins(
+            graph.iter_triangles(None).map(|x| x.center())
+        )
+    )?;
+
+    rec.log(
         name,
         &rerun::Mesh3D::new(graph.iter_vertices())
             .with_vertex_normals(graph.vertex_normals(None))

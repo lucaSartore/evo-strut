@@ -7,7 +7,7 @@ use crate::{
 };
 
 mod graph;
-mod logic;
+pub mod logic;
 mod stiffness;
 mod visualization;
 
