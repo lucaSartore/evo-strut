@@ -26,8 +26,6 @@ fn test_cone_1() {
     let r = 5.;
     let shape = TruncatedCone::new(Circle::new(p1, r, v), Circle::new(p2, r, v));
     let mesh = ShapeGenerator::<CornerTableF>::build(&shape, 1.).unwrap();
-    let mut converter = MeshToVolume::default().with_voxel_size(0.1);
-    converter.convert(&mesh);
     let mesh = Arc::new(mesh.into());
     let mesh = SurfaceGraph::new(&mesh);
     visualize_mesh(&mesh, "test cone 1", None).unwrap();
@@ -46,6 +44,7 @@ fn test_cone_2() {
 }
 
 
+#[test]
 pub fn test_composition() {
     let mut builder = ShapeFactory::new();
     let mut settings = Settings::default();

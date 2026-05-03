@@ -81,7 +81,7 @@ impl Point {
     }
 
     pub fn abs(&self) -> f32 {
-        (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
+        self.norm_sq().sqrt()
     }
     pub fn as_versor(&self) -> Point {
         let norm = self.abs();
@@ -207,6 +207,10 @@ impl Point {
     pub fn mean(points: &[Point]) -> Point {
         let sum = points.iter().fold(Point::ZERO, |acc, p| acc + *p);
         sum.to_scaled(1.0 / points.len() as f32)
+    }
+
+    pub fn norm_sq(&self) -> f32 {
+        self.x.powi(2) + self.y.powi(2) + self.z.powi(2)
     }
 }
 
