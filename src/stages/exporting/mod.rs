@@ -1,11 +1,11 @@
-use std::path::Path;
+use std::{path::Path, sync::Arc};
 
 use anyhow::{Result, anyhow};
 use baby_shark::io::write_to_file;
 
 use crate::{
-    models::{Point, SupportSettings}, stages::{
-        MeshExportedState, Pipeline, PipelineBehaviourTrait, SupportStructureRefinedState, support_structure_refinement::{ContactNode, SupportNode, SupportNodeId, SupportStructureGene, evaluation::logic::genome_to_graph_descriptor}
+    models::{Point, SupportSettings, SurfaceGraph}, stages::{
+        MeshExportedState, Pipeline, PipelineBehaviourTrait, SupportStructureRefinedState, support_structure_refinement::{ContactNode, SupportNode, SupportNodeId, SupportStructureGene, evaluation::logic::genome_to_graph_descriptor}, visualization::visualize_mesh
     }, support::shape_generation::{Circle, ShapeFactory, Sphere, TruncatedCone}
 };
 
@@ -14,7 +14,7 @@ pub struct ExportingStage{}
 
 impl ExportingStage {
     fn add_support_structure(builder: &mut ShapeFactory, s: &SupportStructureGene, settings: &SupportSettings) {
-        Self::add_cones(builder, s, settings);
+        // Self::add_cones(builder, s, settings);
         Self::add_beams(builder, s, settings);
     }
 
@@ -80,10 +80,12 @@ impl ExportingStage {
         let cone = TruncatedCone::new(bottom, top);
         builder.add_positive_shape(cone);
 
-        let bottom = Circle::new(cone_base, base_radius - settings.cones_width, versor);
-        let top = Circle::new(cone_top, 1e-4, Point::UPWARD);
-        let cone = TruncatedCone::new(bottom, top);
-        builder.add_negative_shape(cone);
+        if radius_top > settings.max_non_empty_cone_radius {
+            let bottom = Circle::new(cone_base, base_radius - settings.cones_width, versor);
+            let top = Circle::new(cone_top, 1e-4, Point::UPWARD);
+            let cone = TruncatedCone::new(bottom, top);
+            builder.add_negative_shape(cone);
+        }
     }
 }
 
@@ -105,6 +107,10 @@ impl ExportingStage
 
         let mesh = builder.build(settings)?;
         let path = &settings.io_settings.output_file_path;
+
+        let mesh_rc = Arc::new(mesh.clone().into());
+        let graph = SurfaceGraph::new(&mesh_rc);
+        visualize_mesh(&graph, "output mesh", None).unwrap();
 
         write_to_file(&mesh, Path::new(path))
             .map_err(|e| anyhow!("unable to export file: {e:?}"))?;

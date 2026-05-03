@@ -10,7 +10,7 @@ mod sphere;
 pub use sphere::Sphere;
 mod builder_wrapper;
 
-use crate::models::Settings;
+use crate::models::{Settings, SupportSettings};
 #[cfg(test)]
 pub mod test;
 
@@ -47,8 +47,8 @@ impl ShapeFactory
 
     pub fn build(&self, settings: &Settings) -> Result<CornerTableF> {
         let s = &settings.support_settings;
-        let positive = Self::to_volumes(&self.positive_shapes, s.voxel_size)?;
-        let negative = Self::to_volumes(&self.negative_shapes, s.voxel_size)?;
+        let positive = Self::to_volumes(&self.positive_shapes, s)?;
+        let negative = Self::to_volumes(&self.negative_shapes, s)?;
 
         let all_positive = positive
             .into_iter()
@@ -60,7 +60,7 @@ impl ShapeFactory
             .fold(all_positive, |acc, v| acc.subtract(v));
 
         let vertices = MarchingCubesMesher::default()
-            .with_voxel_size(final_volume.voxel_size())
+            .with_voxel_size(s.merging_voxel_size)
             .mesh(&final_volume);
 
         let soup = PolygonSoup::from_vertices(vertices);
@@ -71,12 +71,12 @@ impl ShapeFactory
         ))
     }
 
-    fn to_volumes(shapes: &[Box<dyn ShapeGenerator<CornerTableF>>], voxel_size: f32) -> Result<Vec<Volume>> {
+    fn to_volumes(shapes: &[Box<dyn ShapeGenerator<CornerTableF>>], settings: &SupportSettings) -> Result<Vec<Volume>> {
         let mut to_return = vec![];
 
         for shape in shapes {
-            let mut converter = MeshToVolume::default().with_voxel_size(voxel_size);
-            let mesh = shape.build(voxel_size)?;
+            let mut converter = MeshToVolume::default().with_voxel_size(settings.merging_voxel_size);
+            let mesh = shape.build(settings.primitive_voxel_size)?;
             let volume = converter.convert(&mesh).ok_or(anyhow!("conversion fail"))?;
             to_return.push(volume);
         }

@@ -180,8 +180,8 @@ impl Default for ContactPointsOptimizationSettings {
             layer_height: 1.,
             critical_angle_clipping_factor: 5.,
             initialization_support_density: RandomDistribution::InRange {
-                low: 0.03,
-                high: 0.031,
+                low: 0.003,
+                high: 0.0031,
             },
             max_support_radius: 4.,
             min_support_radius: 0.5,
@@ -476,17 +476,21 @@ impl Default for MaterialStiffnessSettings {
 
 #[derive(Clone, Debug)]
 pub struct SupportSettings {
-    pub voxel_size: f32,
+    pub primitive_voxel_size: f32,
+    pub merging_voxel_size: f32,
     pub beam_radius: f32,
-    pub cones_width: f32
+    pub cones_width: f32,
+    pub max_non_empty_cone_radius: f32
 }
 
 impl Default for SupportSettings {
     fn default() -> Self {
         Self { 
-            voxel_size: 0.3,
+            merging_voxel_size: 0.1,
+            primitive_voxel_size: 0.3,
             beam_radius: 1.5,
-            cones_width: 0.1
+            cones_width: 0.6,
+            max_non_empty_cone_radius: 3.
         }
     }
 }
