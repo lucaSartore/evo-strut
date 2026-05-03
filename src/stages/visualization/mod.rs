@@ -119,7 +119,7 @@ impl Visualizer<ContactPointsDecidedState> for VisualizationStage {
         Ok(())
     }
 }
-fn visualize_mesh(graph: &SurfaceGraph, name: &str, colors: Option<Vec<Color>>) -> Result<()> {
+pub fn visualize_mesh(graph: &SurfaceGraph, name: &str, colors: Option<Vec<Color>>) -> Result<()> {
     let rec = rerun::RecordingStreamBuilder::new(name).spawn()?;
 
     let colors = match colors {
