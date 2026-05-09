@@ -15,6 +15,7 @@ pub struct Face {
 pub struct Mesh {
     pub points: MeshVector<PointId, Point>,
     pub faces: MeshVector<FaceId, Face>,
+    pub original: CornerTableF
 }
 
 impl From<CornerTableF> for Mesh {
@@ -54,7 +55,7 @@ impl From<CornerTableF> for Mesh {
             })
             .collect();
 
-        Mesh { points, faces }
+        Mesh { points, faces, original: value}
     }
 }
 

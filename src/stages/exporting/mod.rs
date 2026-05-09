@@ -1,7 +1,7 @@
-use std::{path::Path, sync::Arc};
+use std::{ops::Deref, path::Path, sync::Arc};
 
 use anyhow::{Result, anyhow};
-use baby_shark::io::write_to_file;
+use baby_shark::{io::write_to_file, mesh::{corner_table::CornerTableF, polygon_soup::data_structure::PolygonSoup}, voxel::prelude::MeshToVolume};
 
 use crate::{
     models::{Point, SupportSettings, SurfaceGraph}, stages::{
@@ -14,7 +14,7 @@ pub struct ExportingStage{}
 
 impl ExportingStage {
     fn add_support_structure(builder: &mut ShapeFactory, s: &SupportStructureGene, settings: &SupportSettings) {
-        // Self::add_cones(builder, s, settings);
+        Self::add_cones(builder, s, settings);
         Self::add_beams(builder, s, settings);
     }
 
@@ -67,8 +67,12 @@ impl ExportingStage {
         let sphere_a = Sphere::new(a, radius);
         let sphere_b = Sphere::new(b, radius);
         builder.add_positive_shape(cone);
-        builder.add_positive_shape(sphere_a);
-        builder.add_positive_shape(sphere_b);
+        if sphere_a.center.z > 0. {
+            builder.add_positive_shape(sphere_a);
+        }
+        if sphere_b.center.z > 0. {
+            builder.add_positive_shape(sphere_b);
+        }
     }
 
     fn add_cone(builder: &mut ShapeFactory, cone_base: Point, cone_top: Point, radius_top: f32, settings: &SupportSettings ) {
@@ -81,8 +85,8 @@ impl ExportingStage {
         builder.add_positive_shape(cone);
 
         if radius_top > settings.max_non_empty_cone_radius {
-            let bottom = Circle::new(cone_base, base_radius - settings.cones_width, versor);
-            let top = Circle::new(cone_top, 1e-4, Point::UPWARD);
+            let bottom = Circle::new(cone_base, 1e-4, versor);
+            let top = Circle::new(cone_top + versor.to_scaled(0.01), radius_top - settings.cones_width, Point::UPWARD);
             let cone = TruncatedCone::new(bottom, top);
             builder.add_negative_shape(cone);
         }
@@ -104,6 +108,13 @@ impl ExportingStage
         input.state.support_structures
             .iter()
             .for_each(|s| Self::add_support_structure(&mut builder, s, support_settings));
+
+        let volume = MeshToVolume::default()
+            .with_voxel_size(support_settings.primitive_voxel_size)
+            .convert(&input.state.graph.mesh.original)
+            .ok_or(anyhow!("fail in creation of volume"))?;
+        let volume = volume.offset(3.);
+        builder.add_negative_volume(volume);
 
         let mesh = builder.build(settings)?;
         let path = &settings.io_settings.output_file_path;

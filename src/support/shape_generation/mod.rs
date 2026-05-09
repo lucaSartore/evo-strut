@@ -1,10 +1,8 @@
-use std::fmt::Debug;
 
 use anyhow::{anyhow, Result};
 use baby_shark::{io::Builder, mesh::{corner_table::CornerTableF, polygon_soup::data_structure::PolygonSoup, traits::Triangles}, voxel::{prelude::{MarchingCubesMesher, MeshToVolume}, volume::Volume}};
 
 mod truncated_cone;
-use log::debug;
 pub use truncated_cone::{Circle, TruncatedCone};
 mod sphere;
 pub use sphere::Sphere;
@@ -18,8 +16,10 @@ pub struct ShapeFactory
 {
     /// shapes that will be added to the shape
     positive_shapes: Vec<Box<dyn ShapeGenerator<CornerTableF>>>,
+    positive_volumes: Vec<Volume>,
     /// shapes that will be subtracted to the final shape
     negative_shapes: Vec<Box<dyn ShapeGenerator<CornerTableF>>>,
+    negative_volumes: Vec<Volume>,
 }
 
 impl ShapeFactory
@@ -28,9 +28,17 @@ impl ShapeFactory
         Self {
             positive_shapes: vec![],
             negative_shapes: vec![],
+            positive_volumes: vec![],
+            negative_volumes: vec![]
         }
     }
 
+    pub fn add_positive_volume(&mut self, volume: Volume) {
+        self.positive_volumes.push(volume);
+    }
+    pub fn add_negative_volume(&mut self, volume: Volume) {
+        self.negative_volumes.push(volume);
+    }
     pub fn add_positive_shape<T>(&mut self, shape: T)
     where
         T: ShapeGenerator<CornerTableF> + 'static,
@@ -47,21 +55,24 @@ impl ShapeFactory
 
     pub fn build(&self, settings: &Settings) -> Result<CornerTableF> {
         let s = &settings.support_settings;
-        let positive = Self::to_volumes(&self.positive_shapes, s)?;
-        let negative = Self::to_volumes(&self.negative_shapes, s)?;
+        let mut positive = Self::to_volumes(&self.positive_shapes, s)?;
+        positive.append(&mut self.positive_volumes.clone());
+
+        let mut negative = Self::to_volumes(&self.negative_shapes, s)?;
+        negative.append(&mut self.negative_volumes.clone());
 
         let all_positive = positive
             .into_iter()
             .reduce(|v1, v2| v1.union(v2))
             .ok_or(anyhow!("at least one positive shape should be provided"))?;
 
-        let final_volume = negative
-            .into_iter()
-            .fold(all_positive, |acc, v| acc.subtract(v));
+        // let final_volume = negative
+        //     .into_iter()
+        //     .fold(all_positive, |acc, v| acc.subtract(v));
 
         let vertices = MarchingCubesMesher::default()
             .with_voxel_size(s.merging_voxel_size)
-            .mesh(&final_volume);
+            .mesh(&all_positive);
 
         let soup = PolygonSoup::from_vertices(vertices);
 
