@@ -55,7 +55,7 @@ where
         let t = Triangle3::new(pa.into(), pb.into(), pc.into());
 
         let triangle_center: Point = t.center().into();
-        let triangle_normal: Point = t.get_normal().ok_or(anyhow!("unable to get normal")).unwrap().into();
+        let triangle_normal: Point = t.get_normal().expect("normal should always exist").into();
         let triangle_normal = triangle_normal.as_versor();
         let actual_normal = (triangle_center - self.polygon_center).as_versor();
         let dot = Point::dot(triangle_normal, actual_normal);

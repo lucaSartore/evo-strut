@@ -59,7 +59,7 @@ impl ExportingStage {
     }
 
     fn add_beam(builder: &mut ShapeFactory, a: Point, b: Point, settings: &SupportSettings) {
-        let (point_bottom, point_top) = if (a.z < b.z) {
+        let (point_bottom, point_top) = if a.z < b.z {
             (a, b)
         } else {
             (b, a)
@@ -105,7 +105,7 @@ impl ExportingStage {
         };
         let bottom = Circle::new(cone_base, base_radius, bottom_versor);
         let top = Circle::new(cone_top, radius_top, Point::UPWARD);
-        let cone = TruncatedCone::new(bottom, top, settings.cones_width, settings.min_cone_thickness_for_hole);
+        let cone = TruncatedCone::new(bottom, top, settings.cone_thickness, settings.min_cone_thickness_for_hole);
         builder.add_positive_shape(cone);
     }
 }

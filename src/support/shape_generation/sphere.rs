@@ -3,6 +3,7 @@ use baby_shark::{io::Builder, mesh::corner_table::CornerTableF, voxel::volume::V
 
 use crate::{models::Point, support::shape_generation::{ShapeGenerator, builder_wrapper::BuilderWrapper, to_volumes}};
 
+#[derive(Debug)]
 pub struct Sphere {
     pub center: Point,
     pub radius: f32,

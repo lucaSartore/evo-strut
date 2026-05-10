@@ -478,7 +478,7 @@ impl Default for MaterialStiffnessSettings {
 pub struct SupportSettings {
     pub voxel_size: f32,
     pub beam_radius: f32,
-    pub cones_width: f32,
+    pub cone_thickness: f32,
     pub min_cone_thickness_for_hole: f32,
     pub base_cylinder_radius: f32,
     pub base_cylinder_height: f32,
@@ -490,9 +490,9 @@ impl Default for SupportSettings {
     fn default() -> Self {
         Self { 
             voxel_size: 0.3,
-            beam_radius: 1.75,
-            cones_width: 0.6,
-            min_cone_thickness_for_hole: 2.,
+            beam_radius: 2.,
+            cone_thickness: 0.6,
+            min_cone_thickness_for_hole: 0.1,
             base_cylinder_radius: 5.,
             base_cylinder_height: 1.,
             min_cone_radius: 1.
