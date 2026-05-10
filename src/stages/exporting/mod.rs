@@ -28,7 +28,7 @@ impl ExportingStage {
             })
             .for_each(|x: &ContactNode| {
                 let cone_top = x.position;
-                let radius = x.radius;
+                let radius = x.radius.max(settings.min_cone_radius);
                 x.leans_on
                     .iter()
                     .map(point_to_pos)

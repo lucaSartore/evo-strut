@@ -482,6 +482,7 @@ pub struct SupportSettings {
     pub min_cone_thickness_for_hole: f32,
     pub base_cylinder_radius: f32,
     pub base_cylinder_height: f32,
+    pub min_cone_radius: f32,
 
 }
 
@@ -489,11 +490,12 @@ impl Default for SupportSettings {
     fn default() -> Self {
         Self { 
             voxel_size: 0.3,
-            beam_radius: 2.,
+            beam_radius: 1.75,
             cones_width: 0.6,
             min_cone_thickness_for_hole: 2.,
             base_cylinder_radius: 5.,
-            base_cylinder_height: 1.
+            base_cylinder_height: 1.,
+            min_cone_radius: 1.
         }
     }
 }
