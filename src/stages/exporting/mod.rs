@@ -1,7 +1,7 @@
 use std::{path::Path, sync::Arc};
 
 use anyhow::{Result, anyhow};
-use baby_shark::io::write_to_file;
+use baby_shark::{io::write_to_file, voxel::prelude::MeshToVolume};
 
 use crate::{
     models::{Point, SupportSettings, SurfaceGraph}, stages::{
@@ -84,6 +84,13 @@ impl ExportingStage {
         if !bottom_too_close_to_ground {
             let sphere = Sphere::new(point_bottom, radius);
             builder.add_positive_shape(sphere);
+        }
+
+        if point_bottom.z <= 0. {
+            let circle_bottom = Circle::new(point_bottom, settings.base_cylinder_radius, Point::UPWARD);
+            let circle_top = Circle::new(point_bottom + Point::UPWARD.to_scaled(settings.base_cylinder_height), settings.base_cylinder_radius, Point::UPWARD);
+            let cone = TruncatedCone::new(circle_bottom, circle_top, 10e9, 10e9);
+            builder.add_positive_shape(cone);
         }
     }
 
