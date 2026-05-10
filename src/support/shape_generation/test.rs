@@ -49,7 +49,7 @@ pub fn test_composition() {
     let mut builder = ShapeFactory::new();
     let mut settings = Settings::default();
     let voxel_size = 0.1;
-    settings.support_settings.primitive_voxel_size = voxel_size;
+    settings.support_settings.voxel_size = voxel_size;
 
     let sphere = Sphere::new(
         Point::new(0., 0., 0.),

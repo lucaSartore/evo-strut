@@ -8,7 +8,9 @@ use crate::{
 use anyhow::Result;
 
 mod color;
+use baby_shark::decimation::CollapseStrategy;
 pub use color::Color;
+use nalgebra::SuperTCategoryOf;
 
 pub trait Visualizer<TS>
 where
@@ -126,6 +128,29 @@ impl Visualizer<ContactPointsDecidedState> for VisualizationStage {
         Ok(())
     }
 }
+
+pub fn visualize_final_supports(supports: &SurfaceGraph, mesh: &SurfaceGraph) -> Result<()> {
+    let rec = rerun::RecordingStreamBuilder::new("final support structure").spawn()?;
+
+    rec.log(
+        "Support",
+        &rerun::Mesh3D::new(supports.iter_vertices())
+            .with_vertex_normals(supports.vertex_normals(None))
+            .with_vertex_colors(vec![Color::Green; supports.count_vertices()])
+            .with_triangle_indices(supports.iter_triangles(None)),
+    )?;
+
+    rec.log(
+        "Mesh",
+        &rerun::Mesh3D::new(mesh.iter_vertices())
+            .with_vertex_normals(mesh.vertex_normals(None))
+            .with_vertex_colors(vec![Color::Red; supports.count_vertices()])
+            .with_triangle_indices(mesh.iter_triangles(None)),
+    )?;
+
+    Ok(())
+}
+
 pub fn visualize_mesh(graph: &SurfaceGraph, name: &str, colors: Option<Vec<Color>>) -> Result<()> {
     let rec = rerun::RecordingStreamBuilder::new(name).spawn()?;
 

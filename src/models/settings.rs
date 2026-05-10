@@ -187,7 +187,7 @@ impl Default for ContactPointsOptimizationSettings {
             min_support_radius: 0.5,
             move_support_mutation_intensity: 2.5,
             change_support_radius_mutation_intensity: 2.,
-            num_generations: 1,
+            num_generations: 2000,
             patience: 25,
             generation_size: 100,
             tournament_size: 10,
@@ -357,7 +357,7 @@ impl Default for SupportStructureOptimizationSettings {
         Self {
             num_generations: 20,
             patience: 50,
-            generation_size: 100,
+            generation_size: 2000,
             tournament_size: 10,
             num_elite_individuals: 10,
             num_points_per_layer: RandomDistribution::InRange { low: 1., high: 7. },
@@ -476,21 +476,19 @@ impl Default for MaterialStiffnessSettings {
 
 #[derive(Clone, Debug)]
 pub struct SupportSettings {
-    pub primitive_voxel_size: f32,
-    pub merging_voxel_size: f32,
+    pub voxel_size: f32,
     pub beam_radius: f32,
     pub cones_width: f32,
-    pub max_non_empty_cone_radius: f32
+    pub min_cone_thickness_for_hole: f32,
 }
 
 impl Default for SupportSettings {
     fn default() -> Self {
         Self { 
-            merging_voxel_size: 0.1,
-            primitive_voxel_size: 0.3,
+            voxel_size: 0.3,
             beam_radius: 1.5,
             cones_width: 0.6,
-            max_non_empty_cone_radius: 3.
+            min_cone_thickness_for_hole: 2.
         }
     }
 }

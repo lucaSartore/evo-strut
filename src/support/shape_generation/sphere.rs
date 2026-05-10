@@ -1,7 +1,7 @@
-use anyhow::anyhow;
-use baby_shark::io::Builder;
+use anyhow::{ anyhow, Result };
+use baby_shark::{io::Builder, mesh::corner_table::CornerTableF, voxel::volume::Volume};
 
-use crate::{models::Point, support::shape_generation::{ShapeGenerator, builder_wrapper::BuilderWrapper}};
+use crate::{models::Point, support::shape_generation::{ShapeGenerator, builder_wrapper::BuilderWrapper, to_volumes}};
 
 pub struct Sphere {
     pub center: Point,
@@ -14,23 +14,20 @@ impl Sphere {
 }
 
 
-impl<TMesh> ShapeGenerator<TMesh> for Sphere
-where
-    TMesh: Builder<Mesh = TMesh, Scalar = f32>,
-{
-    fn build(&self, vertex_size: f32) -> anyhow::Result<TMesh> {
+impl ShapeGenerator for Sphere {
+    fn build(&self, voxel_size: f32) -> Result<Volume> {
         if self.radius <= 0. {
             return Err(anyhow!("Sphere radius must be positive"));
         }
-        if vertex_size <= 0. {
-            return Err(anyhow!("Vertex size must be positive"));
+        if voxel_size <= 0. {
+            return Err(anyhow!("voxel size must be positive"));
         }
 
-        let mut builder = BuilderWrapper::new(TMesh::builder_indexed(), self.center);
-        let latitude_segments = ((std::f32::consts::PI * self.radius) / vertex_size)
+        let mut builder = BuilderWrapper::new(CornerTableF::builder_indexed(), self.center);
+        let latitude_segments = ((std::f32::consts::PI * self.radius) / voxel_size)
             .ceil()
             .max(2.) as usize;
-        let longitude_segments = ((2. * std::f32::consts::PI * self.radius) / vertex_size)
+        let longitude_segments = ((2. * std::f32::consts::PI * self.radius) / voxel_size)
             .ceil()
             .max(3.) as usize;
 
@@ -85,6 +82,8 @@ where
             builder.add_face(last_ring[longitude], bottom, last_ring[next_longitude])?;
         }
 
-        builder.finish()
+        let mesh = builder.finish()?;
+
+        to_volumes(&mesh, voxel_size)
     }
 }

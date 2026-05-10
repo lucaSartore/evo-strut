@@ -1,11 +1,11 @@
-use std::{ops::Deref, path::Path, sync::Arc};
+use std::{path::Path, sync::Arc};
 
 use anyhow::{Result, anyhow};
-use baby_shark::{io::write_to_file, mesh::{corner_table::CornerTableF, polygon_soup::data_structure::PolygonSoup}, voxel::prelude::MeshToVolume};
+use baby_shark::io::write_to_file;
 
 use crate::{
     models::{Point, SupportSettings, SurfaceGraph}, stages::{
-        MeshExportedState, Pipeline, PipelineBehaviourTrait, SupportStructureRefinedState, support_structure_refinement::{ContactNode, SupportNode, SupportNodeId, SupportStructureGene, evaluation::logic::genome_to_graph_descriptor}, visualization::visualize_mesh
+        MeshExportedState, Pipeline, PipelineBehaviourTrait, SupportStructureRefinedState, support_structure_refinement::{ContactNode, SupportNode, SupportNodeId, SupportStructureGene, evaluation::logic::genome_to_graph_descriptor}, visualization::visualize_final_supports
     }, support::shape_generation::{Circle, ShapeFactory, Sphere, TruncatedCone}
 };
 
@@ -59,19 +59,31 @@ impl ExportingStage {
     }
 
     fn add_beam(builder: &mut ShapeFactory, a: Point, b: Point, settings: &SupportSettings) {
-        let versor = (a - b).as_versor();
+        let (point_bottom, point_top) = if (a.z < b.z) {
+            (a, b)
+        } else {
+            (b, a)
+        };
+
+        let versor = (point_top - point_bottom).as_versor();
         let radius = settings.beam_radius;
-        let bottom = Circle::new(a, radius, versor);
-        let top = Circle::new(b, radius, versor);
-        let cone = TruncatedCone::new(bottom, top);
-        let sphere_a = Sphere::new(a, radius);
-        let sphere_b = Sphere::new(b, radius);
+
+        let bottom_too_close_to_ground = point_bottom.z <= radius;
+        let top_too_close_to_ground = point_top.z <= radius;
+
+        let circle_bottom = Circle::new(point_bottom, radius, if bottom_too_close_to_ground { Point::UPWARD } else { versor });
+        let circle_top = Circle::new(point_top, radius, if top_too_close_to_ground { Point::UPWARD } else { versor });
+
+        let cone = TruncatedCone::new(circle_bottom, circle_top, 10e9, 10e9);
         builder.add_positive_shape(cone);
-        if sphere_a.center.z > 0. {
-            builder.add_positive_shape(sphere_a);
+
+        if !top_too_close_to_ground {
+            let sphere = Sphere::new(point_top, radius);
+            builder.add_positive_shape(sphere);
         }
-        if sphere_b.center.z > 0. {
-            builder.add_positive_shape(sphere_b);
+        if !bottom_too_close_to_ground {
+            let sphere = Sphere::new(point_bottom, radius);
+            builder.add_positive_shape(sphere);
         }
     }
 
@@ -79,17 +91,15 @@ impl ExportingStage {
         let versor = (cone_top - cone_base).as_versor();
         let base_radius = settings.beam_radius;
 
-        let bottom = Circle::new(cone_base, base_radius, versor);
+        let bottom_versor = if cone_base.z < base_radius {
+            Point::UPWARD
+        } else {
+            versor
+        };
+        let bottom = Circle::new(cone_base, base_radius, bottom_versor);
         let top = Circle::new(cone_top, radius_top, Point::UPWARD);
-        let cone = TruncatedCone::new(bottom, top);
+        let cone = TruncatedCone::new(bottom, top, settings.cones_width, settings.min_cone_thickness_for_hole);
         builder.add_positive_shape(cone);
-
-        if radius_top > settings.max_non_empty_cone_radius {
-            let bottom = Circle::new(cone_base, 1e-4, versor);
-            let top = Circle::new(cone_top + versor.to_scaled(0.01), radius_top - settings.cones_width, Point::UPWARD);
-            let cone = TruncatedCone::new(bottom, top);
-            builder.add_negative_shape(cone);
-        }
     }
 }
 
@@ -109,19 +119,20 @@ impl ExportingStage
             .iter()
             .for_each(|s| Self::add_support_structure(&mut builder, s, support_settings));
 
-        let volume = MeshToVolume::default()
-            .with_voxel_size(support_settings.primitive_voxel_size)
-            .convert(&input.state.graph.mesh.original)
-            .ok_or(anyhow!("fail in creation of volume"))?;
-        let volume = volume.offset(3.);
-        builder.add_negative_volume(volume);
+        // cutting out the mesh we are printing from the area of supports
+        // let volume = MeshToVolume::default()
+        //     .with_voxel_size(support_settings.voxel_size)
+        //     .convert(&input.state.graph.mesh.original)
+        //     .ok_or(anyhow!("fail in creation of volume"))?;
+        // let volume = volume.offset(3.);
+        // builder.add_negative_volume(volume);
 
         let mesh = builder.build(settings)?;
         let path = &settings.io_settings.output_file_path;
 
         let mesh_rc = Arc::new(mesh.clone().into());
         let graph = SurfaceGraph::new(&mesh_rc);
-        visualize_mesh(&graph, "output mesh", None).unwrap();
+        visualize_final_supports(&graph, &input.state.graph)?;
 
         write_to_file(&mesh, Path::new(path))
             .map_err(|e| anyhow!("unable to export file: {e:?}"))?;
