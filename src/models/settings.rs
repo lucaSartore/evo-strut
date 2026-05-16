@@ -355,9 +355,9 @@ pub struct SupportStructureOptimizationSettings {
 impl Default for SupportStructureOptimizationSettings {
     fn default() -> Self {
         Self {
-            num_generations: 20,
+            num_generations: 2000,
             patience: 50,
-            generation_size: 2000,
+            generation_size: 100,
             tournament_size: 10,
             num_elite_individuals: 10,
             num_points_per_layer: RandomDistribution::InRange { low: 1., high: 7. },
@@ -483,19 +483,20 @@ pub struct SupportSettings {
     pub base_cylinder_radius: f32,
     pub base_cylinder_height: f32,
     pub min_cone_radius: f32,
-
+    pub support_detachment: f32
 }
 
 impl Default for SupportSettings {
     fn default() -> Self {
         Self { 
-            voxel_size: 0.3,
-            beam_radius: 2.,
+            voxel_size: 0.2,
+            beam_radius: 1.5,
             cone_thickness: 0.6,
             min_cone_thickness_for_hole: 0.1,
             base_cylinder_radius: 5.,
             base_cylinder_height: 1.,
-            min_cone_radius: 1.
+            min_cone_radius: 1.,
+            support_detachment: 0.2
         }
     }
 }
