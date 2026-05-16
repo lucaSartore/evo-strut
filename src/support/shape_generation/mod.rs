@@ -10,8 +10,6 @@ pub use sphere::Sphere;
 mod builder_wrapper;
 
 use crate::models::{Settings, SupportSettings};
-#[cfg(test)]
-pub mod test;
 
 pub struct ShapeFactory
 {
