@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::Add};
+use std::{fmt::Display, ops::{Add, Sub}};
 
 use log::{self, warn};
 
@@ -55,5 +55,13 @@ impl Add<Cost> for Cost {
 
     fn add(self, rhs: Cost) -> Self::Output {
         Cost::new(self.cost + rhs.cost)
+    }
+}
+
+impl Sub<Cost> for Cost {
+    type Output = Cost;
+
+    fn sub(self, rhs: Cost) -> Self::Output {
+        Cost::new(self.cost - rhs.cost)
     }
 }
