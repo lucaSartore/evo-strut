@@ -873,8 +873,6 @@ checksum = "be5eb007b7cacc6c660343e96f650fedf4b5a77512399eb952ca6642cf8d13f7"
 [[package]]
 name = "baby_shark"
 version = "0.3.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87e571b4113b875db68f8a7fe7f7dbb11f4294fbef7e37754b9a8b327f5f9b6f"
 dependencies = [
  "bitflags 2.11.0",
  "faer",

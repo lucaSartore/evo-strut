@@ -12,7 +12,7 @@ rand = "0.10.0"
 log = "0.4.29"
 env_logger = "0.11.9"
 smallvec = "1.15.1"
-baby_shark = "0.3.12"
+baby_shark = { path = "./src/support/baby_shark/" }
 nalgebra = "0.34.1"
 rand_distr = "0.6.0"
 # apparently raw access to hashmap's table has being removed
