@@ -25,7 +25,7 @@ pub struct Settings {
     /// support structure.
     pub support_structure_refinement_settings: SupportStructureRefinementSettings,
     /// settings that define how the support structure is generated
-    pub support_settings: SupportSettings
+    pub support_settings: SupportSettings,
 }
 
 #[derive(Debug, Clone)]
@@ -48,7 +48,7 @@ pub struct CriticalitySettings {
 impl Default for CriticalitySettings {
     fn default() -> Self {
         Self {
-            support_overhanging_angle: 60.,
+            support_overhanging_angle: 55.,
             max_detachment_from_z_plane: 0.1,
             criticality_expansion_rate: 1.,
         }
@@ -79,7 +79,7 @@ impl Default for IoSettings {
             // input_file_path: "test_meshes/inclination_test_re_meshed.stl".into(),
             input_file_path: "test_meshes/dragon_re_meshed.stl".into(),
             re_meshed_input_file_path: None,
-            output_file_path: "output.stl".into(),
+            output_file_path: "test_meshes/output.stl".into(),
             target_edge_length: 0.,
         }
     }
@@ -125,9 +125,21 @@ pub struct ContactPointsOptimizationSettings {
     pub layer_height: f32,
 
     /// when propagating the cost surplus (using cost_surplus_propagation_factor)
-    /// the if the critical angle's absolute is higher than this threshold
+    /// the if the critical angle is higher than this threshold
     /// it will be clipped (to avoid having criticality that are too high)
-    pub critical_angle_clipping_factor: f32,
+    pub critical_angle_clipping_factor_up: f32,
+    /// when propagating the cost surplus (using cost_surplus_propagation_factor)
+    /// the if the critical angle is lower than this threshold
+    /// it will be clipped (to avoid having criticality recover too quickly)
+    pub critical_angle_clipping_factor_down: f32,
+
+    /// when propagating the cost, this value will be use to average two factors:
+    /// the support given by the contact points
+    /// the criticality / costs that surfaces have when no supports are applied.
+    ///
+    /// if set to zero, only the first one will be kept in to consideration,
+    /// meaning that one support will be considered "infinitely rigid"
+    pub soft_cost_propagation_factor: f32,
 
     /// the density of support initially used
     /// unit of measure: 1/mm^2
@@ -173,12 +185,14 @@ pub struct ContactPointsOptimizationSettings {
 impl Default for ContactPointsOptimizationSettings {
     fn default() -> Self {
         Self {
-            cost_surplus_propagation_factor: 10.,
-            support_point_cost: 500.0,
-            support_area_cost: 50.0,
-            non_supported_base_cost: 1000.0,
+            cost_surplus_propagation_factor: 4.,
+            support_point_cost: 800.0,
+            support_area_cost: 60.0,
+            non_supported_base_cost: 2500.0,
             layer_height: 1.,
-            critical_angle_clipping_factor: 5.,
+            critical_angle_clipping_factor_up: 20.,
+            critical_angle_clipping_factor_down: 2.5,
+            soft_cost_propagation_factor: 0.03,
             initialization_support_density: RandomDistribution::InRange {
                 low: 0.003,
                 high: 0.0031,
