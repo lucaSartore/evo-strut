@@ -1,3 +1,3 @@
 [submodule "src/support/baby_shark"]
 	path = src/support/baby_shark
-	url = https://github.com/lucaSartore/baby_shark
+	url = git@github.com:lucaSartore/baby_shark.git
