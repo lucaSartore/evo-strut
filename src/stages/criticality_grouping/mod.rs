@@ -148,7 +148,10 @@ impl DistanceBasedCriticalityGrouper {
 
             while let Some(e) = to_visit.pop() {
                 visited.insert(e);
-                area.push(e);
+                let triangle = graph.get_triangle(e);
+                if !triangle.is_facing_upward() {
+                    area.push(e);
+                }
 
                 graph
                     .iter_adjacent(e)

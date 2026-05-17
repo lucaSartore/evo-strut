@@ -109,7 +109,7 @@ impl EvaluatedLayer {
         let mut e = Self {
             triangles: current_layer
                 .iter()
-                .filter(|x| known_costs.cost_of(**x).is_none())
+                .filter(|x| known_costs.is_cost_unknown_or_non_zero(**x))
                 .map(|x| {
                     (
                         *x,
@@ -151,44 +151,20 @@ impl EvaluatedLayer {
         let angle_difference = (angle_threshold - angle).clamp(
             -settings
                 .contact_points_optimization_settings
-                .critical_angle_clipping_factor,
+                .critical_angle_clipping_factor_down,
             settings
                 .contact_points_optimization_settings
-                .critical_angle_clipping_factor,
+                .critical_angle_clipping_factor_up,
         );
 
         let c = propagation_factor * distance * angle_difference;
         Cost::new(c)
     }
-    // fn evaluate_cost_surplus(from: &Triangle<'_>, to: &Triangle<'_>, settings: &Settings) -> Cost {
-    //     let from_center = from.center();
-    //     let to_center= to.center();
-    //     let distance = (from_center - to_center).abs();
-    //     let propagation_factor = settings.contact_points_optimization_settings.cost_surplus_propagation_factor;
-    //
-    //     // if triangles are UPWARD facing id does not matter the inclination...
-    //     // they are never critical.
-    //     let angle_to = Point::angle_between(&Point::UPWARD, &to.normal()).to_degrees();
-    //     let angle_from = Point::angle_between(&Point::UPWARD, &from.normal()).to_degrees();
-    //     if angle_to < 90. || angle_from < 90. {
-    //         return Cost::new(-propagation_factor * distance * 90.)
-    //     }
-    //
-    //     let angle = if to_center.z <= from_center.z + f32::EPSILON {
-    //         0.
-    //     } else {
-    //         Point::horizon_angle(from_center, to_center).to_degrees()
-    //     }.clamp(0., 90.);
-    //     // 0 => nothing is supported; 90 => everything is supported
-    //     let angle_threshold = 90. - settings.criticality_settings.support_overhanging_angle;
-    //
-    //     // is positive if cost should increase, negative if cost should decrease
-    //     let angle_difference = angle_threshold - angle;
-    //
-    //     let c = propagation_factor * distance * angle_difference;
-    //     Cost::new(c)
-    // }
 
+    // fill the base cost of every triangle in a layer.
+    // the cost is filled up as follow:
+    //  - if any adjacent triangle have a known cost, then the cost will be that + the cost surplus
+    //  - otherwise we will set it to the cost of an unsupported triangle
     fn fill_base_cost<T>(&mut self, graph: &SurfaceGraph, known_costs: &T, settings: &Settings)
     where
         T: KnownCosts,
@@ -199,7 +175,11 @@ impl EvaluatedLayer {
             t.base_cost = graph
                 .iter_adjacent(this.index)
                 .filter(|x| x.center().layer(settings) <= this_layer)
-                .flat_map(|x| known_costs.cost_of(x.index))
+                .flat_map(|x| {
+                    let known_cost = known_costs.cost_of(x.index)?;
+                    let surplus_cost = Self::evaluate_cost_surplus(&this, &x, settings);
+                    Some((known_cost + surplus_cost).max(Cost::ZERO))
+                })
                 .min()
                 .unwrap_or(Cost::new(
                     settings
@@ -262,10 +242,14 @@ impl EvaluatedLayer {
         }
     }
 
+    /// evaluate the nodes in one layer by propagating the cost factor nodes by node.
+    /// the cost of a node N1 adjacent to node N2 will be:
+    ///  - cost(N2) + surplus_cost(N2, N1) + soft_cost_propagation_factor * base_cost(N1) * area(N1)
     pub fn evaluate(
         &self,
         costs: &mut HashMap<FaceId, CostWithArea>,
         is_supported: &impl Fn(FaceId) -> bool,
+        soft_cost_propagation_factor: f32
     ) {
         let mut to_evaluate = self.triangles.len();
         let mut queue = BinaryHeap::new();
@@ -312,7 +296,12 @@ impl EvaluatedLayer {
                 .expect("triangle should always be found");
             for n in &triangle.same_layer_neighbors {
                 let neighbor_recursive_cost =
-                    (popped.value + n.cost_surplus_forward).max(Cost::ZERO);
+                    (
+                        popped.value +
+                        n.cost_surplus_forward +
+                        Cost::new(self.triangles[&n.id].base_cost.as_f32() * soft_cost_propagation_factor * triangle.area)
+                    ).max(Cost::ZERO);
+                    
                 let neighbor_current_cost = *id_to_current_cost.get(&n.id).unwrap_or(&Cost::MAX);
                 if neighbor_recursive_cost < neighbor_current_cost {
                     _ = id_to_current_cost.insert(n.id, neighbor_recursive_cost);
@@ -325,6 +314,12 @@ impl EvaluatedLayer {
 
 pub trait KnownCosts {
     fn cost_of(&self, id: FaceId) -> Option<Cost>;
+    fn is_cost_unknown_or_non_zero(&self, id: FaceId) -> bool {
+        match self.cost_of(id) {
+            None => true,
+            Some(c) => c > Cost::ZERO
+        }
+    }
 }
 
 pub struct PropagationEvaluator<'a, T>
@@ -363,7 +358,7 @@ where
         let layers = self
             .area
             .iter()
-            .filter(|x| self.known_costs.cost_of(**x).is_none())
+            .filter(|x| self.known_costs.is_cost_unknown_or_non_zero(**x))
             .copied()
             .map(|x| {
                 let p = self.graph.get_triangle(x).center();
@@ -393,10 +388,11 @@ where
     pub fn evaluate(
         &self,
         is_supported: &impl Fn(FaceId) -> bool,
+        soft_cost_propagation_factor: f32
     ) -> HashMap<FaceId, CostWithArea> {
         let mut costs = HashMap::new();
         for l in &self.layers {
-            l.evaluate(&mut costs, is_supported);
+            l.evaluate(&mut costs, is_supported, soft_cost_propagation_factor);
         }
         costs
     }

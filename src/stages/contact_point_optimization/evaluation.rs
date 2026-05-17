@@ -1,5 +1,6 @@
 use crate::models::MeshId;
 use crate::models::MeshVector;
+use crate::stages::criticality_detection::PropagationBasedCriticalityDetector;
 use crate::stages::criticality_detection::propagation::*;
 use crate::{
     evolution::{Cost, Evaluator},
@@ -37,22 +38,24 @@ impl<'a> ContactPointEvaluatorSettings<'a> {
     }
 }
 
-pub struct CriticalBasedKnownCosts<'a> {
-    critical: &'a MeshVector<FaceId, bool>,
+pub struct PropagationBasedKnownCosts {
+    costs: HashMap<FaceId, Cost>
 }
-impl<'a> KnownCosts for CriticalBasedKnownCosts<'a> {
+impl PropagationBasedKnownCosts {
+    pub fn new(graph: &SurfaceGraph, settings: &Settings) -> Self {
+        let costs = PropagationBasedCriticalityDetector::calculate_unit_costs(graph, settings);
+        Self { costs }
+    }
+}
+impl KnownCosts for PropagationBasedKnownCosts {
     fn cost_of(&self, id: FaceId) -> Option<Cost> {
-        if self.critical[id] {
-            return None;
-        } else {
-            return Some(Cost::ZERO);
-        }
+        self.costs.get(&id).copied()
     }
 }
 
 pub struct ContactPointEvaluator<'a> {
     graph: &'a SurfaceGraph,
-    propagator: PropagationEvaluator<'a, CriticalBasedKnownCosts<'a>>,
+    propagator: PropagationEvaluator<'a, PropagationBasedKnownCosts>,
     settings: &'a Settings,
     stream: RecordingStream,
 }
@@ -167,7 +170,7 @@ impl<'a> ContactPointEvaluator<'a> {
         gene: &ContactPointsGene,
     ) -> HashMap<FaceId, CostWithArea> {
         let supported = gene.get_supported(self.graph);
-        self.propagator.evaluate(&|x| supported.contains(&x))
+        self.propagator.evaluate(&|x| supported.contains(&x), self.settings.contact_points_optimization_settings.soft_cost_propagation_factor)
     }
 
     pub fn evaluate_support_costs(&self, gene: &ContactPointsGene) -> Cost {
@@ -196,9 +199,7 @@ impl<'a> Evaluator<ContactPointsGene, ContactPointEvaluatorSettings<'a>>
                 settings.graph,
                 settings.settings,
                 settings.area,
-                CriticalBasedKnownCosts {
-                    critical: settings.critical,
-                },
+                PropagationBasedKnownCosts::new(settings.graph, settings.settings)
             ),
         }
     }

@@ -7,8 +7,7 @@ use crate::{
     evolution::Cost,
     models::{FaceId, Point, PointId, Settings, SurfaceGraph, Triangle},
     stages::{
-        criticality_detection::propagation::KnownCosts, CriticalityDetectedState, LoadedState,
-        Pipeline, PipelineBehaviourTrait,
+        CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait, criticality_detection::propagation::{CostWithArea, KnownCosts}
     },
 };
 
@@ -134,24 +133,15 @@ impl PropagationBasedCriticalityDetector {
             .map(|t| t.index)
             .collect()
     }
-}
 
-struct HeightBasedKnownCost<'a> {
-    graph: &'a SurfaceGraph,
-    settings: &'a Settings,
-}
-impl<'a> KnownCosts for HeightBasedKnownCost<'a> {
-    fn cost_of(&self, id: FaceId) -> Option<Cost> {
-        let t = self.graph.get_triangle(id);
-        if is_triangle_close_to_the_ground(&t, self.settings) {
-            return Some(Cost::ZERO);
-        }
-        None
+
+    pub fn calculate_unit_costs(graph: &SurfaceGraph, settings: &Settings) -> HashMap<FaceId, Cost> {
+        Self::calculate_costs(graph, settings)
+            .iter()
+            .map(|(k, v)| (*k, v.unit_cost))
+            .collect()
     }
-}
-
-impl CriticalityDetector for PropagationBasedCriticalityDetector {
-    fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<FaceId> {
+    pub fn calculate_costs(graph: &SurfaceGraph, settings: &Settings) -> HashMap<FaceId, CostWithArea> {
         let known_costs: HashMap<FaceId, Cost> = graph
             .iter_triangles(None)
             .filter(|x| is_triangle_close_to_the_ground(x, settings))
@@ -172,9 +162,27 @@ impl CriticalityDetector for PropagationBasedCriticalityDetector {
         );
 
         let supported = Self::find_concavity(graph);
-        let costs = pm.evaluate(&|x| supported.contains(&x));
+        pm.evaluate(&|x| supported.contains(&x), 0.0)
+    }
+}
 
-        costs
+struct HeightBasedKnownCost<'a> {
+    graph: &'a SurfaceGraph,
+    settings: &'a Settings,
+}
+impl<'a> KnownCosts for HeightBasedKnownCost<'a> {
+    fn cost_of(&self, id: FaceId) -> Option<Cost> {
+        let t = self.graph.get_triangle(id);
+        if is_triangle_close_to_the_ground(&t, self.settings) {
+            return Some(Cost::ZERO);
+        }
+        None
+    }
+}
+
+impl CriticalityDetector for PropagationBasedCriticalityDetector {
+    fn detect_criticality(graph: &SurfaceGraph, settings: &Settings) -> Vec<FaceId> {
+        Self::calculate_costs(graph, settings)
             .iter()
             .filter(|(_, c)| c.unit_cost != Cost::ZERO)
             .map(|(k, _)| *k)

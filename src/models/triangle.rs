@@ -124,6 +124,10 @@ impl Triangle<'_> {
         // by the current triangle
         v1.z - (n.x * (x - v1.x) + n.y * (y - v1.y)) / n.z
     }
+
+    pub fn is_facing_upward(&self) -> bool {
+        Point::dot(self.normal(), Point::UPWARD) > 0.
+    }
 }
 
 impl<'a> From<Triangle<'a>> for TriangleIndices {
