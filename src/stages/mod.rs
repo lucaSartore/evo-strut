@@ -211,6 +211,7 @@ where
             ContactPointOptimizationStage::<TB>::execute(p)
         )?;
         timed!("visualizing", VisualizationStage::visualize(&p))?;
+        // return Ok(());
         let p = timed!(
             "contact_points_grouping",
             ContactPointsGroupingStage::<TB>::execute(p)

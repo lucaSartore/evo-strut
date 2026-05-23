@@ -162,7 +162,7 @@ impl PropagationBasedCriticalityDetector {
         );
 
         let supported = Self::find_concavity(graph);
-        pm.evaluate(&|x| supported.contains(&x), 0.0)
+        pm.evaluate(&|x| supported.contains(&x), 0.0, &|_| Cost::ZERO)
     }
 }
 

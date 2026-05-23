@@ -1,5 +1,6 @@
 use crate::models::MeshId;
 use crate::models::MeshVector;
+use crate::stages::contact_point_optimization::evaluation::additional_cost::AdditionalCosts;
 use crate::stages::criticality_detection::PropagationBasedCriticalityDetector;
 use crate::stages::criticality_detection::propagation::*;
 use crate::{
@@ -12,6 +13,8 @@ use hashbrown::HashMap;
 use rerun::external::glam::usize;
 use rerun::RecordingStream;
 use std::collections::HashSet;
+
+mod additional_cost;
 
 pub struct ContactPointEvaluatorSettings<'a> {
     pub graph: &'a SurfaceGraph,
@@ -169,8 +172,22 @@ impl<'a> ContactPointEvaluator<'a> {
         &self,
         gene: &ContactPointsGene,
     ) -> HashMap<FaceId, CostWithArea> {
+        let s = &self.settings.contact_points_optimization_settings;
+        let points = gene.iter_contacts().map(|x| self.graph.get_triangle(*x.0).center());
+        let additional_costs = AdditionalCosts::new(
+            points,
+            s.additional_cost_multiplier,
+            s.additional_cost_divisor_size,
+            s.additional_cost_max_distance,
+            s.additional_cost_num_points
+        );
+
         let supported = gene.get_supported(self.graph);
-        self.propagator.evaluate(&|x| supported.contains(&x), self.settings.contact_points_optimization_settings.soft_cost_propagation_factor)
+        self.propagator.evaluate(
+            &|x| supported.contains(&x),
+            s.soft_cost_propagation_factor,
+            &|x| additional_costs.evaluate(x)
+        )
     }
 
     pub fn evaluate_support_costs(&self, gene: &ContactPointsGene) -> Cost {

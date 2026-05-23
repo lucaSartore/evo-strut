@@ -180,6 +180,30 @@ pub struct ContactPointsOptimizationSettings {
     pub tournament_size: usize,
     /// number of individual generated/evaluated in every generation
     pub num_elite_individuals: usize,
+    /// additional cost that is added to the cost of every
+    /// vertex being unsupported.
+    /// the cost is calculated as such:
+    ///  - given a vertex V in position B
+    ///  - find the N = `num_points` closest supported points
+    ///  - calculate the euclidean distance, (with a upper threshold of `max_distance`)
+    ///  - calculate the `parallel_distance` = 1 / [ 1 / distance(i) for i in 0..N]
+    ///     > formula inspired to the resistance in parallel, that give less cost
+    ///       if a point is completely surrounded by supports
+    ///  - returns the cost as `parallel_distance` * `multiplier`
+    /// unit of measure: [cost / mm]
+    pub additional_cost_multiplier: f32,
+    /// when evaluating the closest points using a k-d tree, points are put in to
+    /// buckets of size `divisor_isize`.
+    /// this helps the program with cashing, and thus make it faster.
+    /// A bigger value means less precision, but more cashing.
+    /// unit of measure: mm
+    pub additional_cost_divisor_size: f32,
+    /// max distance (see description of `additional_cost_multiplier`)
+    /// unit of measure: mm
+    pub additional_cost_max_distance: f32,
+    /// num points (see description of `additional_cost_multiplier`)
+    /// unit of measure: [u]
+    pub additional_cost_num_points: usize,
 }
 
 impl Default for ContactPointsOptimizationSettings {
@@ -206,6 +230,10 @@ impl Default for ContactPointsOptimizationSettings {
             generation_size: 100,
             tournament_size: 10,
             num_elite_individuals: 10,
+            additional_cost_multiplier: 50.,
+            additional_cost_divisor_size: 2.5,
+            additional_cost_max_distance: 20.,
+            additional_cost_num_points: 10
         }
     }
 }

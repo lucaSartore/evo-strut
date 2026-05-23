@@ -9,7 +9,7 @@ mod settings;
 pub use settings::{IoSettings, MaterialStiffnessSettings, Settings, SupportSettings};
 
 mod point;
-pub use point::Point;
+pub use point::{Point, PointI};
 
 mod triangle;
 pub use triangle::Triangle;

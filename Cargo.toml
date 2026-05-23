@@ -18,3 +18,4 @@ rand_distr = "0.6.0"
 # apparently raw access to hashmap's table has being removed
 # in the next versions.
 hashbrown = { version = "0.14.2", features = [ "raw" ] }
+kdtree = "0.8.0"

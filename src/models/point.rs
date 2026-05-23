@@ -17,6 +17,8 @@ pub struct Point {
     pub z: f32,
 }
 
+
+
 impl Eq for Point {}
 impl Hash for Point {
     fn hash<H>(&self, state: &mut H)
@@ -239,5 +241,32 @@ impl From<Matrix<f32, Const<3>, Const<1>, ArrayStorage<f32, 3, 1>>> for Point {
 impl From<Point> for rerun::Vec3D {
     fn from(value: Point) -> Self {
         rerun::Vec3D::new(value.x, value.y, value.z)
+    }
+}
+
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PointI {
+    pub x: i32,
+    pub y: i32,
+    pub z: i32,
+}
+
+impl PointI {
+    pub fn new(point: Point, divisor: f32) -> Self {
+        Self {
+            x: (point.x / divisor) as i32,
+            y: (point.y / divisor) as i32,
+            z: (point.z / divisor) as i32
+        }
+    }
+
+
+    pub fn to_float(&self, multiplier: f32) -> Point {
+        Point {
+            x: (self.x as f32 * multiplier),
+            y: (self.y as f32 * multiplier),
+            z: (self.z as f32 * multiplier)
+        }
     }
 }

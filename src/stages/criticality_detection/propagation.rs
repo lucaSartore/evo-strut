@@ -90,14 +90,15 @@ struct EvaluatedTriangle {
     pub area: f32,
 }
 
-struct EvaluatedLayer {
+struct EvaluatedLayer<'a> {
     /// list of the triangles part of this layer
     triangles: HashMap<FaceId, EvaluatedTriangle>,
+    graph: &'a SurfaceGraph
 }
 
-impl EvaluatedLayer {
+impl<'a> EvaluatedLayer<'a> {
     pub fn new<T>(
-        graph: &SurfaceGraph,
+        graph: &'a SurfaceGraph,
         known_costs: &T,
         current_layer: &[FaceId],
         in_below_layers: &HashSet<FaceId>,
@@ -107,6 +108,7 @@ impl EvaluatedLayer {
         T: KnownCosts,
     {
         let mut e = Self {
+            graph,
             triangles: current_layer
                 .iter()
                 .filter(|x| known_costs.is_cost_unknown_or_non_zero(**x))
@@ -249,7 +251,8 @@ impl EvaluatedLayer {
         &self,
         costs: &mut HashMap<FaceId, CostWithArea>,
         is_supported: &impl Fn(FaceId) -> bool,
-        soft_cost_propagation_factor: f32
+        soft_cost_propagation_factor: f32,
+        additional_cost: &impl Fn(Point) -> Cost
     ) {
         let mut to_evaluate = self.triangles.len();
         let mut queue = BinaryHeap::new();
@@ -280,11 +283,12 @@ impl EvaluatedLayer {
             if costs.contains_key(&popped.id) {
                 continue;
             }
+            let point = self.graph.get_triangle(popped.id).center();
             // adding the point to the known costs
             to_evaluate -= 1;
             // _ = costs.insert(popped.id, popped.cost.times(self.triangles[&popped.id].area));
             let cwa = CostWithArea {
-                unit_cost: popped.value,
+                unit_cost: popped.value + additional_cost(point),
                 area: self.triangles[&popped.id].area,
             };
             _ = costs.insert(popped.id, cwa);
@@ -330,7 +334,7 @@ where
     settings: &'a Settings,
     pub area: &'a [FaceId],
     pub known_costs: T,
-    layers: Vec<EvaluatedLayer>,
+    layers: Vec<EvaluatedLayer<'a>>,
 }
 
 impl<'a, T> PropagationEvaluator<'a, T>
@@ -388,11 +392,12 @@ where
     pub fn evaluate(
         &self,
         is_supported: &impl Fn(FaceId) -> bool,
-        soft_cost_propagation_factor: f32
+        soft_cost_propagation_factor: f32,
+        additional_cost: &impl Fn(Point) -> Cost
     ) -> HashMap<FaceId, CostWithArea> {
         let mut costs = HashMap::new();
         for l in &self.layers {
-            l.evaluate(&mut costs, is_supported, soft_cost_propagation_factor);
+            l.evaluate(&mut costs, is_supported, soft_cost_propagation_factor, additional_cost);
         }
         costs
     }
