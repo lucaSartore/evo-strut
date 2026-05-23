@@ -161,7 +161,9 @@ impl DistanceBasedCriticalityGrouper {
                     });
             }
 
-            to_return.push(area);
+            if !area.is_empty() {
+                to_return.push(area);
+            }
         }
 
         to_return
