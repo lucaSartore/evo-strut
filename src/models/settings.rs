@@ -185,7 +185,7 @@ pub struct ContactPointsOptimizationSettings {
 impl Default for ContactPointsOptimizationSettings {
     fn default() -> Self {
         Self {
-            cost_surplus_propagation_factor: 4.,
+            cost_surplus_propagation_factor: 2.5,
             support_point_cost: 800.0,
             support_area_cost: 60.0,
             non_supported_base_cost: 2500.0,
@@ -478,9 +478,9 @@ pub struct MaterialStiffnessSettings {
 impl Default for MaterialStiffnessSettings {
     fn default() -> Self {
         Self {
-            area: 4.0,
-            e_mod: 3000.0,
-            g_mod: 1000.0,
+            area: 7.0,
+            e_mod: 1500.0,
+            g_mod: 500.0,
             jxx: 6.0,
             iy: 3.0,
             iz: 3.0,
