@@ -66,6 +66,7 @@ impl SimpleSupportStructureOptimizer {
         group: &'a SupportGroup,
     ) -> Result<SupportGroup> {
         let settings = &status.settings;
+        let mesh = &status.graph.mesh.original;
         let graph = &status.graph;
         let s = &settings.support_structure_optimization_settings;
 
@@ -93,7 +94,7 @@ impl SimpleSupportStructureOptimizer {
                 max_generations: s.num_generations,
                 patience: s.patience,
             },
-            &SupportStructureEvaluatorSettings::new(settings, graph),
+            &SupportStructureEvaluatorSettings::new(settings, graph, mesh),
             &TournamentBasedCrossoverSelectionSettings {
                 k: s.tournament_size,
             },

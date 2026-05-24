@@ -1,4 +1,4 @@
-use crate::models::MaterialStiffnessSettings;
+use crate::{models::MaterialStiffnessSettings, stages::{contact_points_grouping, support_structure_refinement::evaluation::graph::Neighbor}};
 use hashbrown::HashMap;
 use smallvec::{smallvec, SmallVec};
 
@@ -279,20 +279,47 @@ fn evaluate_stiffness_cost(
     Cost::new(cost)
 }
 
-pub fn evaluate_cost(gene: &SupportStructureGene, settings: &Settings) -> Cost {
+fn evaluate_collision_cost(descriptor: &GraphDescriptor, volume: &Volume, settings: &Settings) -> Cost {
+    let mut cost = 0.;
+    let s = &settings.support_structure_refinement_settings;
+    let interval_distance = s.collision_check_intervals;
+    let collision_cost = s.collision_penalization;
+    for (node_id, neighbors) in descriptor.edges.iter() {
+        let node = descriptor.positions[node_id];
+        for neighbor_id in neighbors.iter().filter(|x| *x < node_id) {
+            let neighbor = descriptor.positions[neighbor_id];
+            let interpolation = Point::interpolate(node, neighbor, interval_distance);
+            if interpolation.len() < 2 {
+                continue;
+            }
+            let distance = (interpolation[0] - interpolation[1]).abs();
+            for p in interpolation {
+                if volume.is_inside(Into::<[f32;3]>::into(p)) {
+                    cost += distance * collision_cost;
+                }
+            }
+        }
+    }
+    Cost::new(cost)
+}
+
+pub fn evaluate_cost(gene: &SupportStructureGene, volume: &Volume, settings: &Settings) -> Cost {
     let descriptor = genome_to_graph_descriptor(gene);
     let cone_cost = evaluate_cones_cost(gene, &descriptor, settings);
     let steepness_cost = evaluate_steepness_cost(&descriptor, settings);
     let length_cost = evaluate_length_cost(&descriptor, settings);
     let stiffness_cost = evaluate_stiffness_cost(gene, &descriptor, settings);
+    let collision_cost = evaluate_collision_cost(&descriptor, volume, settings);
 
     // println!(
-    //     "cone_cost: {}, steepness_cost: {}, length_cost: {}, stiffness_cost: {}",
+    //     "cone_cost: {}, steepness_cost: {}, length_cost: {}, stiffness_cost: {}, collision_cost: {}",
     //     cone_cost.as_f32(),
     //     steepness_cost.as_f32(),
     //     length_cost.as_f32(),
-    //     stiffness_cost.as_f32()
+    //     stiffness_cost.as_f32(),
+    //     collision_cost.as_f32()
     // );
 
-    cone_cost + steepness_cost + length_cost + stiffness_cost
+    cone_cost + steepness_cost + length_cost + stiffness_cost + collision_cost
 }
+

@@ -469,6 +469,24 @@ pub struct SupportStructureRefinementSettings {
     /// cost of a node that is not stiff at all
     /// unit of measure: cost
     pub max_non_stiffness_cost: f32,
+    /// the voxel size of the volume that will be used
+    /// to check collisions (to avoid supports intersecting
+    /// with the mesh)
+    /// unit of measure: mm
+    pub collision_volume_voxel_size: f32,
+    /// how much to expand the collision detection volume
+    /// (this function as a safety margin)
+    /// unit of measure: mm
+    pub collision_volume_offset: f32,
+    /// how often to check for a collision.
+    /// example, if a beam is 10mm long, and the interval
+    /// is 2mm, 6 checks will be performed (10/2+1) at equally
+    /// sampled distance
+    /// unit of measure: mm
+    pub collision_check_intervals: f32,
+    /// cost of a collision, per unit of length
+    /// unit of measure: cost / mm
+    pub collision_penalization: f32
 }
 
 impl Default for SupportStructureRefinementSettings {
@@ -489,6 +507,10 @@ impl Default for SupportStructureRefinementSettings {
             material_stiffness_settings: MaterialStiffnessSettings::default(),
             node_position_mutation_std: 3.0,
             max_non_stiffness_cost: 1e7,
+            collision_volume_voxel_size: 3.,
+            collision_volume_offset: 3.,
+            collision_check_intervals: 2.,
+            collision_penalization: 200.
         }
     }
 }

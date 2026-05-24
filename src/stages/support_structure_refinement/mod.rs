@@ -69,6 +69,7 @@ impl SupportStructureRefiner for SimpleSupportStructureRefiner {
         debug!("starting optimization for structure {structure_index}");
         let settings = &status.settings;
         let graph = &status.graph;
+        let mesh = &status.graph.mesh.original;
         let s = &settings.support_structure_refinement_settings;
         let structure = &status.support_structures[structure_index];
 
@@ -96,7 +97,7 @@ impl SupportStructureRefiner for SimpleSupportStructureRefiner {
                 max_generations: s.num_generations,
                 patience: s.patience,
             },
-            &SupportStructureEvaluatorSettings::new(settings, graph),
+            &SupportStructureEvaluatorSettings::new(settings, graph, mesh),
             &TournamentBasedCrossoverSelectionSettings {
                 k: s.tournament_size,
             },
