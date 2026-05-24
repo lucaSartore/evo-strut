@@ -4,7 +4,7 @@ use crate::{
     stages::{
         contact_point_optimization::ContactPointsGene,
         contact_points_grouping::models::ContactPointGroupingGene,
-    },
+    }, support::convex_hull_3d::ConvexHull3D,
 };
 use crate::{stages::visualization::Color, support::convex_hull::ConvexHull};
 use rerun::RecordingStream;
@@ -62,12 +62,12 @@ impl<'a> Evaluator<ContactPointGroupingGene, ContactPointGroupingEvaluatorSettin
             .iter()
             .map(|g| {
                 let p = g.support_positions();
-                let h = ConvexHull::new(p.collect());
+                let h = ConvexHull3D::new(p.collect());
                 let area = h.area();
-                let perimeter = h.perimeter();
+                let volume = h.volume();
                 let height = g.max_height();
                 area * s.area_minimization_weight
-                    + perimeter * s.perimeter_minimization_weight
+                    + volume * s.volume_minimization_weight
                     + height * s.group_cost_penalty
             })
             .sum();

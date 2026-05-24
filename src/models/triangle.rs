@@ -73,13 +73,7 @@ impl Triangle<'_> {
     /// calculate the area of the triangle using the cross product
     pub fn area(&self) -> f32 {
         let [v1, v2, v3] = self.vertexes();
-
-        let a = v2 - v1;
-        let b = v3 - v1;
-
-        let c = Point::cross(a, b);
-
-        c.abs() / 2.0
+        Point::triangle_area(v1, v2, v3)
     }
 
     // find out if a point is inside the footprint (i.e. the projection

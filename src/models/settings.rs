@@ -218,8 +218,8 @@ impl Default for ContactPointsOptimizationSettings {
             critical_angle_clipping_factor_down: 2.5,
             soft_cost_propagation_factor: 0.03,
             initialization_support_density: RandomDistribution::InRange {
-                low: 0.003,
-                high: 0.0031,
+                low: 0.01,
+                high: 0.015,
             },
             max_support_radius: 4.,
             min_support_radius: 0.5,
@@ -240,8 +240,8 @@ impl Default for ContactPointsOptimizationSettings {
 
 #[derive(Debug, Clone)]
 pub struct ContactPointsGroupingSettings {
-    pub perimeter_minimization_weight: f32,
     pub area_minimization_weight: f32,
+    pub volume_minimization_weight: f32,
     /// cost for creating a new group
     /// the cost is multiplied by the height of the group (taller groups, are more expensive to
     /// support)
@@ -280,9 +280,9 @@ impl Default for ContactPointsGroupingSettings {
         let max_num_groups = 25;
 
         Self {
-            group_cost_penalty: 90.,
-            perimeter_minimization_weight: 90.,
-            area_minimization_weight: 30.,
+            group_cost_penalty: 10000.,
+            area_minimization_weight: 50.,
+            volume_minimization_weight: 30.,
             num_generations: 2000,
             patience: 100,
             generation_size: 100,

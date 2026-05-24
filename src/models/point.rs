@@ -1,3 +1,4 @@
+use convexhull3d::Vertex;
 use nalgebra::{ArrayStorage, Const, Matrix, Matrix2, Vector3};
 use rand::seq::index::sample;
 use core::f32;
@@ -183,6 +184,24 @@ impl Point {
         Point { x, y, z }
     }
 
+
+    pub fn triangle_area(v1: Point, v2: Point, v3: Point) -> f32 {
+        let a = v2 - v1;
+        let b = v3 - v1;
+
+        let c = Point::cross(a, b);
+
+        c.abs() / 2.0
+    }
+
+
+    pub fn pyramid_area(v1: Point, v2: Point, v3: Point, v4: Point) -> f32 {
+        let a = v1 - v4;
+        let b = v2 - v4;
+        let c = v3 - v4;
+        Point::dot(a, Point::cross(b, c)).abs() / 6.0
+    }
+
     /// create a new random point with z = 0 and x,y sampled from the a random distribution
     pub fn random_zero_z(mean: Point, covariance: &Matrix2<f32>, rand: &Random) -> Point {
         let distribution = RandomDistribution::Normal {
@@ -241,6 +260,13 @@ impl From<Matrix<f32, Const<3>, Const<1>, ArrayStorage<f32, 3, 1>>> for Point {
 impl From<Point> for rerun::Vec3D {
     fn from(value: Point) -> Self {
         rerun::Vec3D::new(value.x, value.y, value.z)
+    }
+}
+
+
+impl From<Point> for convexhull3d::Vertex {
+    fn from(value: Point) -> Self {
+        Vertex::new(value.x as f64, value.y as f64, value.z as f64)
     }
 }
 

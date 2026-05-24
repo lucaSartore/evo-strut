@@ -1614,6 +1614,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "convexhull3d"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e4ba40b46af5b207541111162290e951757c20bb0fae210aad2658df74a1f32"
+dependencies = [
+ "log",
+ "ndarray",
+ "rand 0.9.2",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3175,6 +3189,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "baby_shark",
+ "convexhull3d",
  "env_logger",
  "hashbrown 0.14.5",
  "itertools 0.14.0",
@@ -5430,6 +5445,7 @@ dependencies = [
  "portable-atomic",
  "portable-atomic-util",
  "rawpointer",
+ "serde",
 ]
 
 [[package]]
