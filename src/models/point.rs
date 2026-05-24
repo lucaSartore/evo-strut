@@ -1,6 +1,5 @@
 use convexhull3d::Vertex;
 use nalgebra::{ArrayStorage, Const, Matrix, Matrix2, Vector3};
-use rand::seq::index::sample;
 use core::f32;
 use std::{
     hash::{Hash, Hasher},
@@ -130,13 +129,17 @@ impl Point {
 
     pub fn interpolate(start: Point, end: Point, max_distance: f32) -> Vec<Point> {
         let distance = (end - start).abs();
+        if distance == 0.0 {
+            return vec![start];
+        }
+
         let versor = (end - start).as_versor();
         let n_points = (distance / max_distance).ceil() as u32 + 1;
 
         let mut to_return = vec![];
         for i in 0..n_points {
             let scale = i as f32 / (n_points - 1) as f32;
-            let p = start + versor.to_scaled(scale);
+            let p = start + versor.to_scaled(distance * scale);
             to_return.push(p);
         }
         to_return

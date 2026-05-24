@@ -6,3 +6,4 @@ pub mod neural_network;
 pub mod random_distribution;
 pub mod remove_random;
 pub mod shape_generation;
+pub mod tree_generation;
