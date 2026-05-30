@@ -19,13 +19,13 @@ impl<'a> Evaluator<SupportGroup, SupportStructureEvaluatorSettings<'a>>
     }
 
     fn evaluate(&self, gene: &SupportGroup) -> Cost {
-        let gene = gene.to_full_gene(self.evaluator.graph);
+        let gene = gene.to_full_gene(self.evaluator.graph, self.evaluator.settings);
         let cost = self.evaluator.evaluate(&gene);
         cost
     }
 
     fn visualize(&self, gene: &SupportGroup) -> anyhow::Result<()> {
         self.evaluator
-            .visualize(&gene.to_full_gene(&self.evaluator.graph))
+            .visualize(&gene.to_full_gene(&self.evaluator.graph, self.evaluator.settings))
     }
 }

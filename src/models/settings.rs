@@ -392,6 +392,10 @@ pub struct SupportStructureOptimizationSettings {
     /// standard deviation for adjusting the height of a layer.
     /// unit of measure: mm
     pub layer_height_motion_std: f32,
+    /// used when constructing trees, control chow often points are interpolated
+    /// (smaller value means more precise trees, but higher computational cost)
+    /// unit of measure: mm
+    pub tree_creation_interpolation_size: f32
 }
 
 impl Default for SupportStructureOptimizationSettings {
@@ -415,6 +419,7 @@ impl Default for SupportStructureOptimizationSettings {
             layer_node_creation_update_step: 5.,
             layer_point_motion_std: 5.,
             layer_height_motion_std: 2.5,
+            tree_creation_interpolation_size: 2.0,
         }
     }
 }
@@ -498,7 +503,7 @@ impl Default for SupportStructureRefinementSettings {
             tournament_size: 10,
             num_elite_individuals: 10,
             cost_for_unit_of_length: 1.0,
-            cost_for_support_too_steep: 1.0,
+            cost_for_support_too_steep: 15.0,
             non_stiffness_cost: 1.,
             stiffness_cost_integration_size: 1.0,
             cone_area_cost: 2.0,
@@ -547,7 +552,8 @@ pub struct SupportSettings {
     pub base_cylinder_radius: f32,
     pub base_cylinder_height: f32,
     pub min_cone_radius: f32,
-    pub support_detachment: f32
+    pub support_detachment: f32,
+    pub support_tree_max_overhanging_angle: f32
 }
 
 impl Default for SupportSettings {
@@ -560,7 +566,8 @@ impl Default for SupportSettings {
             base_cylinder_radius: 5.,
             base_cylinder_height: 1.,
             min_cone_radius: 1.,
-            support_detachment: 0.2
+            support_detachment: 0.2,
+            support_tree_max_overhanging_angle: 60.
         }
     }
 }

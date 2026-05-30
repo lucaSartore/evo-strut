@@ -127,12 +127,12 @@ impl ExportingStage
             .for_each(|s| Self::add_support_structure(&mut builder, s, support_settings));
 
         // cutting out the mesh we are printing from the area of supports
-        let volume = MeshToVolume::default()
-            .with_voxel_size(support_settings.voxel_size)
-            .convert(&input.state.graph.mesh.original)
-            .ok_or(anyhow!("fail in creation of volume"))?;
-        let volume = volume.offset(support_settings.support_detachment);
-        builder.add_negative_volume(volume);
+        // let volume = MeshToVolume::default()
+        //     .with_voxel_size(support_settings.voxel_size)
+        //     .convert(&input.state.graph.mesh.original)
+        //     .ok_or(anyhow!("fail in creation of volume"))?;
+        // let volume = volume.offset(support_settings.support_detachment);
+        // builder.add_negative_volume(volume);
 
         let mesh = builder.build(settings)?;
         let path = &settings.io_settings.output_file_path;

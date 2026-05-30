@@ -1,26 +1,26 @@
 use core::f32;
-use std::fmt::Debug;
+use std::{collections::VecDeque, default, fmt::Debug};
 
 use baby_shark::algo::utils::min;
-use hashbrown::{hash_set::Iter, HashMap};
-use itertools::Itertools;
+use hashbrown::{HashMap, HashSet, hash_set::Iter};
+use itertools::{Itertools, WhileSome};
 use nalgebra::Matrix2;
 use rerun::{
     demo_util::grid,
-    external::{glam::usize, re_data_loader::lerobot::common::LEROBOT_DATASET_IGNORED_COLUMNS},
+    external::{glam::usize, re_data_loader::lerobot::common::LEROBOT_DATASET_IGNORED_COLUMNS}, lenses::Op,
 };
 use smallvec::smallvec;
 
 use crate::{
     evolution::{Cost, Random},
-    models::{Point, SurfaceGraph},
+    models::{Point, Settings, SurfaceGraph},
     stages::{
         support_structure_optimization::mutation::SupportStructureMutator,
         support_structure_refinement::{
             BaseNode, ContactNode, MiddleNode, PositionAnchor, SupportNode, SupportNodeId,
             SupportStructureGene,
         },
-    },
+    }, support::tree_generation::{Tree, TreeGenerator},
 };
 
 type ContactPointMutPtr<'a> = (&'a mut ContactPoint, usize);
@@ -344,21 +344,23 @@ impl SupportGroup {
         super::mutation::regenerate_group::mutate(mutator, self);
     }
 
-    pub fn to_full_gene(&self, graph: &SurfaceGraph) -> SupportStructureGene {
-        let mut builder = RawStructureBuilder::new();
+    pub fn to_full_gene(&self, graph: &SurfaceGraph, settings: &Settings) -> SupportStructureGene {
+        let mut builder = RawStructureBuilder::new(settings);
         builder.add_group(self);
         builder.build(graph)
     }
 }
 
-struct RawStructureBuilder {
+struct RawStructureBuilder<'a> {
     pub raw_structure: SupportStructureGene,
     pub position_to_id: HashMap<Point, SupportNodeId>,
     pub random: Random,
+    pub settings: &'a Settings,
+    pub supports: HashSet<Point>
 }
 
-impl RawStructureBuilder {
-    pub fn new() -> Self {
+impl<'a> RawStructureBuilder<'a> {
+    pub fn new(settings: &'a Settings) -> Self {
         // node zero is added as a placeholder, so that the we can use it for anchors, and then
         // remove it and repairing the structure
         let mut raw_structure = SupportStructureGene {
@@ -379,6 +381,8 @@ impl RawStructureBuilder {
             // random has no actual effect on the shape of the created structure
             // it only effect IDs, so we can put an unseeded value here
             random: Random::UnSeededRandom,
+            settings,
+            supports: HashSet::new()
         }
     }
 
@@ -392,40 +396,27 @@ impl RawStructureBuilder {
     }
 
     pub fn add_group(&mut self, group: &SupportGroup) {
-        enum ListElement<'a> {
-            Layer(&'a SupportLayer),
-            Point(&'a ContactPoint),
-        }
-        impl<'a> ListElement<'a> {
-            pub fn height(&self) -> f32 {
-                match self {
-                    ListElement::Layer(support_layer) => support_layer.center.z,
-                    ListElement::Point(contact_point) => contact_point.position.z,
-                }
-            }
-        }
+        let mut layers: Vec<&SupportLayer> = group.layers.iter().collect();
+        layers.sort_by_key(|x| Cost::new(x.center.z));
 
-        let mut vec = vec![];
-        for layer in &group.layers {
-            vec.push(ListElement::Layer(layer));
-        }
-        for support in &group.supports {
-            vec.push(ListElement::Point(support));
-        }
-        vec.sort_by_key(|x| Cost::new(x.height()));
+        let mut supports: VecDeque<_> = group
+            .supports
+            .iter()
+            .sorted_by_key(|x| Cost::new(x.position.z))
+            .collect();
 
         let mut prev_layer = None;
-        for e in vec {
-            match e {
-                ListElement::Layer(support_layer) => {
-                    self.add_layer(support_layer, prev_layer);
-                    prev_layer = Some(support_layer);
-                }
-                ListElement::Point(contact_point) => {
-                    self.add_contact(contact_point, prev_layer);
-                }
+        for layer in layers {
+            let mut new_supports = vec![];
+            while let Some(s) = supports.front() && s.position.z < layer.center.z{
+                new_supports.push(supports.pop_front().unwrap());
+                self.add_contacts(&new_supports, prev_layer);
             }
+            self.add_layer(layer, prev_layer);
+            prev_layer = Some(layer);
         }
+        let supports: Vec<_> = supports.into();
+        self.add_contacts(&supports, prev_layer);
     }
 
     pub fn create_node(&mut self, position: Point, node_kind: NodeKind) -> SupportNodeId {
@@ -492,16 +483,73 @@ impl RawStructureBuilder {
             });
     }
 
-    pub fn add_contact(&mut self, contact: &ContactPoint, layer_below: Option<&SupportLayer>) {
-        let _ = self.create_node(
-            contact.position,
-            NodeKind::Contact {
-                radius: contact.radius,
-            },
-        );
-        let Some(layer_below) = layer_below else { return };
-        let support = layer_below.closest_point_to_point(contact.position);
-        self.add_connection(contact.position, support);
+    fn add_contacts(&mut self, contacts: &[&ContactPoint], layer_prev: Option<&SupportLayer>) {
+        self.add_supports(contacts);
+        let Some(layer_prev) = layer_prev else { return };
+        let valid_points: Vec<_> = layer_prev.nodes.iter().map(|x| x.offset + layer_prev.center).collect();
+        let to_add = contacts
+            .iter()
+            .map(|x| (self.closest_point(x.position, &valid_points), *x))
+            .into_group_map();
+        for (root, leafs) in to_add.into_iter() {
+            let Some(root) = root else { continue };
+            self.add_tree(root, &leafs);
+        }
+    }
+
+    fn add_supports(&mut self, supports: &[&ContactPoint]) {
+        for s in supports {
+            self.supports.insert(s.position);
+        }
+        for s in supports {
+            let _ = self.create_node(
+                s.position,
+                NodeKind::Contact {
+                    radius: s.radius
+                },
+            );
+        }
+    }
+
+    fn add_tree(&mut self, root: Point, leafs: &[&ContactPoint]) {
+
+        // for leaf in leafs {
+        //     self.add_connection(leaf.position, root);
+        // }
+        //
+        // return;
+        let point_to_contact: HashMap<Point, &ContactPoint> = leafs
+            .iter()
+            .map(|x| (x.position, *x))
+            .collect();
+        let tree = TreeGenerator::new(
+            root,
+            leafs.iter().map(|x| x.position),
+            self.settings.criticality_settings.support_overhanging_angle,
+            self.settings.support_structure_optimization_settings.tree_creation_interpolation_size
+        ).run();
+
+        for (from, to) in tree.iter_branches() {
+            let _ = self.create_node(to, NodeKind::Middle);
+            let _ = self.create_node(
+                from,
+                match point_to_contact.get(&from) {
+                    Some(contact) => NodeKind::Contact {
+                        radius: contact.radius,
+                    },
+                    None => NodeKind::Middle
+                }
+            );
+            self.add_connection(from, to);
+        }
+    }
+
+
+    fn closest_point(&self, point: Point, valid_attachment_points: &[Point]) -> Option<Point> {
+        valid_attachment_points
+            .iter()
+            .min_by_key(|x| Cost::new((point - **x).norm_sq()))
+            .copied()
     }
 }
 

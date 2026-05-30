@@ -25,7 +25,7 @@ impl<'a> SupportStructureEvaluatorSettings<'a> {
 }
 
 pub struct SupportStructureEvaluator<'a> {
-    settings: &'a Settings,
+    pub settings: &'a Settings,
     pub graph: &'a SurfaceGraph,
     volume: Volume,
     stream: RecordingStream,

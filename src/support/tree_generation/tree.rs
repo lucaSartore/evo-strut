@@ -1,6 +1,8 @@
 use hashbrown::HashMap;
+use itertools::Itertools;
+use rerun::external::re_sdk_types::impl_into_cow;
 
-use crate::models::Point;
+use crate::{evolution::Cost, models::Point};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Node {
@@ -30,6 +32,18 @@ impl Tree {
             nodes: vec![root_node],
             pos_to_id,
         }
+    }
+
+    pub fn iter_branches(&self) -> impl Iterator<Item = (Point, Point)> {
+        self.nodes
+            .iter()
+            .skip(1) // skipping the route
+            .map(|x| (
+                x.point,
+                self.nodes[x.father].point
+            ))
+            // ordering by the height of the node
+            .sorted_by_key(|x| Cost::new(x.0.z))
     }
 
     // add a new node as a leaf

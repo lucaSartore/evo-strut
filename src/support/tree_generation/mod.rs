@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use crate::models::Point;
+use crate::{evolution::Cost, models::Point};
 
 mod tree;
 pub use tree::Tree;
@@ -37,7 +37,14 @@ impl TreeGenerator {
         // (without considering the Z dimension in the distance function)
         let center = self.leaf_center_xy();
         let mut leaves = self.leaves.clone();
-        leaves.sort_by(|a, b| xy_distance_sq(*a, center).total_cmp(&xy_distance_sq(*b, center)));
+        // order so that we first add the closest node to the center
+        // and then we start from the furthest one, and we go toward
+        // the center
+        leaves.sort_by_key(|a| Cost::new(-xy_distance_sq(*a, center)));
+        let len = leaves.len();
+        if len >= 2 {
+            leaves.swap(0, len - 1);
+        }
 
         let mut tree = Tree::new(self.root);
 

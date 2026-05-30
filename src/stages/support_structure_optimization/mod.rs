@@ -43,7 +43,7 @@ where
 
         let support_structures = result
             .into_iter()
-            .map(|x| x.to_full_gene(&input.state.graph))
+            .map(|x| x.to_full_gene(&input.state.graph, &input.state.settings))
             .collect();
         Ok(Pipeline::from_state(SupportStructureOptimizedState {
             settings: input.state.settings,
