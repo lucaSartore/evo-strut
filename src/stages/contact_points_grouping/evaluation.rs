@@ -61,8 +61,8 @@ impl<'a> Evaluator<ContactPointGroupingGene, ContactPointGroupingEvaluatorSettin
         let size_cost: f32 = groups
             .iter()
             .map(|g| {
-                let p = g.support_positions();
-                let h = ConvexHull3D::new(p.collect());
+                let p = g.contact_positions();
+                let h = ConvexHull3D::new(p);
                 let area = h.area();
                 let volume = h.volume();
                 let height = g.max_height();
@@ -101,7 +101,7 @@ impl<'a> Evaluator<ContactPointGroupingGene, ContactPointGroupingEvaluatorSettin
             };
             let color = Color::Hsv(hue, 1.0, 1.0);
 
-            for contact in &group.supports {
+            for contact in &group.contacts {
                 centers.push(contact.position);
                 radiuses.push(contact.radius);
                 colors.push(color);

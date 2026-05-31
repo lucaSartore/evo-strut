@@ -1,7 +1,7 @@
 use crate::{
     evolution::{Mutator, Random},
     models::{Settings, SurfaceGraph},
-    stages::support_structure_optimization::SupportGroup,
+    stages::support_structure_optimization::SupportStructureOptimizationGene,
 };
 
 pub struct SupportStructureMutatorSettings<'a> {
@@ -15,13 +15,10 @@ impl<'a> SupportStructureMutatorSettings<'a> {
     }
 }
 
-pub mod add_layer;
-pub mod add_layer_point;
-pub mod edit_layer_connections;
-pub mod move_layer_height;
-pub mod move_points_in_layer;
-pub mod regenerate_group;
-pub mod remove_layer_point;
+pub mod add_point;
+pub mod move_points;
+pub mod mutate_network;
+pub mod remove_point;
 
 pub struct SupportStructureMutator<'a> {
     pub settings: &'a Settings,
@@ -29,7 +26,7 @@ pub struct SupportStructureMutator<'a> {
     pub rand: Random,
 }
 
-impl<'a> Mutator<SupportGroup, SupportStructureMutatorSettings<'a>>
+impl<'a> Mutator<SupportStructureOptimizationGene, SupportStructureMutatorSettings<'a>>
     for SupportStructureMutator<'a>
 {
     fn new(settings: &SupportStructureMutatorSettings<'a>, rand: Random) -> Self {
@@ -40,24 +37,18 @@ impl<'a> Mutator<SupportGroup, SupportStructureMutatorSettings<'a>>
         }
     }
 
-    fn mutate(&self, gene: &mut SupportGroup) {
+    fn mutate(&self, gene: &mut SupportStructureOptimizationGene) {
         enum MK {
-            AddLayer,
-            AddLayerPoint,
-            EditLayerConnections,
-            MoveLayerHeight,
-            MovePointsInLayer,
-            RegenerateGroup,
-            RemoveLayerPoint,
+            AddPont,
+            MovePoints,
+            MutateNetwork,
+            RemovePoint,
         }
         const OPTIONS: &[MK] = &[
-            MK::AddLayer,
-            MK::AddLayerPoint,
-            MK::EditLayerConnections,
-            MK::MoveLayerHeight,
-            MK::MovePointsInLayer,
-            MK::RemoveLayerPoint,
-            MK::RegenerateGroup,
+            MK::AddPont,
+            // MK::MovePoints,
+            // MK::MutateNetwork,
+            // MK::RemovePoint,
         ];
 
         let n_mutations = self.rand.next_in_range(1, 3);
@@ -65,13 +56,10 @@ impl<'a> Mutator<SupportGroup, SupportStructureMutatorSettings<'a>>
             let mutation = self.rand.choose_or_panic(OPTIONS);
 
             match mutation {
-                MK::AddLayer => add_layer::mutate(self, gene),
-                MK::AddLayerPoint => add_layer_point::mutate(self, gene),
-                MK::EditLayerConnections => edit_layer_connections::mutate(self, gene),
-                MK::MoveLayerHeight => move_layer_height::mutate(self, gene),
-                MK::MovePointsInLayer => move_points_in_layer::mutate(self, gene),
-                MK::RemoveLayerPoint => remove_layer_point::mutate(self, gene),
-                MK::RegenerateGroup => regenerate_group::mutate(self, gene),
+                MK::AddPont => add_point::mutate(self, gene),
+                MK::MovePoints => move_points::mutate(self, gene),
+                MK::MutateNetwork => mutate_network::mutate(self, gene),
+                MK::RemovePoint => remove_point::mutate(self, gene),
             };
         }
     }

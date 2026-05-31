@@ -7,7 +7,7 @@ use crate::{
     stages::{
         contact_point_optimization::ContactPointsGene,
         support_structure_optimization::{
-            mutation::SupportStructureMutator, ContactPoint, SupportGroup,
+            mutation::SupportStructureMutator, ContactPoint, SupportStructureOptimizationGene,
         },
     },
     support::neural_network::NeuralNetwork,
@@ -25,7 +25,7 @@ impl ContactPointGroupingGene {
         graph: &SurfaceGraph,
         settings: &Settings,
         rand: &Random,
-    ) -> Vec<SupportGroup> {
+    ) -> Vec<SupportStructureOptimizationGene> {
         let mut grouped = HashMap::<usize, Vec<_>>::default();
 
         for contact in points.iter_contacts() {
@@ -52,18 +52,10 @@ impl ContactPointGroupingGene {
             }
         }
 
-        let mutator = SupportStructureMutator {
-            settings,
-            graph,
-            rand: rand.seeded_copy(),
-        };
-
         grouped
             .into_values()
             .map(|x| {
-                let mut g = SupportGroup::from_supports(x);
-                g.regenerate(&mutator);
-                return g;
+                SupportStructureOptimizationGene::from_contacts(x, rand)
             })
             .collect()
     }

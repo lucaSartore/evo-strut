@@ -55,7 +55,7 @@ where
 }
 
 pub trait SupportStructureOptimizer {
-    fn optimize(status: &ContactPointsGroupedState) -> Result<Vec<SupportGroup>>;
+    fn optimize(status: &ContactPointsGroupedState) -> Result<Vec<SupportStructureOptimizationGene>>;
 }
 
 pub struct SimpleSupportStructureOptimizer {}
@@ -63,8 +63,8 @@ pub struct SimpleSupportStructureOptimizer {}
 impl SimpleSupportStructureOptimizer {
     fn optimize_group<'a>(
         status: &'a ContactPointsGroupedState,
-        group: &'a SupportGroup,
-    ) -> Result<SupportGroup> {
+        group: &'a SupportStructureOptimizationGene,
+    ) -> Result<SupportStructureOptimizationGene> {
         let settings = &status.settings;
         let mesh = &status.graph.mesh.original;
         let graph = &status.graph;
@@ -78,7 +78,7 @@ impl SimpleSupportStructureOptimizer {
             TournamentBasedCrossoverSelection,
             ElitistNextGenSelector,
             SupportStructureInitializer<'a>,
-            SupportGroup,
+            SupportStructureOptimizationGene,
             SupportStructureMutatorSettings<'a>,
             SupportStructureCrossoverSettings<'a>,
             PatienceBasedTerminationStrategySettings,
@@ -111,7 +111,7 @@ impl SimpleSupportStructureOptimizer {
 }
 
 impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
-    fn optimize<'a>(status: &'a ContactPointsGroupedState) -> Result<Vec<SupportGroup>> {
+    fn optimize<'a>(status: &'a ContactPointsGroupedState) -> Result<Vec<SupportStructureOptimizationGene>> {
         let groups = status.grouper.to_groups(
             &status.connection_points,
             &status.graph,

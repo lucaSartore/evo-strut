@@ -1,20 +1,20 @@
 use crate::{
     evolution::PopulationInitializer,
     models::{Settings, SurfaceGraph},
-    stages::support_structure_optimization::{mutation::SupportStructureMutator, SupportGroup},
+    stages::support_structure_optimization::{mutation::SupportStructureMutator, SupportStructureOptimizationGene},
 };
 
 pub struct SupportStructureInitializerSettings<'a> {
     settings: &'a Settings,
     graph: &'a SurfaceGraph,
-    group_template: &'a SupportGroup,
+    group_template: &'a SupportStructureOptimizationGene,
 }
 
 impl<'a> SupportStructureInitializerSettings<'a> {
     pub fn new(
         settings: &'a Settings,
         graph: &'a SurfaceGraph,
-        group_template: &'a SupportGroup,
+        group_template: &'a SupportStructureOptimizationGene,
     ) -> Self {
         Self {
             settings,
@@ -26,11 +26,11 @@ impl<'a> SupportStructureInitializerSettings<'a> {
 
 pub struct SupportStructureInitializer<'a> {
     settings: &'a Settings,
-    group_template: &'a SupportGroup,
+    group_template: &'a SupportStructureOptimizationGene,
     mutator: SupportStructureMutator<'a>,
 }
 
-impl<'a> PopulationInitializer<SupportGroup, SupportStructureInitializerSettings<'a>>
+impl<'a> PopulationInitializer<SupportStructureOptimizationGene, SupportStructureInitializerSettings<'a>>
     for SupportStructureInitializer<'a>
 {
     fn new(
@@ -54,9 +54,9 @@ impl<'a> PopulationInitializer<SupportGroup, SupportStructureInitializerSettings
             .generation_size
     }
 
-    fn get_random_individual(&self) -> SupportGroup {
+    fn get_random_individual(&self) -> SupportStructureOptimizationGene {
         let mut g = self.group_template.clone();
-        super::mutation::regenerate_group::mutate(&self.mutator, &mut g);
+        // todo: add points at random
         g
     }
 }
