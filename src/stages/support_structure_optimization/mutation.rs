@@ -46,9 +46,9 @@ impl<'a> Mutator<SupportStructureOptimizationGene, SupportStructureMutatorSettin
         }
         const OPTIONS: &[MK] = &[
             MK::AddPont,
-            // MK::MovePoints,
+            MK::MovePoints,
             // MK::MutateNetwork,
-            // MK::RemovePoint,
+            MK::RemovePoint,
         ];
 
         let n_mutations = self.rand.next_in_range(1, 3);

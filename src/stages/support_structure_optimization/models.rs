@@ -46,10 +46,13 @@ impl SupportStructureOptimizationGene {
             ],
         ).unwrap();
         let initialization = NetworkWeightInitialization::He;
+        let mut network = NeuralNetwork::random(topology, initialization, random).unwrap();
+        // starting with the bias helps out the network in the beginning
+        network.layers[1].biases[0] = 4.;
         Self {
             contacts,
             supports: vec![],
-            contact_radius: NeuralNetwork::random(topology, initialization, random).unwrap()
+            contact_radius: network
         }
     }
 
@@ -139,19 +142,21 @@ impl<'a> RawStructureBuilder<'a> {
 
     fn insert_points(&mut self) {
         let mut elements = vec![];
-        let mut contacts = self
+        let contacts_set: HashSet<_> = self.optimization_structure.contacts.iter().map(|x| x.position).collect();
+        let mut contacts: Vec<_> = self
             .optimization_structure
             .contacts
             .iter()
             .map(|x| QueuedPoint::Contact(*x))
             .collect();
-        elements.append(&mut contacts);
-        let mut supports = self
+        let mut supports: Vec<_> = self
             .optimization_structure
             .supports
             .iter()
+            .filter(|x| !contacts_set.contains(&x.position))
             .map(|x| QueuedPoint::Support(*x))
             .collect();
+        elements.append(&mut contacts);
         elements.append(&mut supports);
 
         // sorting with the lowest noes at the bottom
@@ -184,6 +189,7 @@ impl<'a> RawStructureBuilder<'a> {
                 SupportNode::Contact(n)
             }
             QueuedPoint::Support(_) => {
+                self.supports.insert(position);
                 let n = MiddleNode {
                     id,
                     // we put a random anchor
@@ -213,12 +219,16 @@ impl<'a> RawStructureBuilder<'a> {
 
 
     fn find_supporters(&self, position: Point) -> Vec<Point> {
-        let max_distance = self.optimization_structure.get_contact_radius(position);
+        // convert from mm to cm (easier scale for the network)
+        let max_distance = self.optimization_structure.get_contact_radius(position) * 10.;
+        // println!("max_distance: {max_distance}");
+        // let max_distance = 60.;
+
         let valid_points: Vec<_> = self
             .supports
             .iter()
             .filter(|x| {
-                Point::horizon_angle(**x, position) > (30.0 as f32).to_radians()
+                Point::horizon_angle(**x, position) > 30.0_f32.to_radians()
             })
             .map(|x| {
                 let distance = (*x - position).abs();
@@ -237,20 +247,13 @@ impl<'a> RawStructureBuilder<'a> {
             .map(|x| *x.0)
             .collect();
 
-        if best_3.len() != 0 {
-            return best_3;
+        if best_3.is_empty() {
+            vec![*closest.0];
         }
-
-        return vec![*closest.0];
+        best_3
     }
 
 }
-
-enum NodeKind {
-    Contact { radius: f32 },
-    Middle,
-}
-
 
 enum QueuedPoint {
     Contact(ContactPoint),

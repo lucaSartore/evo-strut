@@ -90,8 +90,8 @@ impl NetworkTopology {
 
 #[derive(Debug, Clone)]
 pub struct NeuralNetworkLayer {
-    weights: DMatrix<NetworkValue>,
-    biases: DVector<NetworkValue>,
+    pub weights: DMatrix<NetworkValue>,
+    pub biases: DVector<NetworkValue>,
 }
 
 impl NeuralNetworkLayer {
@@ -125,8 +125,8 @@ impl NeuralNetworkLayer {
 
 #[derive(Debug, Clone)]
 pub struct NeuralNetwork {
-    topology: NetworkTopology,
-    layers: Vec<NeuralNetworkLayer>,
+    pub topology: NetworkTopology,
+    pub layers: Vec<NeuralNetworkLayer>,
 }
 
 impl NeuralNetwork {
