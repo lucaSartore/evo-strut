@@ -1,7 +1,7 @@
 use super::SupportStructureOptimizationGene;
 use crate::{
     evolution::{Crossover, Random},
-    models::Settings,
+    models::{Plane, Settings},
 };
 
 pub struct SupportStructureCrossoverSettings<'a> {
@@ -29,8 +29,27 @@ impl<'a> Crossover<SupportStructureOptimizationGene, SupportStructureCrossoverSe
         }
     }
 
-    fn crossover(&self, a: &SupportStructureOptimizationGene, _b: &SupportStructureOptimizationGene) -> SupportStructureOptimizationGene {
-        // todo: implement real crossover
-        a.clone()
+    fn crossover(&self, a: &SupportStructureOptimizationGene, b: &SupportStructureOptimizationGene) -> SupportStructureOptimizationGene {
+        let rand = &self.rand;
+        let p1 = a.random_point(rand);
+        let p2 = a.random_point(rand);
+        let p3 = b.random_point(rand);
+
+        let plane = Plane::from_points_and_max_distance(p1, p2, p3);
+
+        let supports_from_a = a
+            .supports
+            .iter()
+            .filter(|x| plane.classify_point(x.position));
+
+        let supports_from_b = b
+            .supports
+            .iter()
+            .filter(|x| !plane.classify_point(x.position));
+
+        SupportStructureOptimizationGene { 
+            contacts: a.contacts.clone(),
+            supports: supports_from_a.chain(supports_from_b).copied().collect()
+        }
     }
 }
