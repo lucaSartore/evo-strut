@@ -318,6 +318,10 @@ impl SupportStructureGene {
     }
 
     pub fn repair(&mut self, graph: &SurfaceGraph, rand: &Random) {
+
+        // todo: there is a bug in the function, and the entire thing could probably be simplified
+        self.repair_floating_nodes(rand);
+        return;
         let mut repaired = Default::default();
 
         let ids: Vec<SupportNodeId> = self
