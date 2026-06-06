@@ -3,14 +3,10 @@ use std::marker::PhantomData;
 
 use crate::{
     evolution::{
-        ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour,
-        PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random,
-        TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings,
+        Cost, ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings
     },
     stages::{
-        support_structure_refinement::evaluation::SupportStructureEvaluatorSettings,
-        ContactPointsDecidedState, ContactPointsGroupedState, Pipeline, PipelineBehaviourTrait,
-        SupportStructureOptimizedState,
+        ContactPointsDecidedState, ContactPointsGroupedState, Pipeline, PipelineBehaviourTrait, SupportStructureOptimizedState, support_structure_refinement::evaluation::SupportStructureEvaluatorSettings
     },
 };
 
@@ -39,25 +35,34 @@ where
     pub fn execute(
         input: Pipeline<ContactPointsDecidedState, TB>,
     ) -> Result<Pipeline<ContactPointsGroupedState, TB>> {
-        let result = SimpleContactPointsGrouper::optimize(&input.state)?;
+
+        let mut best = None;
+        let mut best_cost = Cost::new(f32::MAX);
+        for _ in 0..10 {
+            let (result, cost) = SimpleContactPointsGrouper::optimize(&input.state)?;
+            if cost < best_cost {
+                best = Some(result);
+                best_cost = cost
+            }
+        }
 
         Ok(Pipeline::from_state(ContactPointsGroupedState {
             settings: input.state.settings,
             graph: input.state.graph,
             connection_points: input.state.connection_points,
-            grouper: result,
+            grouper: best.expect("can't be empty"),
         }))
     }
 }
 
 pub trait ContactPointsGrouper {
-    fn optimize(status: &ContactPointsDecidedState) -> Result<ContactPointGroupingGene>;
+    fn optimize(status: &ContactPointsDecidedState) -> Result<(ContactPointGroupingGene, Cost)>;
 }
 
 pub struct SimpleContactPointsGrouper {}
 
 impl ContactPointsGrouper for SimpleContactPointsGrouper {
-    fn optimize<'a>(status: &'a ContactPointsDecidedState) -> Result<ContactPointGroupingGene> {
+    fn optimize<'a>(status: &'a ContactPointsDecidedState) -> Result<(ContactPointGroupingGene, Cost)> {
         let settings = &status.settings;
         let connection_points = &status.connection_points;
         let graph = &status.graph;

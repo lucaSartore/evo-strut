@@ -80,7 +80,7 @@ where
         }
     }
 
-    pub fn run(&self) -> Result<TBehaviour::TGene> {
+    pub fn run(&self) -> Result<(TBehaviour::TGene, Cost)> {
         let best = |x: &[Cost]| x.iter().copied().min().unwrap_or(Cost::MAX);
 
         let initial_count = self.population_initializer.get_initial_individuals();
@@ -150,7 +150,7 @@ where
                 "Unable to find best individual, the list was empty"
             ))?;
         self.evaluator.visualize(&x.0)?;
-        Ok(x.0)
+        Ok((x.0, *x.1))
     }
 }
 

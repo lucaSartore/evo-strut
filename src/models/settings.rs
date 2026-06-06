@@ -227,7 +227,7 @@ impl Default for ContactPointsOptimizationSettings {
             min_support_radius: 0.5,
             move_support_mutation_intensity: 2.5,
             change_support_radius_mutation_intensity: 2.,
-            num_generations: 20,
+            num_generations: 2000,
             patience: 25,
             generation_size: 100,
             tournament_size: 10,
@@ -403,7 +403,7 @@ pub struct SupportStructureOptimizationSettings {
 impl Default for SupportStructureOptimizationSettings {
     fn default() -> Self {
         Self {
-            num_generations: 900,
+            num_generations: 2000,
             patience: 50,
             generation_size: 100,
             tournament_size: 10,

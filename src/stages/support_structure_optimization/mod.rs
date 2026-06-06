@@ -106,7 +106,7 @@ impl SimpleSupportStructureOptimizer {
             Random::UnSeededRandom,
         );
 
-        evolver.run()
+        evolver.run().map(|x| x.0)
     }
 }
 
