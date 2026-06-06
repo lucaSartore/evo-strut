@@ -25,14 +25,23 @@ pub struct ContactPoint {
 #[derive(Clone, Debug, Copy)]
 pub struct SupportPoint {
     pub position: Point,
-    pub num_contacts: u32,
-    pub radius: f32
+    pub num_contacts: u32
+}
+
+impl SupportPoint {
+    pub fn radius(&self, full_gene: &SupportStructureOptimizationGene) -> f32 {
+        let p: [f32; 3] = self.position.into();
+        let output = full_gene.contact_radius.evaluate(&p).expect("network evaluation failed")[0];
+        // todo: hardcoded values
+        output * (5. - 1.5) + 1.5
+    }
 }
 
 #[derive(Clone, Debug)]
 pub struct SupportStructureOptimizationGene {
     pub contacts: Vec<ContactPoint>,
     pub supports: Vec<SupportPoint>,
+    pub contact_radius: NeuralNetwork
 }
 
 impl SupportStructureOptimizationGene {
@@ -40,9 +49,9 @@ impl SupportStructureOptimizationGene {
         let topology = NetworkTopology::new(
             3,
             vec![
-                // LayerTopology::new(16, ActivationFunction::Sigmoid)
-                //     .expect("invalid default contact-point grouping hidden layer"),
-                LayerTopology::new(1, ActivationFunction::Relu)
+                LayerTopology::new(16, ActivationFunction::Relu)
+                    .expect("invalid default contact-point grouping hidden layer"),
+                LayerTopology::new(1, ActivationFunction::Sigmoid)
                     .expect("invalid default contact-point grouping output layer"),
             ],
         ).unwrap();
@@ -52,7 +61,8 @@ impl SupportStructureOptimizationGene {
         network.layers[0].biases[0] = 0.5;
         Self {
             contacts,
-            supports: vec![]
+            supports: vec![],
+            contact_radius: network
         }
     }
 
@@ -224,7 +234,7 @@ impl<'a> RawStructureBuilder<'a> {
                     anchor: PositionAnchor::new(SupportNodeId(0), Point::ZERO, Point::ZERO),
                     last_position: position,
                     leans_on: smallvec![],
-                    radius: s.radius
+                    radius: s.radius(self.optimization_structure)
                 };
                 SupportNode::Middle(n)
             }

@@ -1,7 +1,7 @@
 use super::SupportStructureOptimizationGene;
 use crate::{
     evolution::{Crossover, Random},
-    models::{Plane, Settings},
+    models::{Plane, Settings}, support::neural_network::NetworkCrossoverSettings,
 };
 
 pub struct SupportStructureCrossoverSettings<'a> {
@@ -47,9 +47,22 @@ impl<'a> Crossover<SupportStructureOptimizationGene, SupportStructureCrossoverSe
             .iter()
             .filter(|x| !plane.classify_point(x.position));
 
+
+        let valid_crossovers = vec![
+            NetworkCrossoverSettings::uniform(),
+            NetworkCrossoverSettings::single_point(),
+            NetworkCrossoverSettings::arithmetic(0.5)
+                .expect("invalid default contact-point grouping crossover settings"),
+        ];
+
+        let crossover = rand.choose(&valid_crossovers)
+            .expect("at least one crossover should be found");
+
         SupportStructureOptimizationGene { 
             contacts: a.contacts.clone(),
-            supports: supports_from_a.chain(supports_from_b).copied().collect()
+            supports: supports_from_a.chain(supports_from_b).copied().collect(),
+            contact_radius: a.contact_radius.crossover(&b.contact_radius, crossover, rand)
+                .expect("network crossover failed")
         }
     }
 }

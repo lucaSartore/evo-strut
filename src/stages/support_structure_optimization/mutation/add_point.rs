@@ -35,9 +35,7 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureOpti
     };
 
     let num_contacts = rand.next_u32() % 3 + 1;
-    // todo: hardcoded values
-    let radius = rand.next_f32(1., 5.);
 
-    gene.supports.push(SupportPoint { position, num_contacts, radius });
+    gene.supports.push(SupportPoint { position, num_contacts });
 }
 
