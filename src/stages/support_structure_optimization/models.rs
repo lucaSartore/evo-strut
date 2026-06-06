@@ -24,14 +24,14 @@ pub struct ContactPoint {
 
 #[derive(Clone, Debug, Copy)]
 pub struct SupportPoint {
-    pub position: Point
+    pub position: Point,
+    pub num_contacts: u32
 }
 
 #[derive(Clone, Debug)]
 pub struct SupportStructureOptimizationGene {
     pub contacts: Vec<ContactPoint>,
     pub supports: Vec<SupportPoint>,
-    pub contact_radius: NeuralNetwork
 }
 
 impl SupportStructureOptimizationGene {
@@ -39,8 +39,8 @@ impl SupportStructureOptimizationGene {
         let topology = NetworkTopology::new(
             3,
             vec![
-                LayerTopology::new(16, ActivationFunction::Sigmoid)
-                    .expect("invalid default contact-point grouping hidden layer"),
+                // LayerTopology::new(16, ActivationFunction::Sigmoid)
+                //     .expect("invalid default contact-point grouping hidden layer"),
                 LayerTopology::new(1, ActivationFunction::Relu)
                     .expect("invalid default contact-point grouping output layer"),
             ],
@@ -48,24 +48,16 @@ impl SupportStructureOptimizationGene {
         let initialization = NetworkWeightInitialization::He;
         let mut network = NeuralNetwork::random(topology, initialization, random).unwrap();
         // starting with the bias helps out the network in the beginning
-        network.layers[1].biases[0] = 4.;
+        network.layers[0].biases[0] = 0.5;
         Self {
             contacts,
-            supports: vec![],
-            contact_radius: network
+            supports: vec![]
         }
     }
 
     pub fn to_full_gene(&self, graph: &SurfaceGraph, settings: &Settings) -> SupportStructureGene {
         let builder = RawStructureBuilder::new(settings, self);
         builder.build(graph)
-    }
-
-    fn get_contact_radius(&self, position: Point) -> f32 {
-        let p: [f32; 3] = position.into();
-        let r = self.contact_radius.evaluate(&p).unwrap();
-        assert!(r.len() == 1);
-        return r[0];
     }
 
     pub fn random_point(&self, rand: &Random) -> Point {
@@ -77,6 +69,10 @@ impl SupportStructureOptimizationGene {
         } else {
             rand.choose(&self.contacts).unwrap().position
         }
+    }
+
+    pub fn random_support_mut(&mut self, rand: &Random) -> Option<&mut SupportPoint> {
+        rand.choose_mut(&mut self.supports)
     }
 
     pub fn contact_positions(&self) -> Vec<Point> {
@@ -165,7 +161,7 @@ impl<'a> RawStructureBuilder<'a> {
         while let Some(p) = elements.pop() {
             self.create_node(&p);
             let position = p.position();
-            let supporters = self.find_supporters(position);
+            let supporters = self.find_supporters(p.position(), p.num_contacts());
             for s in supporters {
                 self.add_connection(position, s);
             }
@@ -218,11 +214,7 @@ impl<'a> RawStructureBuilder<'a> {
 
 
 
-    fn find_supporters(&self, position: Point) -> Vec<Point> {
-        // convert from mm to cm (easier scale for the network)
-        let max_distance = self.optimization_structure.get_contact_radius(position) * 10.;
-        // println!("max_distance: {max_distance}");
-        // let max_distance = 60.;
+    fn find_supporters(&self, position: Point, num_contacts: usize) -> Vec<Point> {
 
         let valid_points: Vec<_> = self
             .supports
@@ -235,22 +227,12 @@ impl<'a> RawStructureBuilder<'a> {
                 (x, Cost::new(distance))
             }).collect();
 
-        // we always take the closest one if it exist
-        let Some(closest) = valid_points.iter()
-            .min_by_key(|x| x.1) else { return vec![] };
-        // if there are many that respect the minimum 
-        let best_3: Vec<_> = valid_points
+        return valid_points
             .iter()
-            .filter(|x| x.1.as_f32() < max_distance)
             .sorted_by_key(|x| x.1)
-            .take(3)
+            .take(num_contacts)
             .map(|x| *x.0)
             .collect();
-
-        if best_3.is_empty() {
-            vec![*closest.0];
-        }
-        best_3
     }
 
 }
@@ -268,5 +250,11 @@ impl QueuedPoint {
     }
     pub fn height(&self) -> f32 {
         self.position().z
+    }
+    pub fn num_contacts(&self) -> usize {
+        match self {
+            QueuedPoint::Contact(_) => 1,
+            QueuedPoint::Support(p) => p.num_contacts as usize
+        }
     }
 }

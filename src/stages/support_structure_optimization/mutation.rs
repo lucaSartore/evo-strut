@@ -17,7 +17,7 @@ impl<'a> SupportStructureMutatorSettings<'a> {
 
 pub mod add_point;
 pub mod move_points;
-pub mod mutate_network;
+pub mod mutate_contacts;
 pub mod remove_point;
 
 pub struct SupportStructureMutator<'a> {
@@ -41,13 +41,13 @@ impl<'a> Mutator<SupportStructureOptimizationGene, SupportStructureMutatorSettin
         enum MK {
             AddPont,
             MovePoints,
-            MutateNetwork,
+            MutateContacts,
             RemovePoint,
         }
         const OPTIONS: &[MK] = &[
             MK::AddPont,
             MK::MovePoints,
-            // MK::MutateNetwork,
+            MK::MutateContacts,
             MK::RemovePoint,
         ];
 
@@ -58,7 +58,7 @@ impl<'a> Mutator<SupportStructureOptimizationGene, SupportStructureMutatorSettin
             match mutation {
                 MK::AddPont => add_point::mutate(self, gene),
                 MK::MovePoints => move_points::mutate(self, gene),
-                MK::MutateNetwork => mutate_network::mutate(self, gene),
+                MK::MutateContacts => mutate_contacts::mutate(self, gene),
                 MK::RemovePoint => remove_point::mutate(self, gene),
             };
         }

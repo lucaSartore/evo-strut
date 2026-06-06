@@ -33,6 +33,8 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureOpti
         p
     };
 
-    gene.supports.push(SupportPoint { position });
+    let num_contacts = *rand.choose(&[1, 2, 3]).expect("can't be empty");
+
+    gene.supports.push(SupportPoint { position, num_contacts });
 }
 
