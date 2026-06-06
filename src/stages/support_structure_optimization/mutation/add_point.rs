@@ -27,11 +27,8 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureOpti
         Point::random(midpoint, 0.5, rand)
         
     } else {
-        // Ground Anchoring
-        let p1 = gene.random_point(rand);
-        let mut p = p1;
-        p.z *= rand.next_distribution(&RandomDistribution::InRange { low: 0.0, high: 1.0 });
-        p
+        // random in the area
+        gene.convex_hull.random_point(rand)
     };
 
     let num_contacts = rand.next_u32() % 3 + 1;

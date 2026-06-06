@@ -51,7 +51,7 @@ impl<'a> Mutator<SupportStructureOptimizationGene, SupportStructureMutatorSettin
             MK::MovePoints,
             MK::MutateContacts,
             MK::RemovePoint,
-            MK::ChangeRadius
+            // MK::ChangeRadius
         ];
 
         let n_mutations = self.rand.next_in_range(1, 3);

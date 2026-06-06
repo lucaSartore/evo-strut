@@ -1,7 +1,3 @@
-use std::thread::panicking;
-
-use convexhull3d::ConvexHullError;
-
 use crate::{
     evolution::PopulationInitializer,
     models::{Settings, SurfaceGraph},
@@ -62,16 +58,18 @@ impl<'a> PopulationInitializer<SupportStructureOptimizationGene, SupportStructur
         let mut g = self.group_template.clone();
 
         // randomly generating some points
+        // todo: hardcoded value
         let support_density = 0.0001; // support point per mm^3
-        let area = ConvexHull::new(g.contact_positions()).area();
+        let convex_hull = &g.convex_hull;
+        let area = convex_hull.area();
         let height = g.max_height();
         let volume = area * height;
+
         let n_supports = (volume * support_density) as usize;
 
         let mut to_add = vec![];
         for _ in 0..n_supports {
-            let mut p = g.random_point(&self.mutator.rand);
-            p.z = self.mutator.rand.next_f32(0., p.z);
+            let p = convex_hull.random_point(&self.mutator.rand);
             let num_contacts = self.mutator.rand.next_u32() % 3 + 1;
             to_add.push(SupportPoint {
                 position: p,
@@ -79,6 +77,7 @@ impl<'a> PopulationInitializer<SupportStructureOptimizationGene, SupportStructur
             });
         }
         g.supports.append(&mut to_add);
+        g.contact_radius = SupportStructureOptimizationGene::random_network(&self.mutator.rand);
         g
     }
 }

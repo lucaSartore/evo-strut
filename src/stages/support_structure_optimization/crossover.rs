@@ -62,7 +62,8 @@ impl<'a> Crossover<SupportStructureOptimizationGene, SupportStructureCrossoverSe
             contacts: a.contacts.clone(),
             supports: supports_from_a.chain(supports_from_b).copied().collect(),
             contact_radius: a.contact_radius.crossover(&b.contact_radius, crossover, rand)
-                .expect("network crossover failed")
+                .expect("network crossover failed"),
+            convex_hull: a.convex_hull.clone()
         }
     }
 }

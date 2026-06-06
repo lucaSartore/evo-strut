@@ -3,17 +3,16 @@ use std::{ fmt::Debug };
 
 use hashbrown::{HashMap, HashSet};
 use itertools::{Itertools};
+use rerun::external::arrow::compute::kernels::cast_utils::parse_interval_month_day_nano_config;
 use smallvec::smallvec;
 
 use crate::{
     evolution::{Cost, Random},
     models::{Point, Settings, SurfaceGraph},
-    stages::{
-        support_structure_refinement::{
+    stages::support_structure_refinement::{
             BaseNode, ContactNode, MiddleNode, PositionAnchor, SupportNode, SupportNodeId,
             SupportStructureGene,
-        },
-    }, support::{neural_network::{ActivationFunction, LayerTopology, NetworkTopology, NetworkWeightInitialization, NeuralNetwork}},
+        }, support::{convex_hull::ConvexHull, neural_network::{ActivationFunction, LayerTopology, NetworkTopology, NetworkWeightInitialization, NeuralNetwork}},
 };
 
 #[derive(Clone, Debug, Copy)]
@@ -41,29 +40,33 @@ impl SupportPoint {
 pub struct SupportStructureOptimizationGene {
     pub contacts: Vec<ContactPoint>,
     pub supports: Vec<SupportPoint>,
-    pub contact_radius: NeuralNetwork
+    pub contact_radius: NeuralNetwork,
+    pub convex_hull: ConvexHull
 }
 
 impl SupportStructureOptimizationGene {
     pub fn from_contacts(contacts: Vec<ContactPoint>, random: &Random) -> Self {
+        let convex_hull = ConvexHull::new(contacts.iter().map(|x| x.position).collect());
+        Self {
+            contacts,
+            supports: vec![],
+            contact_radius: Self::random_network(random),
+            convex_hull
+        }
+    }
+
+    pub fn random_network(random: &Random) -> NeuralNetwork {
         let topology = NetworkTopology::new(
             3,
             vec![
-                LayerTopology::new(16, ActivationFunction::Relu)
-                    .expect("invalid default contact-point grouping hidden layer"),
+                // LayerTopology::new(16, ActivationFunction::Relu)
+                //     .expect("invalid default contact-point grouping hidden layer"),
                 LayerTopology::new(1, ActivationFunction::Sigmoid)
                     .expect("invalid default contact-point grouping output layer"),
             ],
         ).unwrap();
         let initialization = NetworkWeightInitialization::He;
-        let mut network = NeuralNetwork::random(topology, initialization, random).unwrap();
-        // starting with the bias helps out the network in the beginning
-        network.layers[0].biases[0] = 0.5;
-        Self {
-            contacts,
-            supports: vec![],
-            contact_radius: network
-        }
+        NeuralNetwork::random(topology, initialization, random).unwrap()
     }
 
     pub fn to_full_gene(&self, graph: &SurfaceGraph, settings: &Settings) -> SupportStructureGene {
@@ -263,7 +266,10 @@ impl<'a> RawStructureBuilder<'a> {
             .supports
             .iter()
             .filter(|x| {
+                // todo: hardcoded value
                 Point::horizon_angle(**x, position) > 30.0_f32.to_radians()
+                // x.z < position.z
+                && **x != position
             })
             .map(|x| {
                 let distance = (*x - position).abs();
@@ -275,6 +281,7 @@ impl<'a> RawStructureBuilder<'a> {
             .sorted_by_key(|x| x.1)
             .take(num_contacts)
             .map(|x| *x.0)
+            .unique()
             .collect();
     }
 
