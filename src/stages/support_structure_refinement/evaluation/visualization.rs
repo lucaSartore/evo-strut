@@ -30,11 +30,11 @@ pub fn visualize(
         .edges
         .iter()
         .flat_map(|(id, neighbors)| {
-            let p = descriptor.positions[id];
+            let p = descriptor.details[id].position;
             neighbors
                 .iter()
                 .filter(|x| **x < *id)
-                .map(|x| [p, descriptor.positions[x]])
+                .map(|x| [p, descriptor.details[x].position])
                 .collect::<Vec<_>>()
         })
         .collect();
@@ -47,7 +47,7 @@ pub fn visualize(
         .flat_map(|(_, x)| {
             if let SupportNode::Contact(n) = x {
                 Some(n.leans_on.iter().map(|support| {
-                    let sp = descriptor.positions[support];
+                    let sp = descriptor.details[support].position;
                     [
                         [sp, n.position + Point::new(0., n.radius, 0.)],
                         [sp, n.position + Point::new(0., -n.radius, 0.)],

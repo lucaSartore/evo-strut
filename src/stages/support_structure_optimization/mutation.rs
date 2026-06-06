@@ -19,6 +19,7 @@ pub mod add_point;
 pub mod move_points;
 pub mod mutate_contacts;
 pub mod remove_point;
+pub mod change_radius;
 
 pub struct SupportStructureMutator<'a> {
     pub settings: &'a Settings,
@@ -43,12 +44,14 @@ impl<'a> Mutator<SupportStructureOptimizationGene, SupportStructureMutatorSettin
             MovePoints,
             MutateContacts,
             RemovePoint,
+            ChangeRadius
         }
         const OPTIONS: &[MK] = &[
             MK::AddPont,
             MK::MovePoints,
             MK::MutateContacts,
             MK::RemovePoint,
+            MK::ChangeRadius
         ];
 
         let n_mutations = self.rand.next_in_range(1, 3);
@@ -60,6 +63,7 @@ impl<'a> Mutator<SupportStructureOptimizationGene, SupportStructureMutatorSettin
                 MK::MovePoints => move_points::mutate(self, gene),
                 MK::MutateContacts => mutate_contacts::mutate(self, gene),
                 MK::RemovePoint => remove_point::mutate(self, gene),
+                MK::ChangeRadius => change_radius::mutate(self, gene)
             };
         }
     }

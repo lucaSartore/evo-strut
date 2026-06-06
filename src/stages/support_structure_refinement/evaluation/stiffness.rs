@@ -39,12 +39,13 @@ pub fn stiffness_series(
     base_stiffness: &Stiffness,
     point_from: Point,
     point_to: Point,
+    radius: f32,
     settings: &MaterialStiffnessSettings,
 ) -> Stiffness {
     if base_stiffness.0.iter().all(|x| *x == 0.) {
         return Stiffness(Matrix6::zeros());
     }
-    let beam_stiffness = calculate_beam_stiffness(point_from, point_to, settings);
+    let beam_stiffness = calculate_beam_stiffness(point_from, point_to, radius, settings);
     let v = point_to - point_from;
 
     // Jacobian matrix that maps the beam's "point_to" from the degrees of freedom
@@ -111,10 +112,11 @@ pub fn stiffness_parallel(s: &[Stiffness]) -> Stiffness {
 pub fn calculate_beam_stiffness(
     point_from: Point,
     point_to: Point,
+    radius: f32,
     settings: &MaterialStiffnessSettings,
 ) -> Stiffness {
     let beam_length = (point_to - point_from).abs();
-    let beam_stiffness = get_stiffness_matrix(beam_length, &settings);
+    let beam_stiffness = get_stiffness_matrix(beam_length, radius, &settings);
 
     let v = point_to - point_from;
     let beam_vec = [v.x, v.y, v.z];
@@ -131,30 +133,13 @@ pub fn calculate_beam_stiffness(
     Stiffness(rotated)
 }
 
-/// Calculate the stiffness of a point given its supporting points
-///
-/// This combines all support stiffness values in series and then in parallel.
-pub fn calculate_stiffness(
-    point: Point,
-    supports: &[(Point, Stiffness)],
-    settings: &MaterialStiffnessSettings,
-) -> Stiffness {
-    let mut supports_stiffness: Vec<Stiffness> = Vec::new();
-
-    for (support_p, support_s) in supports {
-        let full_stiffness = stiffness_series(support_s, *support_p, point, settings);
-        supports_stiffness.push(full_stiffness);
-    }
-
-    stiffness_parallel(&supports_stiffness)
-}
-
 /// Return the stiffness matrix of a beam with a specific length
 ///
 /// The beam is assumed to be parallel to the x-axis. The matrix includes
 /// effects of axial, bending, and torsional stiffness.
-fn get_stiffness_matrix(beam_length: f32, settings: &MaterialStiffnessSettings) -> Matrix6<f32> {
-    let ea = settings.e_mod * settings.area;
+fn get_stiffness_matrix(beam_length: f32, radius: f32, settings: &MaterialStiffnessSettings) -> Matrix6<f32> {
+    let area = 2. * radius * settings.area_multiplier;
+    let ea = settings.e_mod * area;
     let eiz = settings.e_mod * settings.iz;
     let eiy = settings.e_mod * settings.iy;
     let gj = settings.g_mod * settings.jxx;

@@ -25,6 +25,7 @@ pub struct Node {
     pub distance_from_source: f32,
     pub neighbors: SmallVec<[Neighbor; 4]>,
     pub supported: bool,
+    pub radius: f32
 }
 
 #[derive(Debug)]
@@ -145,6 +146,7 @@ impl Graph {
         position: Point,
         neighbors: &[SupportNodeId],
         supported: bool,
+        radius: f32
     ) {
         let mut new_node = Node {
             id,
@@ -153,6 +155,7 @@ impl Graph {
             distance_from_source: 0.,
             neighbors: smallvec![],
             supported,
+            radius
         };
 
         for n_id in neighbors {

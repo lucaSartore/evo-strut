@@ -1,3 +1,5 @@
+use std::f32;
+
 use crate::support::{
     neural_network::{
         ActivationFunction, LayerTopology, NetworkCrossoverSettings, NetworkMutationRates,
@@ -225,7 +227,7 @@ impl Default for ContactPointsOptimizationSettings {
             min_support_radius: 0.5,
             move_support_mutation_intensity: 2.5,
             change_support_radius_mutation_intensity: 2.,
-            num_generations: 2000,
+            num_generations: 20,
             patience: 25,
             generation_size: 100,
             tournament_size: 10,
@@ -401,7 +403,7 @@ pub struct SupportStructureOptimizationSettings {
 impl Default for SupportStructureOptimizationSettings {
     fn default() -> Self {
         Self {
-            num_generations: 2000,
+            num_generations: 900,
             patience: 50,
             generation_size: 100,
             tournament_size: 10,
@@ -444,7 +446,7 @@ pub struct SupportStructureRefinementSettings {
     pub num_elite_individuals: usize,
     /// cost for every mm of length of supports
     /// unit of measure: cost/mm
-    pub cost_for_unit_of_length: f32,
+    pub cost_for_support_area: f32,
     /// cost foe every mm of support that goes over the desired angle by some degrees
     /// unit of measure: cost/(mm*deg)
     pub cost_for_support_too_steep: f32,
@@ -502,7 +504,7 @@ impl Default for SupportStructureRefinementSettings {
             generation_size: 100,
             tournament_size: 10,
             num_elite_individuals: 10,
-            cost_for_unit_of_length: 1.0,
+            cost_for_support_area: 0.5,
             cost_for_support_too_steep: 15.0,
             non_stiffness_cost: 1.,
             stiffness_cost_integration_size: 1.0,
@@ -522,7 +524,8 @@ impl Default for SupportStructureRefinementSettings {
 
 #[derive(Clone, Debug)]
 pub struct MaterialStiffnessSettings {
-    pub area: f32,
+    // diameter * area multiplier = area of the beam
+    pub area_multiplier: f32,
     pub e_mod: f32,
     pub g_mod: f32,
     pub jxx: f32,
@@ -533,7 +536,7 @@ pub struct MaterialStiffnessSettings {
 impl Default for MaterialStiffnessSettings {
     fn default() -> Self {
         Self {
-            area: 7.0,
+            area_multiplier: f32::consts::PI * 0.4,
             e_mod: 1500.0,
             g_mod: 500.0,
             jxx: 6.0,
@@ -559,7 +562,7 @@ pub struct SupportSettings {
 impl Default for SupportSettings {
     fn default() -> Self {
         Self { 
-            voxel_size: 0.2,
+            voxel_size: 0.3,
             beam_radius: 1.5,
             cone_thickness: 0.6,
             min_cone_thickness_for_hole: 0.1,

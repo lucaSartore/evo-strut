@@ -73,9 +73,12 @@ impl<'a> PopulationInitializer<SupportStructureOptimizationGene, SupportStructur
             let mut p = g.random_point(&self.mutator.rand);
             p.z = self.mutator.rand.next_f32(0., p.z);
             let num_contacts = self.mutator.rand.next_u32() % 3 + 1;
+            // todo: hardcoded values
+            let radius = self.mutator.rand.next_f32(1., 5.);
             to_add.push(SupportPoint {
                 position: p,
-                num_contacts
+                num_contacts,
+                radius
             });
         }
         g.supports.append(&mut to_add);

@@ -4,13 +4,13 @@ use crate::{
     stages::support_structure_refinement::SupportStructureGene,
 };
 
-mod add_one_leans_on;
-mod create_one_more_leans_on;
-mod merge_two;
-mod move_one;
-mod remove_one_leans_on;
-mod remove_one_node;
-mod shorten_cone;
+// mod add_one_leans_on;
+// mod create_one_more_leans_on;
+// mod merge_two;
+// mod move_one;
+// mod remove_one_leans_on;
+// mod remove_one_node;
+// mod shorten_cone;
 
 pub struct SupportStructureMutatorSettings<'a> {
     settings: &'a Settings,
@@ -41,38 +41,39 @@ impl<'a> Mutator<SupportStructureGene, SupportStructureMutatorSettings<'a>>
     }
 
     fn mutate(&self, gene: &mut SupportStructureGene) {
-        enum MK {
-            AddOneLeansOn,
-            CreateOneMoreLeansOn,
-            MergeTwo,
-            MoveOne,
-            RemoveOneLeansOn,
-            RemoveOneNode,
-            ShortenCone,
-        }
-        const OPTIONS: &[MK] = &[
-            MK::AddOneLeansOn,
-            MK::CreateOneMoreLeansOn,
-            MK::MergeTwo,
-            MK::MoveOne,
-            MK::RemoveOneLeansOn,
-            MK::RemoveOneNode,
-            MK::ShortenCone,
-        ];
-
-        for _ in 0..5 {
-            let mutation = self.rand.choose_or_panic(OPTIONS);
-
-            match mutation {
-                MK::AddOneLeansOn => add_one_leans_on::mutate(self, gene),
-                MK::CreateOneMoreLeansOn => create_one_more_leans_on::mutate(self, gene),
-                MK::MergeTwo => merge_two::mutate(self, gene),
-                MK::MoveOne => move_one::mutate(self, gene),
-                MK::RemoveOneLeansOn => remove_one_leans_on::mutate(self, gene),
-                MK::RemoveOneNode => remove_one_node::mutate(self, gene),
-                MK::ShortenCone => shorten_cone::mutate(self, gene),
-            };
-            gene.repair(self.graph, &self.rand);
-        }
+        return;
+        // enum MK {
+        //     AddOneLeansOn,
+        //     CreateOneMoreLeansOn,
+        //     MergeTwo,
+        //     MoveOne,
+        //     RemoveOneLeansOn,
+        //     RemoveOneNode,
+        //     ShortenCone,
+        // }
+        // const OPTIONS: &[MK] = &[
+        //     MK::AddOneLeansOn,
+        //     MK::CreateOneMoreLeansOn,
+        //     MK::MergeTwo,
+        //     MK::MoveOne,
+        //     MK::RemoveOneLeansOn,
+        //     MK::RemoveOneNode,
+        //     MK::ShortenCone,
+        // ];
+        //
+        // for _ in 0..5 {
+        //     let mutation = self.rand.choose_or_panic(OPTIONS);
+        //
+        //     match mutation {
+        //         MK::AddOneLeansOn => add_one_leans_on::mutate(self, gene),
+        //         MK::CreateOneMoreLeansOn => create_one_more_leans_on::mutate(self, gene),
+        //         MK::MergeTwo => merge_two::mutate(self, gene),
+        //         MK::MoveOne => move_one::mutate(self, gene),
+        //         MK::RemoveOneLeansOn => remove_one_leans_on::mutate(self, gene),
+        //         MK::RemoveOneNode => remove_one_node::mutate(self, gene),
+        //         MK::ShortenCone => shorten_cone::mutate(self, gene),
+        //     };
+        //     gene.repair(self.graph, &self.rand);
+        // }
     }
 }

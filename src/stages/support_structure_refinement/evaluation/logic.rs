@@ -1,3 +1,5 @@
+use std::f32;
+
 use crate::{models::MaterialStiffnessSettings, stages::{contact_points_grouping, support_structure_refinement::evaluation::graph::Neighbor}};
 use hashbrown::HashMap;
 use smallvec::{smallvec, SmallVec};
@@ -16,16 +18,21 @@ use crate::{
 
 use super::*;
 
+pub struct  DescriptorNodeDetails {
+    pub id: SupportNodeId,
+    pub position: Point,
+    pub radius: f32
+}
 pub struct GraphDescriptor {
     /// nodes with relative position ordered by height
     pub nodes: Vec<SupportNodeId>,
-    pub positions: HashMap<SupportNodeId, Point>,
+    pub details: HashMap<SupportNodeId, DescriptorNodeDetails>,
     pub edges: HashMap<SupportNodeId, SmallVec<[SupportNodeId; 4]>>,
 }
 
 pub fn genome_to_graph_descriptor(gene: &SupportStructureGene) -> GraphDescriptor {
     let mut nodes = vec![];
-    let mut positions = HashMap::new();
+    let mut details = HashMap::new();
     let mut edges = HashMap::new();
     for (_, g) in gene.nodes.iter() {
         let (node_id, position, adj) = match g {
@@ -33,8 +40,9 @@ pub fn genome_to_graph_descriptor(gene: &SupportStructureGene) -> GraphDescripto
             SupportNode::Base(n) => (n.id, n.last_position, &smallvec![]),
             SupportNode::Middle(n) => (n.id, n.last_position, &n.leans_on),
         };
+        let radius = g.radius();
         nodes.push(node_id);
-        positions.insert(node_id, position);
+        details.insert(node_id, DescriptorNodeDetails { id: node_id, position, radius });
         for n in adj {
             edges.entry(*n).or_insert(smallvec![]).push(node_id);
         }
@@ -44,11 +52,11 @@ pub fn genome_to_graph_descriptor(gene: &SupportStructureGene) -> GraphDescripto
             .append(&mut adj.clone());
     }
 
-    nodes.sort_by_key(|x| Cost::new(positions[x].z));
+    nodes.sort_by_key(|x| Cost::new(details[x].position.z));
 
     GraphDescriptor {
         nodes,
-        positions,
+        details,
         edges,
     }
 }
@@ -103,7 +111,7 @@ fn evaluate_cones_cost(
         })
         .flat_map(|x| {
             x.leans_on.iter().map(|y| {
-                cost_of_single_cone(descriptor.positions[y], x.position, x.radius, settings)
+                cost_of_single_cone(descriptor.details[y].position, x.position, x.radius, settings)
             })
         })
         .sum();
@@ -116,12 +124,12 @@ fn evaluate_steepness_cost(descriptor: &GraphDescriptor, settings: &Settings) ->
         .edges
         .iter()
         .map(|(node, neighbours)| {
-            let node_position = descriptor.positions[node];
+            let node_position = descriptor.details[node].position;
             let len: f32 = neighbours
                 .iter()
                 .filter(|neighbour| **neighbour < *node)
                 .map(|neighbour| {
-                    let neighbour_position = descriptor.positions[neighbour];
+                    let neighbour_position = descriptor.details[neighbour].position;
                     let angle = Point::horizon_angle(node_position, neighbour_position)
                         .to_degrees()
                         .abs();
@@ -145,27 +153,30 @@ fn evaluate_steepness_cost(descriptor: &GraphDescriptor, settings: &Settings) ->
 }
 
 fn evaluate_length_cost(descriptor: &GraphDescriptor, settings: &Settings) -> Cost {
-    let distance: f32 = descriptor
+    let surface: f32 = descriptor
         .edges
         .iter()
         .map(|(node, neighbours)| {
-            let node_position = descriptor.positions[node];
+            let node_descriptor = &descriptor.details[node];
             let len: f32 = neighbours
                 .iter()
                 .filter(|neighbour| **neighbour < *node)
                 .map(|neighbour| {
-                    let neighbour_position = descriptor.positions[neighbour];
-                    (node_position - neighbour_position).abs()
+                    let neighbour_descriptor = &descriptor.details[neighbour];
+                    let len = (node_descriptor.position - neighbour_descriptor.position).abs();
+                    let radius = (node_descriptor.radius + neighbour_descriptor.radius) / 2.;
+                    // approximated surface o the cone plus the sphere area
+                    len * radius * 2.0 * f32::consts::PI + node_descriptor.radius.powi(2) * 4. * f32::consts::PI
                 })
                 .sum();
             len
         })
         .sum();
     Cost::new(
-        distance
+        surface
             * settings
                 .support_structure_refinement_settings
-                .cost_for_unit_of_length,
+                .cost_for_support_area,
     )
 }
 
@@ -173,6 +184,7 @@ fn evaluate_single_support_stiffness(
     base_stiffness: &Stiffness,
     from: Point,
     to: Point,
+    radius: f32,
     settings: &Settings,
 ) -> f32 {
     let s = &settings.support_structure_refinement_settings;
@@ -183,7 +195,7 @@ fn evaluate_single_support_stiffness(
         let scalar = i as f32 / (to_integrate.len() - 1) as f32;
         let new_to = from + vector.to_scaled(scalar);
         let stiffness =
-            stiffness_series(base_stiffness, from, new_to, &s.material_stiffness_settings);
+            stiffness_series(base_stiffness, from, new_to, radius, &s.material_stiffness_settings);
         let Some(compliance) = stiffness.0.try_inverse() else {
             // zero matrix mean node is somehow floating, we need
             // to add maximum cost
@@ -224,11 +236,13 @@ fn evaluate_stiffness<'b, 'a: 'b>(
         evaluate_stiffness(support, graph, cache, settings);
         let stiffness = &cache[&support];
         let weighted_stiffness = Stiffness(stiffness.0 * weight);
+        let supporter = &graph.nodes[&support];
         stiffness_to_combine.push(stiffness_series(
             &weighted_stiffness,
-            graph.nodes[&support].position,
+            supporter.position,
             node_position,
-            settings,
+            supporter.radius.min(node.radius),
+            settings
         ));
     }
     let final_stiffness = stiffness_parallel(&stiffness_to_combine);
@@ -245,13 +259,17 @@ fn evaluate_stiffness_cost(
     let mut cost = 0.;
     let mut graph = Graph::new();
     for node in &descriptor.nodes {
-        let node_position = descriptor.positions[node];
+        let node_descriptor = &descriptor.details[node];
+        let node_position = node_descriptor.position;
+        let node_radius = node_descriptor.radius;
         let supporters: Vec<_> = descriptor.edges[node]
             .iter()
             .filter(|x| graph.nodes.contains_key(*x))
             .collect();
         for supporter in supporters {
-            let supporter_position = descriptor.positions[supporter];
+            let supported_descriptor = &descriptor.details[supporter];
+            let supporter_position = supported_descriptor.position;
+            let supporter_radius = supported_descriptor.radius;
             let visited_nodes = graph.mark_distances(*supporter);
             let mut cache = HashMap::default();
             evaluate_stiffness(
@@ -265,15 +283,17 @@ fn evaluate_stiffness_cost(
                 base_stiffness,
                 supporter_position,
                 node_position,
-                settings,
+                node_radius.min(supporter_radius),
+                settings
             );
             graph.reset_some_nodes(&visited_nodes);
         }
         graph.add_node(
             *node,
-            descriptor.positions[node],
+            node_position,
             &descriptor.edges[node],
             gene.is_supported(*node),
+            node_radius
         );
     }
     Cost::new(cost)
@@ -285,10 +305,10 @@ fn evaluate_collision_cost(descriptor: &GraphDescriptor, volume: &Volume, settin
     let interval_distance = s.collision_check_intervals;
     let collision_cost = s.collision_penalization;
     for (node_id, neighbors) in descriptor.edges.iter() {
-        let node = descriptor.positions[node_id];
+        let node = &descriptor.details[node_id];
         for neighbor_id in neighbors.iter().filter(|x| *x < node_id) {
-            let neighbor = descriptor.positions[neighbor_id];
-            let interpolation = Point::interpolate(node, neighbor, interval_distance);
+            let neighbor = &descriptor.details[neighbor_id];
+            let interpolation = Point::interpolate(node.position, neighbor.position, interval_distance);
             if interpolation.len() < 2 {
                 continue;
             }

@@ -25,7 +25,8 @@ pub struct ContactPoint {
 #[derive(Clone, Debug, Copy)]
 pub struct SupportPoint {
     pub position: Point,
-    pub num_contacts: u32
+    pub num_contacts: u32,
+    pub radius: f32
 }
 
 #[derive(Clone, Debug)]
@@ -141,6 +142,7 @@ impl<'a> RawStructureBuilder<'a> {
                 id: SupportNodeId(0),
                 mesh_contact: None,
                 last_position: Point::DOWNWARD.to_scaled(10e20),
+                radius: 3.
             }),
         );
 
@@ -214,7 +216,7 @@ impl<'a> RawStructureBuilder<'a> {
                 };
                 SupportNode::Contact(n)
             }
-            QueuedPoint::Support(_) => {
+            QueuedPoint::Support(s) => {
                 self.supports.insert(position);
                 let n = MiddleNode {
                     id,
@@ -222,6 +224,7 @@ impl<'a> RawStructureBuilder<'a> {
                     anchor: PositionAnchor::new(SupportNodeId(0), Point::ZERO, Point::ZERO),
                     last_position: position,
                     leans_on: smallvec![],
+                    radius: s.radius
                 };
                 SupportNode::Middle(n)
             }

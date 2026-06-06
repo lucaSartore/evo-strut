@@ -38,14 +38,16 @@ pub struct BaseNode {
     // if None, then the current node leans to the ground.
     pub mesh_contact: Option<FaceId>,
     pub last_position: Point,
+    pub radius: f32
 }
 
 impl BaseNode {
-    pub fn new_ground(id: SupportNodeId, position: Point) -> Self {
+    pub fn new_ground(id: SupportNodeId, position: Point, radius: f32) -> Self {
         Self {
             id,
             mesh_contact: None,
             last_position: position,
+            radius
         }
     }
     pub fn new_mesh_contact(id: SupportNodeId, contact: FaceId, graph: &SurfaceGraph) -> Self {
@@ -53,6 +55,7 @@ impl BaseNode {
             id,
             mesh_contact: Some(contact),
             last_position: graph.get_triangle(contact).center(),
+            radius: 3.0
         }
     }
     pub fn repair_position(&self, prev_point: &NodeReference, graph: &SurfaceGraph) -> Self {
@@ -77,6 +80,7 @@ pub struct MiddleNode {
     // kept to re-construct the position in case node we ar anchoring to
     // is deleted
     pub last_position: Point,
+    pub radius: f32,
     pub leans_on: SmallVec<[SupportNodeId; 4]>,
 }
 
@@ -175,6 +179,14 @@ impl SupportNode {
             SupportNode::Base(n) => n.id,
             SupportNode::Middle(n) => n.id,
             SupportNode::Contact(n) => n.id,
+        }
+    }
+
+    pub fn radius(&self) -> f32 {
+        match self {
+            SupportNode::Base(n) => n.radius,
+            SupportNode::Middle(n) => n.radius,
+            SupportNode::Contact(n) => n.radius,
         }
     }
 
@@ -343,10 +355,11 @@ impl SupportStructureGene {
             let node = self.nodes.get_mut(f).expect("node should always exit");
             node.add_support(support);
             let mut position = node.get_position();
+            let radius = node.radius();
             position.z = 0.;
             self.nodes.insert(
                 support,
-                SupportNode::Base(BaseNode::new_ground(support, position)),
+                SupportNode::Base(BaseNode::new_ground(support, position, radius)),
             );
         }
     }

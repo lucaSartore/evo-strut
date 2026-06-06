@@ -42,6 +42,7 @@ impl ExportingStage {
         let descriptor = genome_to_graph_descriptor(s);
         let is_contact = |x: SupportNodeId| s.nodes[&x].is_contact();
         let point_to_pos = |x: SupportNodeId| s.nodes[&x].get_position();
+        let point_to_rad = |x: SupportNodeId| s.nodes[&x].radius();
         descriptor
             .edges
             .iter()
@@ -54,35 +55,34 @@ impl ExportingStage {
                     .map(|adj| (node, adj))
                     .collect::<Vec<_>>()
             })
-            .map(|(a, b)| (point_to_pos(*a), point_to_pos(*b)))
-            .for_each(|(a, b)| Self::add_beam(builder, a, b, settings));
+            .map(|(a, b)| (point_to_pos(*a), point_to_pos(*b), point_to_rad(*a), point_to_rad(*b)))
+            .for_each(|(a, b, ra, rb)| Self::add_beam(builder, a, b, ra, rb, settings));
     }
 
-    fn add_beam(builder: &mut ShapeFactory, a: Point, b: Point, settings: &SupportSettings) {
-        let (point_bottom, point_top) = if a.z < b.z {
-            (a, b)
+    fn add_beam(builder: &mut ShapeFactory, a: Point, b: Point, ra: f32, rb: f32, settings: &SupportSettings) {
+        let (point_bottom, point_top, r_bottom, r_top) = if a.z < b.z {
+            (a, b, ra, rb)
         } else {
-            (b, a)
+            (b, a, rb, ra)
         };
 
         let versor = (point_top - point_bottom).as_versor();
-        let radius = settings.beam_radius;
 
-        let bottom_too_close_to_ground = point_bottom.z <= radius;
-        let top_too_close_to_ground = point_top.z <= radius;
+        let bottom_too_close_to_ground = point_bottom.z <= r_bottom;
+        let top_too_close_to_ground = point_top.z <= r_top;
 
-        let circle_bottom = Circle::new(point_bottom, radius, if bottom_too_close_to_ground { Point::UPWARD } else { versor });
-        let circle_top = Circle::new(point_top, radius, if top_too_close_to_ground { Point::UPWARD } else { versor });
+        let circle_bottom = Circle::new(point_bottom, r_bottom, if bottom_too_close_to_ground { Point::UPWARD } else { versor });
+        let circle_top = Circle::new(point_top, r_top, if top_too_close_to_ground { Point::UPWARD } else { versor });
 
         let cone = TruncatedCone::new(circle_bottom, circle_top, 10e9, 10e9);
         builder.add_positive_shape(cone);
 
         if !top_too_close_to_ground {
-            let sphere = Sphere::new(point_top, radius);
+            let sphere = Sphere::new(point_top, r_top);
             builder.add_positive_shape(sphere);
         }
         if !bottom_too_close_to_ground {
-            let sphere = Sphere::new(point_bottom, radius);
+            let sphere = Sphere::new(point_bottom, r_bottom);
             builder.add_positive_shape(sphere);
         }
 
