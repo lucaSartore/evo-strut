@@ -21,8 +21,9 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureOpti
     } else if strategy_picker < 0.67 {
         // Truss/Midpoint building
         let p1 = gene.random_point(rand);
-        let p2 = gene.random_point(rand);
-        let midpoint = p1 + (p2 - p1).to_scaled(0.5);
+        let p2 = gene.random_point_close_to(p1, 0.2, 30.0_f32.to_radians(), rand);
+        let scaler = rand.next_f32(0., 1.);
+        let midpoint = p1 + (p2 - p1).to_scaled(scaler);
         Point::random(midpoint, 0.5, rand)
         
     } else {

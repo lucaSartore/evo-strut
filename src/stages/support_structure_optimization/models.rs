@@ -71,12 +71,42 @@ impl SupportStructureOptimizationGene {
         }
     }
 
+    pub fn random_point_close_to(&self, original_position: Point, alpha: f32, min_angle_rad: f32, rand: &Random) -> Point {
+        // probabilities that are too small risk to make this function slow
+        assert!(alpha > 0.001);
+        let options: Vec<_> = self.all_points_positions()
+            .filter(|x| *x != original_position && Point::horizon_angle(*x, original_position) > min_angle_rad)
+            .map(|x| (x, (x-original_position).norm_sq()))
+            .sorted_by_key(|x| Cost::new(x.1))
+            .map(|x| x.0)
+            .collect();
+
+        if options.is_empty() {
+            return original_position;
+        }
+
+        let mut index = 0;
+
+        loop {
+            if rand.random_choice(alpha) {
+                return options[index];
+            }
+            index = (index + 1) % options.len();
+        }
+    }
+
     pub fn random_support_mut(&mut self, rand: &Random) -> Option<&mut SupportPoint> {
         rand.choose_mut(&mut self.supports)
     }
 
     pub fn contact_positions(&self) -> Vec<Point> {
         self.contacts.iter().map(|x| x.position).collect()
+    }
+
+    pub fn all_points_positions(&self) -> impl Iterator<Item = Point> {
+        self.contacts.iter()
+            .map(|x| x.position)
+            .chain(self.supports.iter().map(|x| x.position))
     }
 
     pub fn max_height(&self) -> f32 {
