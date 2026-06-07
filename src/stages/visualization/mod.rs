@@ -1,7 +1,9 @@
 use crate::{
+    evolution::Random,
     models::{FaceId, MeshId, SurfaceGraph},
     stages::{
-        ContactPointsDecidedState, CriticalityDetectedState, CriticalityGroupedState, FloatingRegionsDetectedStage, LoadedState, Pipeline, PipelineBehaviourTrait, PipelineState
+        ContactPointsDecidedState, CriticalityDetectedState, CriticalityGroupedState,
+        FloatingRegionsDetectedStage, LoadedState, Pipeline, PipelineBehaviourTrait, PipelineState,
     },
 };
 use anyhow::Result;
@@ -73,12 +75,26 @@ impl Visualizer<CriticalityGroupedState> for VisualizationStage {
     }
 }
 
-
 impl Visualizer<FloatingRegionsDetectedStage> for VisualizationStage {
     fn visualize<TB: PipelineBehaviourTrait>(
         pipeline: &Pipeline<FloatingRegionsDetectedStage, TB>,
     ) -> Result<()> {
-        todo!();
+        let graph = &pipeline.state.graph;
+        let mut colors = vec![Color::White; graph.count_vertices()];
+        let rand = Random::UnSeededRandom;
+
+        for region in &pipeline.state.floating_regions {
+            let color = Color::Hsv(rand.next_f32(0.0, 360.0), 1.0, 1.0);
+
+            for triangle_id in region.faces() {
+                let t = graph.get_triangle(*triangle_id).as_raw_indexed();
+                for v in t.vertexes {
+                    colors[v.0 as usize] = color;
+                }
+            }
+        }
+
+        visualize_mesh(graph, "floating regions", Some(colors))
     }
 }
 
@@ -171,11 +187,8 @@ pub fn visualize_mesh(graph: &SurfaceGraph, name: &str, colors: Option<Vec<Color
 
     rec.log(
         "normals",
-        &rerun::Arrows3D::from_vectors(
-            graph.iter_triangles(None).map(|x| x.normal())
-        ).with_origins(
-            graph.iter_triangles(None).map(|x| x.center())
-        )
+        &rerun::Arrows3D::from_vectors(graph.iter_triangles(None).map(|x| x.normal()))
+            .with_origins(graph.iter_triangles(None).map(|x| x.center())),
     )?;
 
     rec.log(

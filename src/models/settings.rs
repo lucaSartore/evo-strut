@@ -15,6 +15,9 @@ pub struct Settings {
     /// parameters that define what constitute a "critical" surface
     /// (i.e. a surface that needs supports)
     pub criticality_settings: CriticalitySettings,
+    /// parameters used to detect floating regions and determine how rigidly
+    /// they should be supported
+    pub floating_region_detection_settings: FloatingRegionDetectionSettings,
     pub contact_points_optimization_settings: ContactPointsOptimizationSettings,
     /// parameters used to group the contact points into a disjoint sets that should
     /// be considered together when optimizing
@@ -53,6 +56,21 @@ impl Default for CriticalitySettings {
             support_overhanging_angle: 55.,
             max_detachment_from_z_plane: 0.1,
             criticality_expansion_rate: 1.,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct FloatingRegionDetectionSettings {
+    /// multiplier used to convert floating region area into a stiffness threshold
+    /// unit of measure: stiffness/mm^2
+    pub stiffness_threshold_area_multiplier: f32,
+}
+
+impl Default for FloatingRegionDetectionSettings {
+    fn default() -> Self {
+        Self {
+            stiffness_threshold_area_multiplier: 1.,
         }
     }
 }

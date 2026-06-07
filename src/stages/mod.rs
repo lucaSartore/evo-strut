@@ -223,7 +223,7 @@ where
         );
         timed!("visualizing", VisualizationStage::visualize(&p))?;
         let p = timed!(
-            "criticality_detection",
+            "floating_region_detection",
             FloatingRegionDetectionStage::<TB>::execute(p)
         );
         timed!("visualizing", VisualizationStage::visualize(&p))?;
