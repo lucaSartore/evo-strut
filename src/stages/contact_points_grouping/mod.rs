@@ -51,6 +51,7 @@ where
             graph: input.state.graph,
             connection_points: input.state.connection_points,
             grouper: best.expect("can't be empty"),
+            floating_regions: input.state.floating_regions
         }))
     }
 }

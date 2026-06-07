@@ -4,7 +4,7 @@ use std::{collections::HashSet, marker::PhantomData};
 
 use crate::{
     models::{FaceId, MeshVector, Point, Settings, SurfaceGraph},
-    stages::{CriticalityDetectedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait},
+    stages::{CriticalityDetectedState, CriticalityGroupedState, FloatingRegionsDetectedStage, Pipeline, PipelineBehaviourTrait},
 };
 
 pub struct CriticalityGroupingStage<TB>
@@ -19,7 +19,7 @@ where
     TB: PipelineBehaviourTrait,
 {
     pub fn execute(
-        input: Pipeline<CriticalityDetectedState, TB>,
+        input: Pipeline<FloatingRegionsDetectedStage, TB>,
     ) -> Pipeline<CriticalityGroupedState, TB> {
         let graph = &input.state.graph;
         let settings = &input.state.settings;
@@ -42,6 +42,7 @@ where
             grouped_areas,
             grouped_areas_hashes,
             critical,
+            floating_regions: input.state.floating_regions
         })
     }
 }

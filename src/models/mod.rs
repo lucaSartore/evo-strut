@@ -166,4 +166,8 @@ impl SurfaceGraph {
     pub fn neighbors(&self, t: FaceId) -> SmallVec<[FaceId; 3]> {
         self.get_node(t).neighbors.clone()
     }
+
+    pub fn neighbors_ref(&self, t: FaceId) -> &SmallVec<[FaceId; 3]> {
+        &self.get_node(t).neighbors
+    }
 }

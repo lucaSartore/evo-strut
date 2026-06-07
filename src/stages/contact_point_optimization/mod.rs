@@ -57,6 +57,7 @@ where
             graph: input.state.graph,
             connection_points: merged,
             critical: input.state.critical,
+            floating_regions: input.state.floating_regions
         }))
     }
 }

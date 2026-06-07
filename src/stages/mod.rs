@@ -7,6 +7,7 @@ use std::{
 pub mod contact_point_optimization;
 pub mod contact_points_grouping;
 pub mod criticality_detection;
+pub mod floating_region_detection;
 pub mod criticality_grouping;
 pub mod loading;
 pub mod support_structure_optimization;
@@ -31,6 +32,8 @@ use crate::{
             SupportStructureOptimizationStage, SupportStructureOptimizer,
         }, support_structure_refinement::{
             SupportStructureGene, SupportStructureRefinementStage, SupportStructureRefiner,
+        }, floating_region_detection::{
+            FloatingRegionDetectionStage, FloatingRegionDetector, FloatingRegion
         }
     },
 };
@@ -38,6 +41,7 @@ use visualization::{VisualizationStage, Visualizer};
 
 pub trait PipelineBehaviourTrait {
     type TCriticalityDetection: CriticalityDetector;
+    type TFloatingRegionDetection: FloatingRegionDetector;
     type TCriticalityGrouping: CriticalityGrouper;
     type TContactPointOptimizer: ContactPointOptimizer;
     type TContactPointGrouper: ContactPointsGrouper;
@@ -47,17 +51,19 @@ pub trait PipelineBehaviourTrait {
 
 pub struct PipelineBehaviour<
     TD: CriticalityDetector,
+    TFD: FloatingRegionDetector,
     TG: CriticalityGrouper,
     TCPO: ContactPointOptimizer,
     TCPG: ContactPointsGrouper,
     TSSO: SupportStructureOptimizer,
     TSSR: SupportStructureRefiner,
 > {
-    _t: PhantomData<(TD, TG, TCPO, TCPG, TSSO, TSSR)>,
+    _t: PhantomData<(TD, TFD, TG, TCPO, TCPG, TSSO, TSSR)>,
 }
 
 impl<
         TCriticalityDetection: CriticalityDetector,
+        TFloatingRegionDetection: FloatingRegionDetector,
         TCriticalityGrouping: CriticalityGrouper,
         TContactPointOptimizer: ContactPointOptimizer,
         TContactPointGrouper: ContactPointsGrouper,
@@ -66,6 +72,7 @@ impl<
     > PipelineBehaviourTrait
     for PipelineBehaviour<
         TCriticalityDetection,
+        TFloatingRegionDetection,
         TCriticalityGrouping,
         TContactPointOptimizer,
         TContactPointGrouper,
@@ -74,6 +81,7 @@ impl<
     >
 {
     type TCriticalityDetection = TCriticalityDetection;
+    type TFloatingRegionDetection = TFloatingRegionDetection;
     type TCriticalityGrouping = TCriticalityGrouping;
     type TContactPointOptimizer = TContactPointOptimizer;
     type TContactPointGrouper = TContactPointGrouper;
@@ -96,6 +104,7 @@ pub struct LoadedState {
 }
 impl PipelineState for LoadedState {}
 
+
 /// we have successfully detected all the nodes that are considered critical
 pub struct CriticalityDetectedState {
     pub settings: Settings,
@@ -104,6 +113,15 @@ pub struct CriticalityDetectedState {
 }
 impl PipelineState for CriticalityDetectedState {}
 
+/// we have successfully detected all the nodes that are considered critical
+pub struct FloatingRegionsDetectedStage {
+    pub settings: Settings,
+    pub graph: SurfaceGraph,
+    pub critical: Vec<FaceId>,
+    pub floating_regions: Vec<FloatingRegion>,
+}
+impl PipelineState for FloatingRegionsDetectedStage {}
+
 /// we have grouped the criticality into areas
 pub struct CriticalityGroupedState {
     pub settings: Settings,
@@ -111,6 +129,7 @@ pub struct CriticalityGroupedState {
     pub critical: MeshVector<FaceId, bool>,
     pub grouped_areas: Vec<Vec<FaceId>>,
     pub grouped_areas_hashes: Vec<HashSet<FaceId>>,
+    pub floating_regions: Vec<FloatingRegion>,
 }
 impl PipelineState for CriticalityGroupedState {}
 
@@ -120,6 +139,7 @@ pub struct ContactPointsDecidedState {
     pub graph: SurfaceGraph,
     pub critical: MeshVector<FaceId, bool>,
     pub connection_points: ContactPointsGene,
+    pub floating_regions: Vec<FloatingRegion>,
 }
 impl PipelineState for ContactPointsDecidedState {}
 
@@ -128,6 +148,7 @@ pub struct ContactPointsGroupedState {
     pub graph: SurfaceGraph,
     pub connection_points: ContactPointsGene,
     pub grouper: ContactPointGroupingGene,
+    pub floating_regions: Vec<FloatingRegion>,
 }
 impl PipelineState for ContactPointsGroupedState {}
 
@@ -199,6 +220,11 @@ where
         let p = timed!(
             "criticality_detection",
             CriticalityDetectionStage::<TB>::execute(p)
+        );
+        timed!("visualizing", VisualizationStage::visualize(&p))?;
+        let p = timed!(
+            "criticality_detection",
+            FloatingRegionDetectionStage::<TB>::execute(p)
         );
         timed!("visualizing", VisualizationStage::visualize(&p))?;
         let p = timed!(

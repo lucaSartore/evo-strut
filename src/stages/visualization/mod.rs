@@ -1,8 +1,7 @@
 use crate::{
     models::{FaceId, MeshId, SurfaceGraph},
     stages::{
-        ContactPointsDecidedState, CriticalityDetectedState, CriticalityGroupedState, LoadedState,
-        Pipeline, PipelineBehaviourTrait, PipelineState,
+        ContactPointsDecidedState, CriticalityDetectedState, CriticalityGroupedState, FloatingRegionsDetectedStage, LoadedState, Pipeline, PipelineBehaviourTrait, PipelineState
     },
 };
 use anyhow::Result;
@@ -71,6 +70,15 @@ impl Visualizer<CriticalityGroupedState> for VisualizationStage {
         }
 
         visualize_mesh(graph, "grouped critical surfaces", Some(colors))
+    }
+}
+
+
+impl Visualizer<FloatingRegionsDetectedStage> for VisualizationStage {
+    fn visualize<TB: PipelineBehaviourTrait>(
+        pipeline: &Pipeline<FloatingRegionsDetectedStage, TB>,
+    ) -> Result<()> {
+        todo!();
     }
 }
 

@@ -10,6 +10,7 @@ use crate::{
     models::Settings,
     stages::{
         contact_point_optimization::SimpleContactPointOptimizer,
+        floating_region_detection::AreaBasedFloatingRegionDetector,
         contact_points_grouping::SimpleContactPointsGrouper,
         criticality_detection::PropagationBasedCriticalityDetector,
         criticality_grouping::DistanceBasedCriticalityGrouper,
@@ -28,6 +29,7 @@ fn main() {
     let settings = Settings::default();
     type Behaviour = PipelineBehaviour<
         PropagationBasedCriticalityDetector,
+        AreaBasedFloatingRegionDetector,
         DistanceBasedCriticalityGrouper,
         SimpleContactPointOptimizer,
         SimpleContactPointsGrouper,
