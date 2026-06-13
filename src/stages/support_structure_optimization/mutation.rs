@@ -17,6 +17,7 @@ impl<'a> SupportStructureMutatorSettings<'a> {
 
 pub mod add_point;
 pub mod move_points;
+pub mod move_point;
 pub mod mutate_contacts;
 pub mod remove_point;
 pub mod change_radius;
@@ -42,6 +43,7 @@ impl<'a> Mutator<SupportStructureOptimizationGene, SupportStructureMutatorSettin
         enum MK {
             AddPont,
             MovePoints,
+            MovePoint,
             MutateContacts,
             RemovePoint,
             ChangeRadius
@@ -61,6 +63,7 @@ impl<'a> Mutator<SupportStructureOptimizationGene, SupportStructureMutatorSettin
             match mutation {
                 MK::AddPont => add_point::mutate(self, gene),
                 MK::MovePoints => move_points::mutate(self, gene),
+                MK::MovePoint => move_point::mutate(self, gene),
                 MK::MutateContacts => mutate_contacts::mutate(self, gene),
                 MK::RemovePoint => remove_point::mutate(self, gene),
                 MK::ChangeRadius => change_radius::mutate(self, gene)

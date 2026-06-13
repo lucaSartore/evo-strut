@@ -8,6 +8,7 @@ use super::*;
 
 pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureOptimizationGene) {
     let rand = &mutator.rand;
+    // todo: hardcoded values
     let mutation_probability = rand.next_distribution(&RandomDistribution::InRange { low: 0.05, high: 0.4 });
     let mutation_std = rand.next_distribution(&RandomDistribution::InRange { low: 0.5, high: 5. });
 
