@@ -13,7 +13,7 @@ use crate::{
     },
     stages::{
         Pipeline, PipelineBehaviourTrait, SupportStructureOptimizedState,
-        SupportStructureRefinedState,
+        SupportStructureRefinedState
     },
 };
 
@@ -97,7 +97,7 @@ impl SupportStructureRefiner for SimpleSupportStructureRefiner {
                 max_generations: s.num_generations,
                 patience: s.patience,
             },
-            &SupportStructureEvaluatorSettings::new(settings, graph, mesh),
+            &SupportStructureEvaluatorSettings::new(settings, graph, mesh, vec![]),
             &TournamentBasedCrossoverSelectionSettings {
                 k: s.tournament_size,
             },

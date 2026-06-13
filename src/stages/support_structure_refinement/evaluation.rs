@@ -1,10 +1,13 @@
+use std::rc::Rc;
+
 use baby_shark::{mesh::corner_table::CornerTableF, voxel::{prelude::MeshToVolume, volume::Volume}};
+use rand_distr::num_traits::Float;
 use rerun::RecordingStream;
 
 use crate::{
     evolution::Evaluator,
     models::{Settings, SurfaceGraph},
-    stages::support_structure_refinement::SupportStructureGene,
+    stages::{floating_region_detection::{FloatingRegion, FloatingRegionDetector}, support_structure_refinement::SupportStructureGene},
 };
 
 mod graph;
@@ -15,12 +18,13 @@ mod visualization;
 pub struct SupportStructureEvaluatorSettings<'a> {
     pub settings: &'a Settings,
     pub graph: &'a SurfaceGraph,
-    pub mesh: &'a CornerTableF
+    pub mesh: &'a CornerTableF,
+    pub floating_region: Vec<FloatingRegion>
 }
 
 impl<'a> SupportStructureEvaluatorSettings<'a> {
-    pub fn new(settings: &'a Settings, graph: &'a SurfaceGraph, mesh: &'a CornerTableF) -> Self {
-        Self { settings, graph, mesh }
+    pub fn new(settings: &'a Settings, graph: &'a SurfaceGraph, mesh: &'a CornerTableF, floating_region: Vec<FloatingRegion>) -> Self {
+        Self { settings, graph, mesh, floating_region }
     }
 }
 
@@ -29,6 +33,7 @@ pub struct SupportStructureEvaluator<'a> {
     pub graph: &'a SurfaceGraph,
     volume: Volume,
     stream: RecordingStream,
+    floating_regions: Vec<FloatingRegion>
 }
 
 impl<'a> Evaluator<SupportStructureGene, SupportStructureEvaluatorSettings<'a>>
@@ -48,12 +53,13 @@ impl<'a> Evaluator<SupportStructureGene, SupportStructureEvaluatorSettings<'a>>
             stream: rerun::RecordingStreamBuilder::new("contact points structure optimization")
                 .spawn()
                 .expect("fail to build rerun stream"),
-            volume
+            volume,
+            floating_regions: settings.floating_region.clone()
         }
     }
 
     fn evaluate(&self, gene: &SupportStructureGene) -> crate::evolution::Cost {
-        logic::evaluate_cost(gene, &self.volume, self.settings)
+        logic::evaluate_cost(gene,self.graph, &self.volume, self.settings, &self.floating_regions)
 
     }
 

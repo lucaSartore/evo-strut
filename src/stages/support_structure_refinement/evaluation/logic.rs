@@ -1,6 +1,6 @@
 use std::f32;
 
-use crate::{models::MaterialStiffnessSettings, stages::{contact_points_grouping, support_structure_refinement::evaluation::graph::Neighbor}};
+use crate::{evolution::Random, models::{MaterialStiffnessSettings, SupportStructureRefinementSettings}, stages::{contact_points_grouping, support_structure_refinement::evaluation::graph::Neighbor}};
 use hashbrown::HashMap;
 use smallvec::{smallvec, SmallVec};
 
@@ -196,22 +196,27 @@ fn evaluate_single_support_stiffness(
         let new_to = from + vector.to_scaled(scalar);
         let stiffness =
             stiffness_series(base_stiffness, from, new_to, radius, &s.material_stiffness_settings);
-        let Some(compliance) = stiffness.0.try_inverse() else {
-            // zero matrix mean node is somehow floating, we need
-            // to add maximum cost
-            if stiffness.0.iter().all(|x| *x == 0.) {
-                cost += s.max_non_stiffness_cost;
-                continue;
-            }
-            panic!("fail to invert stiffness matrix: {:?}", stiffness)
-        };
-        let cxx = compliance[(0, 0)];
-        let cyy = compliance[(1, 1)];
-        cost += s.non_stiffness_cost * cxx + s.non_stiffness_cost * cyy
+        let c = compliance_value(s, &stiffness);
+        cost += s.non_stiffness_cost * c;
     }
     cost
 }
 
+fn compliance_value(s: &SupportStructureRefinementSettings, stiffness: &Stiffness) -> f32 {
+    let Some(compliance) = stiffness.0.try_inverse() else {
+        // zero matrix mean node is somehow floating, we need
+        // to add maximum cost
+        if stiffness.0.iter().all(|x| *x == 0.) {
+            return s.max_non_stiffness_cost / s.non_stiffness_cost;
+        }
+        panic!("fail to invert stiffness matrix: {:?}", stiffness)
+    };
+    let cxx = compliance[(0, 0)];
+    let cyy = compliance[(1, 1)];
+    (cxx.powi(2) + cyy.powi(2)).sqrt()
+}
+
+// recursively evaluate the stiffness of a graph
 fn evaluate_stiffness<'b, 'a: 'b>(
     point: SupportNodeId,
     graph: &Graph,
@@ -250,10 +255,28 @@ fn evaluate_stiffness<'b, 'a: 'b>(
     cache.insert(point, final_stiffness);
 }
 
+// evaluate the stiffness of a single node given a graph, and then reset the graph to leave no
+// distances
+fn evaluate_single_node_stiffness(s: &SupportStructureRefinementSettings, graph: &mut Graph, to_evaluate: SupportNodeId ) -> Stiffness {
+    let visited_nodes = graph.mark_distances(to_evaluate);
+    let mut cache = HashMap::default();
+    evaluate_stiffness(
+        to_evaluate,
+        &graph,
+        &mut cache,
+        &s.material_stiffness_settings,
+    );
+    let base_stiffness = cache.remove(&to_evaluate).expect("node shall always be found");
+    graph.reset_some_nodes(&visited_nodes);
+    base_stiffness
+}
+
 fn evaluate_stiffness_cost(
     gene: &SupportStructureGene,
+    surface: &SurfaceGraph,
     descriptor: &GraphDescriptor,
     settings: &Settings,
+    floating_regions: &[FloatingRegion]
 ) -> Cost {
     let s = &settings.support_structure_refinement_settings;
     let mut cost = 0.;
@@ -270,23 +293,14 @@ fn evaluate_stiffness_cost(
             let supported_descriptor = &descriptor.details[supporter];
             let supporter_position = supported_descriptor.position;
             let supporter_radius = supported_descriptor.radius;
-            let visited_nodes = graph.mark_distances(*supporter);
-            let mut cache = HashMap::default();
-            evaluate_stiffness(
-                *supporter,
-                &graph,
-                &mut cache,
-                &s.material_stiffness_settings,
-            );
-            let base_stiffness = &cache[supporter];
+            let base_stiffness = evaluate_single_node_stiffness(s, &mut graph, *supporter);
             cost += evaluate_single_support_stiffness(
-                base_stiffness,
+                &base_stiffness,
                 supporter_position,
                 node_position,
                 node_radius.min(supporter_radius),
                 settings
             );
-            graph.reset_some_nodes(&visited_nodes);
         }
         graph.add_node(
             *node,
@@ -296,8 +310,47 @@ fn evaluate_stiffness_cost(
             node_radius
         );
     }
+    Cost::new(cost) + evaluate_floating_regions_stiffness_cost(s, graph, surface, floating_regions)
+}
+
+fn evaluate_floating_regions_stiffness_cost(
+    s: &SupportStructureRefinementSettings,
+    mut graph: Graph,
+    surface: &SurfaceGraph,
+    floating_regions: &[FloatingRegion]
+) -> Cost {
+    let mut cost = 0.;
+    let pos_to_node_id = graph.build_pos_to_node_id();
+    for r in floating_regions.iter() {
+        let faces_positions: Vec<_> =  r.faces()
+            .iter()
+            .map(|x| surface.get_triangle(*x).center())
+            .collect();
+
+        let center = faces_positions
+            .iter()
+            .fold(Point::ZERO, |acc, v| acc + *v)
+            .to_scaled(0.1 / faces_positions.len() as f32);
+
+        let neighbors: Vec<_> = faces_positions
+            .iter()
+            .map(|x| pos_to_node_id[x])
+            .collect();
+
+        let id = graph.new_random_id(&Random::UnSeededRandom);
+
+        // todo: hard codded value
+        graph.add_node(id, center, &neighbors, false, 3.0);
+
+        let stiffness = evaluate_single_node_stiffness(s, &mut graph, id);
+        let compliance = compliance_value(s, &stiffness);
+
+        // todo: hard codded value
+        cost += (compliance - r.compliance_threshold).max(0.) * 100.;
+    }
     Cost::new(cost)
 }
+
 
 fn evaluate_collision_cost(descriptor: &GraphDescriptor, volume: &Volume, settings: &Settings) -> Cost {
     let mut cost = 0.;
@@ -323,12 +376,12 @@ fn evaluate_collision_cost(descriptor: &GraphDescriptor, volume: &Volume, settin
     Cost::new(cost)
 }
 
-pub fn evaluate_cost(gene: &SupportStructureGene, volume: &Volume, settings: &Settings) -> Cost {
+pub fn evaluate_cost(gene: &SupportStructureGene, surface: &SurfaceGraph, volume: &Volume, settings: &Settings, floating_regions: &[FloatingRegion]) -> Cost {
     let descriptor = genome_to_graph_descriptor(gene);
     let cone_cost = evaluate_cones_cost(gene, &descriptor, settings);
     let steepness_cost = evaluate_steepness_cost(&descriptor, settings);
     let length_cost = evaluate_length_cost(&descriptor, settings);
-    let stiffness_cost = evaluate_stiffness_cost(gene, &descriptor, settings);
+    let stiffness_cost = evaluate_stiffness_cost(gene, surface, &descriptor, settings, floating_regions);
     let collision_cost = evaluate_collision_cost(&descriptor, volume, settings);
 
     // println!(

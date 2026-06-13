@@ -227,6 +227,7 @@ where
             FloatingRegionDetectionStage::<TB>::execute(p)
         );
         timed!("visualizing", VisualizationStage::visualize(&p))?;
+        // return Ok(());
         let p = timed!(
             "criticality_grouping",
             CriticalityGroupingStage::<TB>::execute(p)

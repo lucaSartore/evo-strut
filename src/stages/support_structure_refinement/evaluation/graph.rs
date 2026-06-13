@@ -1,14 +1,14 @@
 use std::collections::BinaryHeap;
 
+use baby_shark::data_structures::st_tree::NodeIndex;
 use hashbrown::HashMap;
 use smallvec::{smallvec, SmallVec};
 
 use crate::{
-    models::Point,
-    stages::{
+    evolution::Random, models::Point, stages::{
         criticality_detection::propagation::QueuedElement,
         support_structure_refinement::SupportNodeId,
-    },
+    }
 };
 
 #[derive(Clone, Debug)]
@@ -38,6 +38,15 @@ impl Graph {
         Graph {
             nodes: HashMap::default(),
         }
+    }
+
+    pub fn new_random_id(&self, rand: &Random) -> SupportNodeId {
+        let id = SupportNodeId(rand.next_u32());
+        // re-generate it, as it is already taken
+        if self.nodes.contains_key(&id) {
+            return self.new_random_id(rand);
+        }
+        id
     }
 
     pub fn reset_all_nodes(&mut self) {
@@ -172,5 +181,13 @@ impl Graph {
             old_node.is_none(),
             "can't add a node that is already present"
         );
+    }
+
+    pub fn build_pos_to_node_id(&self) -> HashMap<Point, SupportNodeId> {
+        self
+            .nodes
+            .iter()
+            .map(|x| (x.1.position, *x.0))
+            .collect()
     }
 }

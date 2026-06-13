@@ -42,6 +42,7 @@ impl ContactPointGroupingGene {
                 .0;
 
             let cp = ContactPoint {
+                face: *contact.0,
                 position,
                 radius: contact.1.radius,
             };

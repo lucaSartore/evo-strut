@@ -421,7 +421,7 @@ pub struct SupportStructureOptimizationSettings {
 impl Default for SupportStructureOptimizationSettings {
     fn default() -> Self {
         Self {
-            num_generations: 2000,
+            num_generations: 5000,
             patience: 50,
             generation_size: 100,
             tournament_size: 10,
@@ -462,8 +462,8 @@ pub struct SupportStructureRefinementSettings {
     pub tournament_size: usize,
     /// number of individual generated/evaluated in every generation
     pub num_elite_individuals: usize,
-    /// cost for every mm of length of supports
-    /// unit of measure: cost/mm
+    /// cost for every mm^2 of surface area of supports
+    /// unit of measure: cost/mm^2
     pub cost_for_support_area: f32,
     /// cost foe every mm of support that goes over the desired angle by some degrees
     /// unit of measure: cost/(mm*deg)
@@ -522,7 +522,7 @@ impl Default for SupportStructureRefinementSettings {
             generation_size: 100,
             tournament_size: 10,
             num_elite_individuals: 10,
-            cost_for_support_area: 0.5,
+            cost_for_support_area: 2.5,
             cost_for_support_too_steep: 15.0,
             non_stiffness_cost: 1.,
             stiffness_cost_integration_size: 1.0,

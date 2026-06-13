@@ -10,7 +10,7 @@ use crate::{
     },
     stages::{
         ContactPointsDecidedState, ContactPointsGroupedState, Pipeline, PipelineBehaviourTrait,
-        SupportStructureOptimizedState,
+        SupportStructureOptimizedState, floating_region_detection::FloatingRegion,
     },
 };
 
@@ -65,6 +65,11 @@ impl SimpleSupportStructureOptimizer {
         status: &'a ContactPointsGroupedState,
         group: &'a SupportStructureOptimizationGene,
     ) -> Result<SupportStructureOptimizationGene> {
+        let floating_surfaces = FloatingRegion::filter_array(
+            &status.floating_regions, 
+            group.contacts.iter()
+            .map(|x| x.face)
+        );
         let settings = &status.settings;
         let mesh = &status.graph.mesh.original;
         let graph = &status.graph;
@@ -94,7 +99,7 @@ impl SimpleSupportStructureOptimizer {
                 max_generations: s.num_generations,
                 patience: s.patience,
             },
-            &SupportStructureEvaluatorSettings::new(settings, graph, mesh),
+            &SupportStructureEvaluatorSettings::new(settings, graph, mesh, floating_surfaces),
             &TournamentBasedCrossoverSelectionSettings {
                 k: s.tournament_size,
             },

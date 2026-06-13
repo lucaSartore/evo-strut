@@ -3,12 +3,11 @@ use std::{ fmt::Debug };
 
 use hashbrown::{HashMap, HashSet};
 use itertools::{Itertools};
-use rerun::external::arrow::compute::kernels::cast_utils::parse_interval_month_day_nano_config;
 use smallvec::smallvec;
 
 use crate::{
     evolution::{Cost, Random},
-    models::{Point, Settings, SurfaceGraph},
+    models::{FaceId, Point, Settings, SurfaceGraph},
     stages::support_structure_refinement::{
             BaseNode, ContactNode, MiddleNode, PositionAnchor, SupportNode, SupportNodeId,
             SupportStructureGene,
@@ -17,6 +16,7 @@ use crate::{
 
 #[derive(Clone, Debug, Copy)]
 pub struct ContactPoint {
+    pub face: FaceId,
     pub position: Point,
     pub radius: f32
 }

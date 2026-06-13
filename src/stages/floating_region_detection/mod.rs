@@ -1,4 +1,5 @@
 use hashbrown::HashSet;
+use rerun::external::image::imageops::colorops::contrast_in_place;
 use std::marker::PhantomData;
 
 use crate::{
@@ -35,9 +36,10 @@ where
     }
 }
 
+#[derive(Clone)]
 pub struct FloatingRegion {
     faces: HashSet<FaceId>,
-    stiffness_threshold: f32,
+    pub compliance_threshold: f32,
 }
 
 impl FloatingRegion {
@@ -45,8 +47,27 @@ impl FloatingRegion {
         &self.faces
     }
 
-    pub fn stiffness_threshold(&self) -> f32 {
-        self.stiffness_threshold
+
+    pub fn filter_array(floating_regions: &[FloatingRegion], faces: impl Iterator<Item = FaceId>) -> Vec<FloatingRegion> {
+        let set: HashSet<_> = faces.collect();
+
+        let mut to_return = vec![];
+
+        for floating_region in floating_regions.iter() {
+            let new_fr = floating_region.filter(|x| set.contains(x));
+            if !new_fr.faces.is_empty() {
+                to_return.push(new_fr);
+            }
+        }
+
+        return to_return
+    }
+
+    pub fn filter(&self, condition: impl FnMut(&FaceId) -> bool) -> Self {
+        Self {
+            faces: self.faces.iter().copied().filter(condition).collect(),
+            compliance_threshold: self.compliance_threshold
+        }
     }
 }
 
@@ -71,8 +92,8 @@ impl AreaBasedFloatingRegionDetector {
             .filter(move |x| x.center().layer(settings) >= layer)
     }
 
-    fn area_to_stiffness_threshold(area: f32, settings: &Settings) -> f32 {
-        area * settings
+    fn area_to_compliance_threshold(area: f32, settings: &Settings) -> f32 {
+        100. / area * settings
             .floating_region_detection_settings
             .stiffness_threshold_area_multiplier
     }
@@ -116,7 +137,7 @@ impl FloatingRegionDetector for AreaBasedFloatingRegionDetector {
 
             if !source_is_close_to_ground {
                 floating_regions.push(FloatingRegion {
-                    stiffness_threshold: Self::area_to_stiffness_threshold(region_area, settings),
+                    compliance_threshold: Self::area_to_compliance_threshold(region_area, settings),
                     faces: region_faces,
                 });
             }

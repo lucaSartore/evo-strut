@@ -256,6 +256,10 @@ impl SupportStructureGene {
         self.nodes[&id].is_base()
     }
 
+    pub fn is_contact(&self, id: SupportNodeId) -> bool {
+        self.nodes[&id].is_contact()
+    }
+
     pub fn random_non_base_node(&mut self, rand: &Random) -> SupportNodeId {
         loop {
             let v = self
