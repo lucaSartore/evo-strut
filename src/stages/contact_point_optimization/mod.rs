@@ -116,6 +116,6 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
             Random::UnSeededRandom,
         );
 
-        evolver.run().map(|x| x.0)
+        evolver.run_once().map(|x| x.0)
     }
 }

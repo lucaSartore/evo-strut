@@ -80,7 +80,34 @@ where
         }
     }
 
-    pub fn run(&self) -> Result<(TBehaviour::TGene, Cost)> {
+    pub fn run_n_times(
+        n: usize,
+        mutation_settings: &TBehaviour::SMut,
+        crossover_settings: &TBehaviour::SCross,
+        termination_settings: &TBehaviour::STerm,
+        evaluation_settings: &TBehaviour::SEval,
+        crossover_selection_settings: &TBehaviour::SCrossSel,
+        next_generation_settings: &TBehaviour::SNextSel,
+        population_initializer_settings: &TBehaviour::SInit,
+        rand: Random,
+    ) -> Result<(TBehaviour::TGene, Cost)> {
+        assert!(n >= 1, "N can't be zero");
+        (0..n)
+            .map(|_| Self::new(
+                mutation_settings,
+                crossover_settings,
+                termination_settings,
+                evaluation_settings,
+                crossover_selection_settings,
+                next_generation_settings,
+                population_initializer_settings,
+                rand.seeded_copy()
+            ).run_once())
+            .min_by_key(|x| x.as_ref().map(|y| y.1).unwrap_or(Cost::MAX))
+            .expect("iter should always contain one element")
+    }
+
+    pub fn run_once(&self) -> Result<(TBehaviour::TGene, Cost)> {
         let best = |x: &[Cost]| x.iter().copied().min().unwrap_or(Cost::MAX);
 
         let initial_count = self.population_initializer.get_initial_individuals();

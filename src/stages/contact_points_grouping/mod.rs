@@ -112,6 +112,6 @@ impl ContactPointsGrouper for SimpleContactPointsGrouper {
             Random::UnSeededRandom,
         );
 
-        evolver.run()
+        evolver.run_once()
     }
 }

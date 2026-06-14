@@ -109,6 +109,6 @@ impl SupportStructureRefiner for SimpleSupportStructureRefiner {
             Random::UnSeededRandom,
         );
 
-        evolver.run().map(|x| x.0)
+        evolver.run_once().map(|x| x.0)
     }
 }

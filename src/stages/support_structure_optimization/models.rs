@@ -29,10 +29,12 @@ pub struct SupportPoint {
 
 impl SupportPoint {
     pub fn radius(&self, full_gene: &SupportStructureOptimizationGene) -> f32 {
-        let p: [f32; 3] = self.position.into();
-        let output = full_gene.contact_radius.evaluate(&p).expect("network evaluation failed")[0];
+        // let p: [f32; 3] = self.position.into();
+        // let output = full_gene.contact_radius.evaluate(&p).expect("network evaluation failed")[0];
         // todo: hardcoded values
-        output * (5. - 1.5) + 1.5
+        // println!("output: {output}");
+        // return output * (5. - 1.5) + 0.5;
+        1.5
     }
 }
 

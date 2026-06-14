@@ -422,7 +422,7 @@ impl Default for SupportStructureOptimizationSettings {
     fn default() -> Self {
         Self {
             num_generations: 5000,
-            patience: 50,
+            patience: 500,
             generation_size: 100,
             tournament_size: 10,
             num_elite_individuals: 10,

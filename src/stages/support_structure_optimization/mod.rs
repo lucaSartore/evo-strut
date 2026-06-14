@@ -92,7 +92,8 @@ impl SimpleSupportStructureOptimizer {
             ElitistNextGenSelectorSettings,
             SupportStructureInitializerSettings<'a>,
         >;
-        let evolver = Evolver::<Behaviour<'a>>::new(
+        Evolver::<Behaviour<'a>>::run_n_times(
+            3,
             &SupportStructureMutatorSettings::new(settings, graph),
             &SupportStructureCrossoverSettings::new(settings),
             &PatienceBasedTerminationStrategySettings {
@@ -109,9 +110,7 @@ impl SimpleSupportStructureOptimizer {
             },
             &SupportStructureInitializerSettings::new(settings, graph, group),
             Random::UnSeededRandom,
-        );
-
-        evolver.run().map(|x| x.0)
+        ).map(|x| x.0)
     }
 }
 
