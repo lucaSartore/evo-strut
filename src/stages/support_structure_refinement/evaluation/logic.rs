@@ -37,18 +37,18 @@ pub fn genome_to_graph_descriptor(gene: &SupportStructureGene) -> GraphDescripto
     for (_, g) in gene.nodes.iter() {
         let (node_id, position, adj) = match g {
             SupportNode::Contact(n) => (n.id, n.position, &n.leans_on),
-            SupportNode::Base(n) => (n.id, n.last_position, &smallvec![]),
+            SupportNode::Base(n) => (n.id, n.last_position, &vec![]),
             SupportNode::Middle(n) => (n.id, n.last_position, &n.leans_on),
         };
         let radius = g.radius();
         nodes.push(node_id);
         details.insert(node_id, DescriptorNodeDetails { id: node_id, position, radius });
         for n in adj {
-            edges.entry(*n).or_insert(smallvec![]).push(node_id);
+            edges.entry(*n).or_insert(vec![]).push(node_id);
         }
         edges
             .entry(node_id)
-            .or_insert(smallvec![])
+            .or_insert(vec![])
             .append(&mut adj.clone());
     }
 
@@ -57,7 +57,7 @@ pub fn genome_to_graph_descriptor(gene: &SupportStructureGene) -> GraphDescripto
     GraphDescriptor {
         nodes,
         details,
-        edges,
+        edges: edges.into_iter().map(|(k, v)| (k, v.into_iter().collect())).collect(),
     }
 }
 

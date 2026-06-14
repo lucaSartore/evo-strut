@@ -216,40 +216,50 @@ where
     pub fn run(settings: Settings) -> Result<()> {
         let p = Self::new(settings);
         let p = timed!("loading", LoadingStage::<TB>::execute(p))?;
-        timed!("visualizing", VisualizationStage::visualize(&p))?;
-        let p = timed!(
-            "criticality_detection",
-            CriticalityDetectionStage::<TB>::execute(p)
-        );
-        timed!("visualizing", VisualizationStage::visualize(&p))?;
-        let p = timed!(
-            "floating_region_detection",
-            FloatingRegionDetectionStage::<TB>::execute(p)
-        );
-        timed!("visualizing", VisualizationStage::visualize(&p))?;
-        // return Ok(());
-        let p = timed!(
-            "criticality_grouping",
-            CriticalityGroupingStage::<TB>::execute(p)
-        );
-        timed!("visualizing", VisualizationStage::visualize(&p))?;
-        let p = timed!(
-            "contact_points_optimization",
-            ContactPointOptimizationStage::<TB>::execute(p)
-        )?;
-        timed!("visualizing", VisualizationStage::visualize(&p))?;
-        let p = timed!(
-            "contact_points_grouping",
-            ContactPointsGroupingStage::<TB>::execute(p)
-        )?;
-        let p = timed!(
-            "support_structure_optimization",
-            SupportStructureOptimizationStage::<TB>::execute(p)
-        )?;
-        let p = timed!(
-            "support_structure_refinement",
-            SupportStructureRefinementStage::<TB>::execute(p)
-        )?;
+        let p = match p {
+            // no pre-loaded mesh, we need to repeat every step
+            loading::LoadingStageOutput::MeshLoaded(p) => {
+                timed!("visualizing", VisualizationStage::visualize(&p))?;
+                let p = timed!(
+                    "criticality_detection",
+                    CriticalityDetectionStage::<TB>::execute(p)
+                );
+                timed!("visualizing", VisualizationStage::visualize(&p))?;
+                let p = timed!(
+                    "floating_region_detection",
+                    FloatingRegionDetectionStage::<TB>::execute(p)
+                );
+                timed!("visualizing", VisualizationStage::visualize(&p))?;
+                // return Ok(());
+                let p = timed!(
+                    "criticality_grouping",
+                    CriticalityGroupingStage::<TB>::execute(p)
+                );
+                timed!("visualizing", VisualizationStage::visualize(&p))?;
+                let p = timed!(
+                    "contact_points_optimization",
+                    ContactPointOptimizationStage::<TB>::execute(p)
+                )?;
+                timed!("visualizing", VisualizationStage::visualize(&p))?;
+                let p = timed!(
+                    "contact_points_grouping",
+                    ContactPointsGroupingStage::<TB>::execute(p)
+                )?;
+                let p = timed!(
+                    "support_structure_optimization",
+                    SupportStructureOptimizationStage::<TB>::execute(p)
+                )?;
+                let p = timed!(
+                    "support_structure_refinement",
+                    SupportStructureRefinementStage::<TB>::execute(p)
+                )?;
+                p
+            },
+            // pre-loaded struct, we can skip to exporting
+            loading::LoadingStageOutput::StructureLoaded(p) => {
+                p
+            }
+        };
 
         let _ = timed!("exporting", ExportingStage::execute(p))?;
         Ok(())

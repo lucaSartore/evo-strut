@@ -93,7 +93,7 @@ impl SimpleSupportStructureOptimizer {
             SupportStructureInitializerSettings<'a>,
         >;
         Evolver::<Behaviour<'a>>::run_n_times(
-            3,
+            1,
             &SupportStructureMutatorSettings::new(settings, graph),
             &SupportStructureCrossoverSettings::new(settings),
             &PatienceBasedTerminationStrategySettings {

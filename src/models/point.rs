@@ -1,5 +1,6 @@
 use convexhull3d::Vertex;
 use nalgebra::{ArrayStorage, Const, Matrix, Matrix2, Vector3};
+use serde::{Deserialize, Serialize};
 use core::f32;
 use std::{
     hash::{Hash, Hasher},
@@ -10,7 +11,7 @@ use crate::{
     evolution::Random, models::Settings, support::random_distribution::RandomDistribution,
 };
 
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Point {
     pub x: f32,
     pub y: f32,

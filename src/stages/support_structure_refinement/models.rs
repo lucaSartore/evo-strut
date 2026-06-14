@@ -1,5 +1,6 @@
 use crate::support::remove_random::RemoveRandom;
 use hashbrown::{HashMap, HashSet};
+use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 
 use crate::{
@@ -7,10 +8,10 @@ use crate::{
     models::{FaceId, Point, SurfaceGraph},
 };
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct SupportNodeId(pub u32);
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PositionAnchor {
     pub to: SupportNodeId,
     pub offset: Point,
@@ -31,7 +32,7 @@ impl PositionAnchor {
 
 /// represent a base point (i.e. a point that is connected either to the ground,
 /// or to the printed mesh itself, and provide "support to the support structure")
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BaseNode {
     pub id: SupportNodeId,
     // select the face that the current node leans on.
@@ -72,7 +73,7 @@ impl BaseNode {
 
 /// represent a middle node (i.e. a structural node that is in between
 /// base and contact nodes
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MiddleNode {
     pub id: SupportNodeId,
     // this node's position will be anchor.to.position + anchor.offset
@@ -81,7 +82,7 @@ pub struct MiddleNode {
     // is deleted
     pub last_position: Point,
     pub radius: f32,
-    pub leans_on: SmallVec<[SupportNodeId; 4]>,
+    pub leans_on: Vec<SupportNodeId>,
 }
 
 #[derive(Clone, Debug)]
@@ -126,12 +127,12 @@ impl MiddleNode {
 
 /// represent a contact point (i.e. a point that is providing
 /// support to the mesh we are printing)
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ContactNode {
     pub id: SupportNodeId,
     pub position: Point,
     pub radius: f32,
-    pub leans_on: SmallVec<[SupportNodeId; 4]>,
+    pub leans_on: Vec<SupportNodeId>,
 }
 
 impl ContactNode {
@@ -150,7 +151,7 @@ impl ContactNode {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum SupportNode {
     Base(BaseNode),
     Middle(MiddleNode),
@@ -236,6 +237,28 @@ impl SupportNode {
 #[derive(Debug, Clone)]
 pub struct SupportStructureGene {
     pub nodes: HashMap<SupportNodeId, SupportNode>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct DumpedSupportStructureGene {
+    pub nodes: Vec<(SupportNodeId, SupportNode)>,
+}
+
+impl Serialize for SupportStructureGene {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        let s = DumpedSupportStructureGene { nodes: self.nodes.iter().map(|(k,v)| (*k, v.clone())).collect() };
+        s.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for SupportStructureGene {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        let d = DumpedSupportStructureGene::deserialize(deserializer)?;
+        let r = Self { nodes: d.nodes.into_iter().collect() };
+        Ok(r)
+    }
 }
 
 impl SupportStructureGene {

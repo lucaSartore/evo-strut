@@ -6,8 +6,9 @@ use crate::{
     support::graph_circle::find_circle,
 };
 use hashbrown::{HashMap, HashSet};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Copy, Clone, Default)]
+#[derive(Debug, Copy, Clone, Default, Serialize, Deserialize)]
 pub struct ContactPointShape {
     pub radius: f32,
 }

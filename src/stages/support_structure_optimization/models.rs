@@ -227,7 +227,7 @@ impl<'a> RawStructureBuilder<'a> {
                     id,
                     position,
                     radius: p.radius,
-                    leans_on: smallvec![],
+                    leans_on: vec![],
                 };
                 SupportNode::Contact(n)
             }
@@ -238,7 +238,7 @@ impl<'a> RawStructureBuilder<'a> {
                     // we put a random anchor
                     anchor: PositionAnchor::new(SupportNodeId(0), Point::ZERO, Point::ZERO),
                     last_position: position,
-                    leans_on: smallvec![],
+                    leans_on: vec![],
                     radius: s.radius(self.optimization_structure)
                 };
                 SupportNode::Middle(n)

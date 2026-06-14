@@ -1,4 +1,4 @@
-use std::{path::Path, sync::Arc};
+use std::{fs::File, io::BufWriter, path::Path, sync::Arc};
 
 use anyhow::{Result, anyhow};
 use baby_shark::{io::write_to_file, voxel::prelude::MeshToVolume};
@@ -143,6 +143,12 @@ impl ExportingStage
 
         write_to_file(&mesh, Path::new(path))
             .map_err(|e| anyhow!("unable to export file: {e:?}"))?;
+
+
+        let path = &settings.io_settings.output_json_path;
+        let file = File::create(path)?;
+        let writer = BufWriter::new(file);
+        serde_json::to_writer_pretty(writer, &input.state.support_structures)?;
 
         Ok(Pipeline::from_state(MeshExportedState {  }))
     }

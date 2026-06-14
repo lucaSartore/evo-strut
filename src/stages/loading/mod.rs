@@ -6,7 +6,7 @@ use baby_shark::{
     mesh::corner_table::CornerTableF,
     remeshing::incremental::IncrementalRemesher,
 };
-use std::path::Path;
+use std::{fs::File, io::BufReader, path::Path};
 use std::sync::Arc;
 
 pub fn read(name: &str) -> Result<CornerTableF> {
@@ -47,11 +47,19 @@ where
     }
 }
 
+pub enum LoadingStageOutput<TB> 
+where
+    TB: PipelineBehaviourTrait,
+{
+    MeshLoaded(Pipeline<LoadedState, TB>),
+    StructureLoaded(Pipeline<SupportStructureRefinedState, TB>)
+}
+
 impl<TB> LoadingStage<TB>
 where
     TB: PipelineBehaviourTrait,
 {
-    pub fn execute(input: Pipeline<StartedState, TB>) -> Result<Pipeline<LoadedState, TB>> {
+    pub fn execute(input: Pipeline<StartedState, TB>) -> Result<LoadingStageOutput<TB>> {
         let settings = &input.state.settings.io_settings;
         let mesh = read(&settings.input_file_path)?;
         let mesh = Self::remesh(mesh, settings)?;
@@ -70,11 +78,27 @@ where
         let mesh_rc = Arc::new(mesh.into());
 
         let graph = SurfaceGraph::new(&mesh_rc);
-        let state = LoadedState {
+
+        let Some(path) = settings.input_json_path.as_ref() else {
+            let state = LoadedState {
+                settings: input.state.settings,
+                graph,
+            };
+            let pipeline = Pipeline::from_state(state);
+            return Ok(LoadingStageOutput::MeshLoaded(pipeline))
+        };
+
+        let file = File::open(path)?;
+        let reader = BufReader::new(file);
+
+        let state = SupportStructureRefinedState {
             settings: input.state.settings,
             graph,
+            connection_points: ContactPointsGene::default(),
+            support_structures: serde_json::from_reader(reader)?
         };
         let pipeline = Pipeline::from_state(state);
-        Ok(pipeline)
+
+        return Ok(LoadingStageOutput::StructureLoaded(pipeline))
     }
 }

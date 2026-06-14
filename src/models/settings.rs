@@ -77,8 +77,16 @@ impl Default for FloatingRegionDetectionSettings {
 
 #[derive(Debug, Clone)]
 pub struct IoSettings {
+    /// input mesh
     pub input_file_path: String,
+    /// output file with the supports in a stl format
     pub output_file_path: String,
+    /// output file with the supports in a json format
+    pub output_json_path: String,
+    /// optionally add a path where to load the json supports
+    /// if this is provided, the program will simply export
+    /// a mesh output without re-optimizing the structure
+    pub input_json_path: Option<String>,
     /// optionally specify a path where to write the
     /// re-meshed input.
     pub re_meshed_input_file_path: Option<String>,
@@ -99,7 +107,9 @@ impl Default for IoSettings {
             // input_file_path: "test_meshes/inclination_test_re_meshed.stl".into(),
             input_file_path: "test_meshes/dragon_re_meshed.stl".into(),
             re_meshed_input_file_path: None,
+            input_json_path: None,
             output_file_path: "test_meshes/output.stl".into(),
+            output_json_path: "test_meshes/output.json".into(),
             target_edge_length: 0.,
         }
     }
@@ -422,7 +432,7 @@ impl Default for SupportStructureOptimizationSettings {
     fn default() -> Self {
         Self {
             num_generations: 5000,
-            patience: 500,
+            patience: 50,
             generation_size: 100,
             tournament_size: 10,
             num_elite_individuals: 10,
