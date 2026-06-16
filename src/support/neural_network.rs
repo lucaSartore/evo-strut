@@ -1,25 +1,25 @@
 use anyhow::{Result, bail};
 use nalgebra::{DMatrix, DVector};
-use serde::{Serialize, Serializer, ser::SerializeStruct};
+use serde::{Deserialize, Serialize, Serializer, ser::SerializeStruct};
 
 use crate::{evolution::Random, support::random_distribution::RandomDistribution};
 
 pub type NetworkValue = f32;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ActivationFunction {
     Sigmoid,
     Tanh,
     Relu,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum NetworkWeightInitialization {
     Xavier,
     He,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LayerTopology {
     size: usize,
     activation_function: ActivationFunction,
@@ -46,7 +46,7 @@ impl LayerTopology {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NetworkTopology {
     input_size: usize,
     layers: Vec<LayerTopology>,
@@ -307,7 +307,7 @@ impl NeuralNetwork {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct NetworkMutationRates {
     pub mutation_probability: f32,
     pub reset_probability: f32,
@@ -325,7 +325,7 @@ impl NetworkMutationRates {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkMutationSettings {
     pub rates: NetworkMutationRates,
     pub perturbation: RandomDistribution,
@@ -346,14 +346,14 @@ impl NetworkMutationSettings {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum NetworkCrossoverStrategy {
     Uniform,
     SinglePoint,
     Arithmetic,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct NetworkCrossoverSettings {
     pub strategy: NetworkCrossoverStrategy,
     pub arithmetic_alpha: f32,

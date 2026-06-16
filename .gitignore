@@ -3,3 +3,7 @@
 output.stl
 output.json
 /optimization_logs
+settings.json
+/test_results/*
+!/test_results/visualize.py
+

@@ -3189,6 +3189,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "baby_shark",
+ "clap",
  "convexhull3d",
  "env_logger",
  "hashbrown 0.14.5",

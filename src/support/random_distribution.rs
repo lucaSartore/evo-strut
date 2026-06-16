@@ -1,4 +1,6 @@
-#[derive(Debug, Clone)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RandomDistribution {
     /// A flat distribution between low (inclusive) and high (exclusive)
     InRange { low: f32, high: f32 },

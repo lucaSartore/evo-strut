@@ -3,6 +3,10 @@ mod models;
 mod stages;
 mod support;
 
+use std::{fs, path::PathBuf};
+
+use anyhow::Context;
+use clap::Parser;
 use env_logger::Builder;
 use log::{LevelFilter, error};
 
@@ -20,13 +24,57 @@ use crate::{
     },
 };
 
+#[derive(Parser, Debug)]
+#[command(author, version, about)]
+struct Cli {
+    /// Load settings from a JSON file.
+    #[arg(long)]
+    settings: Option<PathBuf>,
+
+    /// Write the default settings to a JSON file and exit.
+    #[arg(long)]
+    dump_settings: Option<PathBuf>,
+}
+
 fn main() {
     Builder::new()
         .filter_level(LevelFilter::Error)
         .filter_module("evo_strut", LevelFilter::Info)
         .init();
 
-    let settings = Settings::default();
+    if let Err(e) = run() {
+        error!("{e:?}");
+    }
+}
+
+fn run() -> anyhow::Result<()> {
+    let cli = Cli::parse();
+
+    if let Some(path) = cli.dump_settings {
+        let settings = Settings::default();
+        let serialized = serde_json::to_string_pretty(&settings)
+            .context("failed to serialize default settings")?;
+        fs::write(&path, serialized)
+            .with_context(|| format!("failed to write settings to {}", path.display()))?;
+        return Ok(());
+    }
+
+    let settings = match cli.settings {
+        Some(path) => {
+            let serialized = fs::read_to_string(&path)
+                .with_context(|| format!("failed to read settings from {}", path.display()))?;
+            serde_json::from_str(&serialized)
+                .with_context(|| format!("failed to parse settings from {}", path.display()))?
+        }
+        None => Settings::default(),
+    };
+
+    // writing the settings used
+    let serialized = serde_json::to_string_pretty(&settings)
+        .context("failed to serialize default settings")?;
+    fs::write(&settings.io_settings.output_settings_path, serialized)
+        .with_context(|| format!("failed to write settings to {}", settings.io_settings.output_settings_path))?;
+
     type Behaviour = PipelineBehaviour<
         PropagationBasedCriticalityDetector,
         AreaBasedFloatingRegionDetector,
@@ -36,9 +84,5 @@ fn main() {
         SimpleSupportStructureOptimizer,
         SimpleSupportStructureRefiner,
     >;
-    let value = Pipeline::<StartedState, Behaviour>::run(settings);
-
-    if let Err(e) = value {
-        error!("{e:?}");
-    }
+    Pipeline::<StartedState, Behaviour>::run(settings)
 }

@@ -7,8 +7,9 @@ use crate::support::{
     },
     random_distribution::RandomDistribution,
 };
+use serde::{Deserialize, Serialize};
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
     /// input output parameters
     pub io_settings: IoSettings,
@@ -33,7 +34,7 @@ pub struct Settings {
     pub support_settings: SupportSettings,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CriticalitySettings {
     /// minimum angle for which supports are added
     /// if set to zero all overhangs will be supported
@@ -60,7 +61,7 @@ impl Default for CriticalitySettings {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FloatingRegionDetectionSettings {
     /// multiplier used to convert floating region area into a stiffness threshold
     /// unit of measure: stiffness/mm^2
@@ -75,7 +76,7 @@ impl Default for FloatingRegionDetectionSettings {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IoSettings {
     /// input mesh
     pub input_file_path: String,
@@ -83,6 +84,8 @@ pub struct IoSettings {
     pub output_file_path: String,
     /// output file with the supports in a json format
     pub output_json_path: String,
+    /// where to dump the settings used for the optimization
+    pub output_settings_path: String,
     /// directory where optimization genes and cost logs are saved as json
     pub optimization_logs_dir_path: Option<String>,
     /// optionally add a path where to load the json supports
@@ -112,13 +115,14 @@ impl Default for IoSettings {
             input_json_path: None,
             output_file_path: "test_meshes/output.stl".into(),
             output_json_path: "test_meshes/output.json".into(),
+            output_settings_path: "test_meshes/settings.json".into(),
             optimization_logs_dir_path: Some("optimization_logs".into()),
             target_edge_length: 0.,
         }
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContactPointsOptimizationSettings {
     /// tell how the cost propagate from one critical surface to the next
     /// example:
@@ -271,7 +275,7 @@ impl Default for ContactPointsOptimizationSettings {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContactPointsGroupingSettings {
     pub area_minimization_weight: f32,
     pub volume_minimization_weight: f32,
@@ -375,7 +379,7 @@ impl Default for ContactPointsGroupingSettings {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SupportStructureOptimizationSettings {
     /// number of generations optimized
     pub num_generations: usize,
@@ -457,7 +461,7 @@ impl Default for SupportStructureOptimizationSettings {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SupportStructureRefinementSettings {
     /// number of generations optimized
     pub num_generations: usize,
@@ -557,7 +561,7 @@ impl Default for SupportStructureRefinementSettings {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MaterialStiffnessSettings {
     // diameter * area multiplier = area of the beam
     pub area_multiplier: f32,
@@ -581,7 +585,7 @@ impl Default for MaterialStiffnessSettings {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SupportSettings {
     pub voxel_size: f32,
     pub beam_radius: f32,
