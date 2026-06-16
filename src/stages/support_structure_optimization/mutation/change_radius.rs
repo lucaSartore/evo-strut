@@ -1,6 +1,9 @@
 use crate::{
     stages::support_structure_optimization::models::SupportStructureOptimizationGene,
-    support::{neural_network::{NetworkMutationRates, NetworkMutationSettings}, random_distribution::RandomDistribution},
+    support::{
+        neural_network::{NetworkMutationRates, NetworkMutationSettings},
+        random_distribution::RandomDistribution,
+    },
 };
 
 use super::*;
@@ -47,4 +50,3 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureOpti
 
     gene.contact_radius.mutate(mutation, &mutator.rand);
 }
-

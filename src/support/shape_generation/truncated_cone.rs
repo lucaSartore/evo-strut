@@ -1,8 +1,16 @@
-use anyhow::{anyhow, Result};
-use baby_shark::{io::Builder, mesh::{builder::cylinder, corner_table::CornerTableF}, voxel::volume::Volume};
+use anyhow::{Result, anyhow};
+use baby_shark::{
+    io::Builder,
+    mesh::{builder::cylinder, corner_table::CornerTableF},
+    voxel::volume::Volume,
+};
 use rerun::external::glam::usize;
 
-use crate::{evolution::Cost, models::Point, support::shape_generation::{ShapeGenerator, builder_wrapper::BuilderWrapper, to_volumes}};
+use crate::{
+    evolution::Cost,
+    models::Point,
+    support::shape_generation::{ShapeGenerator, builder_wrapper::BuilderWrapper, to_volumes},
+};
 
 #[derive(Debug, Clone)]
 pub struct Circle {
@@ -29,12 +37,17 @@ pub struct TruncatedCone {
     pub min_cone_thickness_for_hole: f32,
 }
 impl TruncatedCone {
-    pub fn new(bottom: Circle, top: Circle, cone_thickness: f32, min_cone_thickness_for_hole: f32) -> Self {
-        Self { 
+    pub fn new(
+        bottom: Circle,
+        top: Circle,
+        cone_thickness: f32,
+        min_cone_thickness_for_hole: f32,
+    ) -> Self {
+        Self {
             bottom,
             top,
             cone_thickness,
-            min_cone_thickness_for_hole
+            min_cone_thickness_for_hole,
         }
     }
 }
@@ -59,8 +72,14 @@ fn build_cone(vertex_size: f32, bottom: &Circle, top: &Circle) -> Result<CornerT
     // adding the points
     let bottom_center = builder.add_vertex(bottom.center)?;
     let top_center = builder.add_vertex(top.center)?;
-    let bottom_points_ids = bottom_points.iter().map(|p| builder.add_vertex(*p)).collect::<Result<Vec<usize>>>()?;
-    let top_points_ids = top_points.iter().map(|p| builder.add_vertex(*p)).collect::<Result<Vec<usize>>>()?;
+    let bottom_points_ids = bottom_points
+        .iter()
+        .map(|p| builder.add_vertex(*p))
+        .collect::<Result<Vec<usize>>>()?;
+    let top_points_ids = top_points
+        .iter()
+        .map(|p| builder.add_vertex(*p))
+        .collect::<Result<Vec<usize>>>()?;
 
     for i in 0..bottom_points.len() {
         let i_next = (i + 1) % bottom_points.len();
@@ -81,7 +100,7 @@ fn build_cone(vertex_size: f32, bottom: &Circle, top: &Circle) -> Result<CornerT
         *bottom_points.last().expect("ponts can't be empty"),
         &top_points,
         top.center,
-        bottom.center
+        bottom.center,
     );
     for (i, point) in bottom_points.iter().enumerate() {
         let next = (i + 1) % bottom_points.len();
@@ -89,12 +108,12 @@ fn build_cone(vertex_size: f32, bottom: &Circle, top: &Circle) -> Result<CornerT
         builder.add_face(
             bottom_points_ids[i],
             bottom_points_ids[next],
-            top_points_ids[closest]
+            top_points_ids[closest],
         )?;
 
         if closest_prev != closest {
             skipped_ranges.push((closest_prev, closest, i));
-                closest_prev = closest;
+            closest_prev = closest;
         }
     }
 
@@ -106,7 +125,7 @@ fn build_cone(vertex_size: f32, bottom: &Circle, top: &Circle) -> Result<CornerT
             builder.add_face(
                 top_points_ids[i],
                 top_points_ids[next],
-                bottom_points_ids[source]
+                bottom_points_ids[source],
             )?;
 
             if next == to {
@@ -118,7 +137,6 @@ fn build_cone(vertex_size: f32, bottom: &Circle, top: &Circle) -> Result<CornerT
 
     builder.finish()
 }
-
 
 fn circle_basis(orientation: Point) -> Result<(Point, Point)> {
     let normal = orientation.as_versor();
@@ -159,7 +177,6 @@ fn circle_points(circle: &Circle, segments: usize) -> Result<Vec<Point>> {
     Ok(points)
 }
 
-
 fn find_closest(point: Point, options: &[Point], l1: Point, l2: Point) -> usize {
     let reference_vector = perpendicular_unit_vector(l1, l2, point);
     options
@@ -197,12 +214,14 @@ impl ShapeGenerator for TruncatedCone {
         if self.top.radius > self.min_cone_thickness_for_hole + 2.0 * self.cone_thickness {
             // put a cylinder on top of the cone
             let mut cylinder_top = self.top.clone();
-            cylinder_top.center = cylinder_top.center + Point::UPWARD.to_scaled(self.cone_thickness * 2.);
+            cylinder_top.center =
+                cylinder_top.center + Point::UPWARD.to_scaled(self.cone_thickness * 2.);
 
             let mut cylinder_bottom = self.top.clone();
-            cylinder_bottom.center = cylinder_bottom.center + Point::DOWNWARD.to_scaled(voxel_size * 2.);
+            cylinder_bottom.center =
+                cylinder_bottom.center + Point::DOWNWARD.to_scaled(voxel_size * 2.);
 
-            let cylinder = build_cone(voxel_size, &cylinder_bottom, &cylinder_top )?;
+            let cylinder = build_cone(voxel_size, &cylinder_bottom, &cylinder_top)?;
             let cylinder = to_volumes(&cylinder, voxel_size)?;
             // cylinder = cylinder.offset(-self.cone_thickness);
 

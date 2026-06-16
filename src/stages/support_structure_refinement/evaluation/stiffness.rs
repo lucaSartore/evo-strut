@@ -69,7 +69,10 @@ pub fn stiffness_series(
 
     // Calculate compliances (inverse of stiffness)
     let Some(base_compliance) = base_stiffness.0.try_inverse() else {
-        panic!("Failed to invert base stiffness matrix {:?}", base_stiffness.0);
+        panic!(
+            "Failed to invert base stiffness matrix {:?}",
+            base_stiffness.0
+        );
     };
     // when the beam is too short, the stiffness matrix is so high that is some times not
     // invertible. In that case we default to a zero matrix
@@ -137,7 +140,11 @@ pub fn calculate_beam_stiffness(
 ///
 /// The beam is assumed to be parallel to the x-axis. The matrix includes
 /// effects of axial, bending, and torsional stiffness.
-fn get_stiffness_matrix(beam_length: f32, radius: f32, settings: &MaterialStiffnessSettings) -> Matrix6<f32> {
+fn get_stiffness_matrix(
+    beam_length: f32,
+    radius: f32,
+    settings: &MaterialStiffnessSettings,
+) -> Matrix6<f32> {
     let area = 2. * radius * settings.area_multiplier;
     let ea = settings.e_mod * area;
     let eiz = settings.e_mod * settings.iz;

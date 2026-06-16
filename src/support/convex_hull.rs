@@ -1,6 +1,10 @@
-use crate::{evolution::{Cost, Random}, models::Point};
+use crate::{
+    evolution::{Cost, Random},
+    models::Point,
+};
+use serde::Serialize;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct ConvexHull {
     pub vertexes: Vec<Point>,
     pub triangles: Vec<[Point; 3]>,
@@ -13,7 +17,7 @@ impl ConvexHull {
     pub fn new(mut points: Vec<Point>) -> ConvexHull {
         if points.len() <= 2 {
             let max_z = points.iter().map(|p| p.z).fold(0.0, f32::max);
-            return ConvexHull { 
+            return ConvexHull {
                 vertexes: points,
                 triangles: Vec::new(),
                 triangles_areas: Vec::new(),
@@ -77,7 +81,7 @@ impl ConvexHull {
             for i in 1..(hull.len() - 1) {
                 let p1 = hull[i];
                 let p2 = hull[i + 1];
-                
+
                 max_z = max_z.max(p1.z).max(p2.z);
 
                 // Area calculations ignore Z completely
@@ -95,9 +99,9 @@ impl ConvexHull {
             max_z = hull.iter().map(|p| p.z).fold(0.0, f32::max);
         }
 
-        ConvexHull { 
-            vertexes: hull, 
-            triangles, 
+        ConvexHull {
+            vertexes: hull,
+            triangles,
             triangles_areas,
             total_area,
             max_z,
@@ -105,7 +109,7 @@ impl ConvexHull {
     }
 
     pub fn area(&self) -> f32 {
-        // Since we compute and cache the area during construction, 
+        // Since we compute and cache the area during construction,
         // we can return it instantly here!
         self.total_area
     }
@@ -130,31 +134,28 @@ impl ConvexHull {
 
     pub fn random_point(&self, rand: &Random) -> Point {
         if self.triangles.is_empty() || self.total_area <= 0.0 {
-            return Point::ZERO
+            return Point::ZERO;
         }
         let random_z = rand.next_f32(0.0, self.max_z);
 
         if self.triangles.is_empty() {
-            let mut p = Point::random_in_between(
-                self.random_point(rand),
-                self.random_point(rand),
-                rand
-            );
+            let mut p =
+                Point::random_in_between(self.random_point(rand), self.random_point(rand), rand);
             p.z = random_z;
             return p;
         }
 
-        let t = rand.choose_weighted(&self.triangles, &self.triangles_areas)
+        let t = rand
+            .choose_weighted(&self.triangles, &self.triangles_areas)
             .expect("triangle selection can't fail");
 
         let r1 = rand.next_f32(0.0, 1.0);
         let r2 = rand.next_f32(0.0, 1.0);
-        
+
         let sqrt_r1 = r1.sqrt();
         let w_a = 1.0 - sqrt_r1;
         let w_b = sqrt_r1 * (1.0 - r2);
         let w_c = sqrt_r1 * r2;
-
 
         Point {
             x: w_a * t[0].x + w_b * t[1].x + w_c * t[2].x,
@@ -163,4 +164,3 @@ impl ConvexHull {
         }
     }
 }
-

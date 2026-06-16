@@ -1,7 +1,7 @@
 use convexhull3d::Vertex;
+use core::f32;
 use nalgebra::{ArrayStorage, Const, Matrix, Matrix2, Vector3};
 use serde::{Deserialize, Serialize};
-use core::f32;
 use std::{
     hash::{Hash, Hasher},
     ops::{Add, Sub},
@@ -17,8 +17,6 @@ pub struct Point {
     pub y: f32,
     pub z: f32,
 }
-
-
 
 impl Eq for Point {}
 impl Hash for Point {
@@ -188,7 +186,6 @@ impl Point {
         Point { x, y, z }
     }
 
-
     pub fn triangle_area(v1: Point, v2: Point, v3: Point) -> f32 {
         let a = v2 - v1;
         let b = v3 - v1;
@@ -197,7 +194,6 @@ impl Point {
 
         c.abs() / 2.0
     }
-
 
     pub fn pyramid_area(v1: Point, v2: Point, v3: Point, v4: Point) -> f32 {
         let a = v1 - v4;
@@ -267,13 +263,11 @@ impl From<Point> for rerun::Vec3D {
     }
 }
 
-
 impl From<Point> for convexhull3d::Vertex {
     fn from(value: Point) -> Self {
         Vertex::new(value.x as f64, value.y as f64, value.z as f64)
     }
 }
-
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PointI {
@@ -287,16 +281,15 @@ impl PointI {
         Self {
             x: (point.x / divisor) as i32,
             y: (point.y / divisor) as i32,
-            z: (point.z / divisor) as i32
+            z: (point.z / divisor) as i32,
         }
     }
-
 
     pub fn to_float(&self, multiplier: f32) -> Point {
         Point {
             x: (self.x as f32 * multiplier),
             y: (self.y as f32 * multiplier),
-            z: (self.z as f32 * multiplier)
+            z: (self.z as f32 * multiplier),
         }
     }
 }

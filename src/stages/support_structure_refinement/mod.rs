@@ -13,7 +13,7 @@ use crate::{
     },
     stages::{
         Pipeline, PipelineBehaviourTrait, SupportStructureOptimizedState,
-        SupportStructureRefinedState
+        SupportStructureRefinedState,
     },
 };
 

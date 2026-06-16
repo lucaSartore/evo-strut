@@ -2,13 +2,15 @@ use std::collections::BinaryHeap;
 
 use baby_shark::data_structures::st_tree::NodeIndex;
 use hashbrown::HashMap;
-use smallvec::{smallvec, SmallVec};
+use smallvec::{SmallVec, smallvec};
 
 use crate::{
-    evolution::Random, models::Point, stages::{
+    evolution::Random,
+    models::Point,
+    stages::{
         criticality_detection::propagation::QueuedElement,
         support_structure_refinement::SupportNodeId,
-    }
+    },
 };
 
 #[derive(Clone, Debug)]
@@ -25,7 +27,7 @@ pub struct Node {
     pub distance_from_source: f32,
     pub neighbors: SmallVec<[Neighbor; 4]>,
     pub supported: bool,
-    pub radius: f32
+    pub radius: f32,
 }
 
 #[derive(Debug)]
@@ -58,7 +60,9 @@ impl Graph {
 
     pub fn reset_some_nodes(&mut self, to_reset: &[SupportNodeId]) {
         for n_id in to_reset {
-            let Some(n) = self.nodes.get_mut(n_id) else { continue };
+            let Some(n) = self.nodes.get_mut(n_id) else {
+                continue;
+            };
             n.visited = false;
             n.distance_from_source = 0.;
         }
@@ -155,7 +159,7 @@ impl Graph {
         position: Point,
         neighbors: &[SupportNodeId],
         supported: bool,
-        radius: f32
+        radius: f32,
     ) {
         let mut new_node = Node {
             id,
@@ -164,11 +168,13 @@ impl Graph {
             distance_from_source: 0.,
             neighbors: smallvec![],
             supported,
-            radius
+            radius,
         };
 
         for n_id in neighbors {
-            let Some(n) = self.nodes.get_mut(n_id) else { continue };
+            let Some(n) = self.nodes.get_mut(n_id) else {
+                continue;
+            };
             let distance = (position - n.position).abs();
             n.neighbors.push(Neighbor { id, distance });
             new_node.neighbors.push(Neighbor {
@@ -184,10 +190,6 @@ impl Graph {
     }
 
     pub fn build_pos_to_node_id(&self) -> HashMap<Point, SupportNodeId> {
-        self
-            .nodes
-            .iter()
-            .map(|x| (x.1.position, *x.0))
-            .collect()
+        self.nodes.iter().map(|x| (x.1.position, *x.0)).collect()
     }
 }

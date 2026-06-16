@@ -4,19 +4,19 @@ mod stages;
 mod support;
 
 use env_logger::Builder;
-use log::{error, LevelFilter};
+use log::{LevelFilter, error};
 
 use crate::{
     models::Settings,
     stages::{
+        Pipeline, PipelineBehaviour, StartedState,
         contact_point_optimization::SimpleContactPointOptimizer,
-        floating_region_detection::AreaBasedFloatingRegionDetector,
         contact_points_grouping::SimpleContactPointsGrouper,
         criticality_detection::PropagationBasedCriticalityDetector,
         criticality_grouping::DistanceBasedCriticalityGrouper,
+        floating_region_detection::AreaBasedFloatingRegionDetector,
         support_structure_optimization::SimpleSupportStructureOptimizer,
-        support_structure_refinement::SimpleSupportStructureRefiner, Pipeline, PipelineBehaviour,
-        StartedState,
+        support_structure_refinement::SimpleSupportStructureRefiner,
     },
 };
 

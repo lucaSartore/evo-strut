@@ -93,7 +93,7 @@ struct EvaluatedTriangle {
 struct EvaluatedLayer<'a> {
     /// list of the triangles part of this layer
     triangles: HashMap<FaceId, EvaluatedTriangle>,
-    graph: &'a SurfaceGraph
+    graph: &'a SurfaceGraph,
 }
 
 impl<'a> EvaluatedLayer<'a> {
@@ -252,7 +252,7 @@ impl<'a> EvaluatedLayer<'a> {
         costs: &mut HashMap<FaceId, CostWithArea>,
         is_supported: &impl Fn(FaceId) -> bool,
         soft_cost_propagation_factor: f32,
-        additional_cost: &impl Fn(Point) -> Cost
+        additional_cost: &impl Fn(Point) -> Cost,
     ) {
         let mut to_evaluate = self.triangles.len();
         let mut queue = BinaryHeap::new();
@@ -299,13 +299,15 @@ impl<'a> EvaluatedLayer<'a> {
                 .get(&popped.id)
                 .expect("triangle should always be found");
             for n in &triangle.same_layer_neighbors {
-                let neighbor_recursive_cost =
-                    (
-                        popped.value +
-                        n.cost_surplus_forward +
-                        Cost::new(self.triangles[&n.id].base_cost.as_f32() * soft_cost_propagation_factor * triangle.area)
-                    ).max(Cost::ZERO);
-                    
+                let neighbor_recursive_cost = (popped.value
+                    + n.cost_surplus_forward
+                    + Cost::new(
+                        self.triangles[&n.id].base_cost.as_f32()
+                            * soft_cost_propagation_factor
+                            * triangle.area,
+                    ))
+                .max(Cost::ZERO);
+
                 let neighbor_current_cost = *id_to_current_cost.get(&n.id).unwrap_or(&Cost::MAX);
                 if neighbor_recursive_cost < neighbor_current_cost {
                     _ = id_to_current_cost.insert(n.id, neighbor_recursive_cost);
@@ -321,7 +323,7 @@ pub trait KnownCosts {
     fn is_cost_unknown_or_non_zero(&self, id: FaceId) -> bool {
         match self.cost_of(id) {
             None => true,
-            Some(c) => c > Cost::ZERO
+            Some(c) => c > Cost::ZERO,
         }
     }
 }
@@ -393,11 +395,16 @@ where
         &self,
         is_supported: &impl Fn(FaceId) -> bool,
         soft_cost_propagation_factor: f32,
-        additional_cost: &impl Fn(Point) -> Cost
+        additional_cost: &impl Fn(Point) -> Cost,
     ) -> HashMap<FaceId, CostWithArea> {
         let mut costs = HashMap::new();
         for l in &self.layers {
-            l.evaluate(&mut costs, is_supported, soft_cost_propagation_factor, additional_cost);
+            l.evaluate(
+                &mut costs,
+                is_supported,
+                soft_cost_propagation_factor,
+                additional_cost,
+            );
         }
         costs
     }

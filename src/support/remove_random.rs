@@ -1,7 +1,7 @@
 use crate::evolution::Random;
 use hashbrown::{
-    raw::{Bucket, RawTable},
     HashMap, HashSet,
+    raw::{Bucket, RawTable},
 };
 use std::hash::Hash;
 

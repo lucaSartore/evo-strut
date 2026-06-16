@@ -95,11 +95,11 @@ impl TreeGenerator {
         for son in tree.nodes.iter().filter(|node| node.id != 0) {
             let father = &tree.nodes[son.father];
             let points = Point::interpolate(father.point, son.point, self.interpolation_step_size);
-            for point in points.iter().take(points.len()-1).skip(1) {
+            for point in points.iter().take(points.len() - 1).skip(1) {
                 let candidate = ConnectionCandidate::Branch {
                     father: father.id,
                     son: son.id,
-                    point: *point
+                    point: *point,
                 };
                 self.try_candidate(&mut best, *point, candidate, leaf);
             }

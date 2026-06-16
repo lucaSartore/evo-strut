@@ -2,7 +2,7 @@ use anyhow::Result;
 use std::marker::PhantomData;
 
 mod evolver;
-pub use evolver::{Evolver, EvolverBehaviour};
+pub use evolver::{CostLog, Evolver, EvolverBehaviour};
 use rerun::external::glam::usize;
 
 mod score;

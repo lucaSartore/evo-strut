@@ -1,13 +1,13 @@
-use std::{cell::RefCell, collections::HashMap};
-use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
+use kdtree::distance::squared_euclidean;
 use log::warn;
 use rerun::external::crossbeam::epoch::default_collector;
+use std::{cell::RefCell, collections::HashMap};
 
-use crate::{evolution::Cost, models::{Point, PointI}};
-
-
-
+use crate::{
+    evolution::Cost,
+    models::{Point, PointI},
+};
 
 /// ad additional costs to a node, depending on his position.
 /// the cost added is proportional to the distance to the nearest support
@@ -26,15 +26,22 @@ pub struct AdditionalCosts {
     /// points that are considered when calculating
     /// the min distance
     num_parallel_points: usize,
-    positions: KdTree<f32, (), [f32; 3]>
+    positions: KdTree<f32, (), [f32; 3]>,
 }
 
 impl AdditionalCosts {
-    pub fn new(points: impl Iterator<Item = Point>, cost_multiplier: f32, divisor: f32, max_distance: f32, num_parallel_points: usize) -> Self {
+    pub fn new(
+        points: impl Iterator<Item = Point>,
+        cost_multiplier: f32,
+        divisor: f32,
+        max_distance: f32,
+        num_parallel_points: usize,
+    ) -> Self {
         let mut positions: KdTree<f32, (), [f32; 3]> = KdTree::new(3);
-        
+
         for point in points {
-            positions.add(point.into(), ())
+            positions
+                .add(point.into(), ())
                 .expect("Add point to kd-tree failed unexpectedly");
         }
 
@@ -44,7 +51,7 @@ impl AdditionalCosts {
             cost_multiplier,
             max_distance,
             positions,
-            num_parallel_points
+            num_parallel_points,
         }
     }
 
@@ -81,7 +88,10 @@ impl AdditionalCosts {
             return self.max_distance;
         }
 
-        if distance.iter().any(|x| *x < f32::EPSILON * self.num_parallel_points as f32) {
+        if distance
+            .iter()
+            .any(|x| *x < f32::EPSILON * self.num_parallel_points as f32)
+        {
             return 0.0;
         }
 

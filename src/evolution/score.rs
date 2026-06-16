@@ -1,4 +1,7 @@
-use std::{fmt::Display, ops::{Add, Sub}};
+use std::{
+    fmt::Display,
+    ops::{Add, Sub},
+};
 
 use log::{self, warn};
 

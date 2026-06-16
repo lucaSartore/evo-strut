@@ -263,7 +263,7 @@ impl Default for ContactPointsOptimizationSettings {
             additional_cost_multiplier: 50.,
             additional_cost_divisor_size: 2.5,
             additional_cost_max_distance: 20.,
-            additional_cost_num_points: 10
+            additional_cost_num_points: 10,
         }
     }
 }
@@ -425,7 +425,7 @@ pub struct SupportStructureOptimizationSettings {
     /// used when constructing trees, control chow often points are interpolated
     /// (smaller value means more precise trees, but higher computational cost)
     /// unit of measure: mm
-    pub tree_creation_interpolation_size: f32
+    pub tree_creation_interpolation_size: f32,
 }
 
 impl Default for SupportStructureOptimizationSettings {
@@ -524,7 +524,7 @@ pub struct SupportStructureRefinementSettings {
     pub collision_check_intervals: f32,
     /// cost of a collision, per unit of length
     /// unit of measure: cost / mm
-    pub collision_penalization: f32
+    pub collision_penalization: f32,
 }
 
 impl Default for SupportStructureRefinementSettings {
@@ -549,7 +549,7 @@ impl Default for SupportStructureRefinementSettings {
             collision_volume_voxel_size: 3.,
             collision_volume_offset: 3.,
             collision_check_intervals: 2.,
-            collision_penalization: 200.
+            collision_penalization: 200.,
         }
     }
 }
@@ -588,12 +588,12 @@ pub struct SupportSettings {
     pub base_cylinder_height: f32,
     pub min_cone_radius: f32,
     pub support_detachment: f32,
-    pub support_tree_max_overhanging_angle: f32
+    pub support_tree_max_overhanging_angle: f32,
 }
 
 impl Default for SupportSettings {
     fn default() -> Self {
-        Self { 
+        Self {
             voxel_size: 0.3,
             beam_radius: 1.5,
             cone_thickness: 0.6,
@@ -602,7 +602,7 @@ impl Default for SupportSettings {
             base_cylinder_height: 1.,
             min_cone_radius: 1.,
             support_detachment: 0.2,
-            support_tree_max_overhanging_angle: 60.
+            support_tree_max_overhanging_angle: 60.,
         }
     }
 }

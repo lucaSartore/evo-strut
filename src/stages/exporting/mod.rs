@@ -4,16 +4,26 @@ use anyhow::{Result, anyhow};
 use baby_shark::{io::write_to_file, voxel::prelude::MeshToVolume};
 
 use crate::{
-    models::{Point, SupportSettings, SurfaceGraph}, stages::{
-        MeshExportedState, Pipeline, PipelineBehaviourTrait, SupportStructureRefinedState, support_structure_refinement::{ContactNode, SupportNode, SupportNodeId, SupportStructureGene, evaluation::logic::genome_to_graph_descriptor}, visualization::visualize_final_supports
-    }, support::shape_generation::{Circle, ShapeFactory, Sphere, TruncatedCone}
+    models::{Point, SupportSettings, SurfaceGraph},
+    stages::{
+        MeshExportedState, Pipeline, PipelineBehaviourTrait, SupportStructureRefinedState,
+        support_structure_refinement::{
+            ContactNode, SupportNode, SupportNodeId, SupportStructureGene,
+            evaluation::logic::genome_to_graph_descriptor,
+        },
+        visualization::visualize_final_supports,
+    },
+    support::shape_generation::{Circle, ShapeFactory, Sphere, TruncatedCone},
 };
 
-
-pub struct ExportingStage{}
+pub struct ExportingStage {}
 
 impl ExportingStage {
-    fn add_support_structure(builder: &mut ShapeFactory, s: &SupportStructureGene, settings: &SupportSettings) {
+    fn add_support_structure(
+        builder: &mut ShapeFactory,
+        s: &SupportStructureGene,
+        settings: &SupportSettings,
+    ) {
         Self::add_cones(builder, s, settings);
         Self::add_beams(builder, s, settings);
     }
@@ -24,17 +34,14 @@ impl ExportingStage {
             .values()
             .flat_map(|x| match x {
                 SupportNode::Contact(x) => Some(x),
-                _ => None
+                _ => None,
             })
             .for_each(|x: &ContactNode| {
                 let cone_top = x.position;
                 let radius = x.radius.max(settings.min_cone_radius);
-                x.leans_on
-                    .iter()
-                    .map(point_to_pos)
-                    .for_each(|cone_base| {
-                        Self::add_cone(builder, cone_base, cone_top, radius, settings)
-                    });
+                x.leans_on.iter().map(point_to_pos).for_each(|cone_base| {
+                    Self::add_cone(builder, cone_base, cone_top, radius, settings)
+                });
             })
     }
 
@@ -47,7 +54,7 @@ impl ExportingStage {
             .edges
             .iter()
             .filter(|x| !is_contact(*x.0))
-            .flat_map(|(node, adjacent)|{
+            .flat_map(|(node, adjacent)| {
                 adjacent
                     .iter()
                     .filter(|adj| **adj < *node)
@@ -55,11 +62,25 @@ impl ExportingStage {
                     .map(|adj| (node, adj))
                     .collect::<Vec<_>>()
             })
-            .map(|(a, b)| (point_to_pos(*a), point_to_pos(*b), point_to_rad(*a), point_to_rad(*b)))
+            .map(|(a, b)| {
+                (
+                    point_to_pos(*a),
+                    point_to_pos(*b),
+                    point_to_rad(*a),
+                    point_to_rad(*b),
+                )
+            })
             .for_each(|(a, b, ra, rb)| Self::add_beam(builder, a, b, ra, rb, settings));
     }
 
-    fn add_beam(builder: &mut ShapeFactory, a: Point, b: Point, ra: f32, rb: f32, settings: &SupportSettings) {
+    fn add_beam(
+        builder: &mut ShapeFactory,
+        a: Point,
+        b: Point,
+        ra: f32,
+        rb: f32,
+        settings: &SupportSettings,
+    ) {
         let (point_bottom, point_top, r_bottom, r_top) = if a.z < b.z {
             (a, b, ra, rb)
         } else {
@@ -71,8 +92,24 @@ impl ExportingStage {
         let bottom_too_close_to_ground = point_bottom.z <= r_bottom;
         let top_too_close_to_ground = point_top.z <= r_top;
 
-        let circle_bottom = Circle::new(point_bottom, r_bottom, if bottom_too_close_to_ground { Point::UPWARD } else { versor });
-        let circle_top = Circle::new(point_top, r_top, if top_too_close_to_ground { Point::UPWARD } else { versor });
+        let circle_bottom = Circle::new(
+            point_bottom,
+            r_bottom,
+            if bottom_too_close_to_ground {
+                Point::UPWARD
+            } else {
+                versor
+            },
+        );
+        let circle_top = Circle::new(
+            point_top,
+            r_top,
+            if top_too_close_to_ground {
+                Point::UPWARD
+            } else {
+                versor
+            },
+        );
 
         let cone = TruncatedCone::new(circle_bottom, circle_top, 10e9, 10e9);
         builder.add_positive_shape(cone);
@@ -87,14 +124,25 @@ impl ExportingStage {
         }
 
         if point_bottom.z <= 0. {
-            let circle_bottom = Circle::new(point_bottom, settings.base_cylinder_radius, Point::UPWARD);
-            let circle_top = Circle::new(point_bottom + Point::UPWARD.to_scaled(settings.base_cylinder_height), settings.base_cylinder_radius, Point::UPWARD);
+            let circle_bottom =
+                Circle::new(point_bottom, settings.base_cylinder_radius, Point::UPWARD);
+            let circle_top = Circle::new(
+                point_bottom + Point::UPWARD.to_scaled(settings.base_cylinder_height),
+                settings.base_cylinder_radius,
+                Point::UPWARD,
+            );
             let cone = TruncatedCone::new(circle_bottom, circle_top, 10e9, 10e9);
             builder.add_positive_shape(cone);
         }
     }
 
-    fn add_cone(builder: &mut ShapeFactory, cone_base: Point, cone_top: Point, radius_top: f32, settings: &SupportSettings ) {
+    fn add_cone(
+        builder: &mut ShapeFactory,
+        cone_base: Point,
+        cone_top: Point,
+        radius_top: f32,
+        settings: &SupportSettings,
+    ) {
         let versor = (cone_top - cone_base).as_versor();
         let base_radius = settings.beam_radius;
 
@@ -105,24 +153,30 @@ impl ExportingStage {
         };
         let bottom = Circle::new(cone_base, base_radius, bottom_versor);
         let top = Circle::new(cone_top, radius_top, Point::UPWARD);
-        let cone = TruncatedCone::new(bottom, top, settings.cone_thickness, settings.min_cone_thickness_for_hole);
+        let cone = TruncatedCone::new(
+            bottom,
+            top,
+            settings.cone_thickness,
+            settings.min_cone_thickness_for_hole,
+        );
         builder.add_positive_shape(cone);
     }
 }
 
-
-impl ExportingStage
-{
+impl ExportingStage {
     pub fn execute<TB>(
         input: Pipeline<SupportStructureRefinedState, TB>,
     ) -> Result<Pipeline<MeshExportedState, TB>>
-    where TB: PipelineBehaviourTrait,
+    where
+        TB: PipelineBehaviourTrait,
     {
         let mut builder = ShapeFactory::new();
         let settings = &input.state.settings;
         let support_settings = &settings.support_settings;
 
-        input.state.support_structures
+        input
+            .state
+            .support_structures
             .iter()
             .for_each(|s| Self::add_support_structure(&mut builder, s, support_settings));
 
@@ -144,12 +198,11 @@ impl ExportingStage
         write_to_file(&mesh, Path::new(path))
             .map_err(|e| anyhow!("unable to export file: {e:?}"))?;
 
-
         let path = &settings.io_settings.output_json_path;
         let file = File::create(path)?;
         let writer = BufWriter::new(file);
         serde_json::to_writer_pretty(writer, &input.state.support_structures)?;
 
-        Ok(Pipeline::from_state(MeshExportedState {  }))
+        Ok(Pipeline::from_state(MeshExportedState {}))
     }
 }

@@ -53,7 +53,9 @@ impl<'a> ContactPointMutator<'a> {
     }
 
     fn move_support_mutation(&self, gene: &mut ContactPointsGene) {
-        let Some(removed) = gene.contact_points.remove_random(&self.rand) else { return };
+        let Some(removed) = gene.contact_points.remove_random(&self.rand) else {
+            return;
+        };
         let radius = self
             .settings
             .contact_points_optimization_settings
@@ -68,9 +70,13 @@ impl<'a> ContactPointMutator<'a> {
     }
 
     fn change_support_size_mutation(&self, gene: &mut ContactPointsGene) {
-        let Some(to_edit) = gene.contact_points.choose_random(&self.rand) else { return };
+        let Some(to_edit) = gene.contact_points.choose_random(&self.rand) else {
+            return;
+        };
         let to_edit = to_edit.0;
-        let Some(shape) = gene.contact_points.get_mut(&to_edit) else { return };
+        let Some(shape) = gene.contact_points.get_mut(&to_edit) else {
+            return;
+        };
         shape.mutate(&self.rand, self.settings);
     }
 }

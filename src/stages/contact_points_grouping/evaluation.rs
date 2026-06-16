@@ -4,7 +4,8 @@ use crate::{
     stages::{
         contact_point_optimization::ContactPointsGene,
         contact_points_grouping::models::ContactPointGroupingGene,
-    }, support::convex_hull_3d::ConvexHull3D,
+    },
+    support::convex_hull_3d::ConvexHull3D,
 };
 use crate::{stages::visualization::Color, support::convex_hull::ConvexHull};
 use rerun::RecordingStream;

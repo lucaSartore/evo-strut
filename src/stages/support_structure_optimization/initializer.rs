@@ -1,7 +1,10 @@
 use crate::{
     evolution::PopulationInitializer,
     models::{Settings, SurfaceGraph},
-    stages::support_structure_optimization::{SupportPoint, SupportStructureOptimizationGene, mutation::SupportStructureMutator}, support::convex_hull::ConvexHull,
+    stages::support_structure_optimization::{
+        SupportPoint, SupportStructureOptimizationGene, mutation::SupportStructureMutator,
+    },
+    support::convex_hull::ConvexHull,
 };
 
 pub struct SupportStructureInitializerSettings<'a> {
@@ -30,7 +33,8 @@ pub struct SupportStructureInitializer<'a> {
     mutator: SupportStructureMutator<'a>,
 }
 
-impl<'a> PopulationInitializer<SupportStructureOptimizationGene, SupportStructureInitializerSettings<'a>>
+impl<'a>
+    PopulationInitializer<SupportStructureOptimizationGene, SupportStructureInitializerSettings<'a>>
     for SupportStructureInitializer<'a>
 {
     fn new(
@@ -73,7 +77,7 @@ impl<'a> PopulationInitializer<SupportStructureOptimizationGene, SupportStructur
             let num_contacts = self.mutator.rand.next_u32() % 3 + 1;
             to_add.push(SupportPoint {
                 position: p,
-                num_contacts
+                num_contacts,
             });
         }
         g.supports.append(&mut to_add);

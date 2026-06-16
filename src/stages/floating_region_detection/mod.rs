@@ -47,8 +47,10 @@ impl FloatingRegion {
         &self.faces
     }
 
-
-    pub fn filter_array(floating_regions: &[FloatingRegion], faces: impl Iterator<Item = FaceId>) -> Vec<FloatingRegion> {
+    pub fn filter_array(
+        floating_regions: &[FloatingRegion],
+        faces: impl Iterator<Item = FaceId>,
+    ) -> Vec<FloatingRegion> {
         let set: HashSet<_> = faces.collect();
 
         let mut to_return = vec![];
@@ -60,13 +62,13 @@ impl FloatingRegion {
             }
         }
 
-        return to_return
+        return to_return;
     }
 
     pub fn filter(&self, condition: impl FnMut(&FaceId) -> bool) -> Self {
         Self {
             faces: self.faces.iter().copied().filter(condition).collect(),
-            compliance_threshold: self.compliance_threshold
+            compliance_threshold: self.compliance_threshold,
         }
     }
 }
@@ -93,9 +95,10 @@ impl AreaBasedFloatingRegionDetector {
     }
 
     fn area_to_compliance_threshold(area: f32, settings: &Settings) -> f32 {
-        100. / area * settings
-            .floating_region_detection_settings
-            .stiffness_threshold_area_multiplier
+        100. / area
+            * settings
+                .floating_region_detection_settings
+                .stiffness_threshold_area_multiplier
     }
 
     fn is_point_close_to_the_ground(t: Triangle<'_>, settings: &Settings) -> bool {

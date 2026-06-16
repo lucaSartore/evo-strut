@@ -1,11 +1,12 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use nalgebra::{DMatrix, DVector};
+use serde::{Serialize, Serializer, ser::SerializeStruct};
 
 use crate::{evolution::Random, support::random_distribution::RandomDistribution};
 
 pub type NetworkValue = f32;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub enum ActivationFunction {
     Sigmoid,
     Tanh,
@@ -18,7 +19,7 @@ pub enum NetworkWeightInitialization {
     He,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct LayerTopology {
     size: usize,
     activation_function: ActivationFunction,
@@ -45,7 +46,7 @@ impl LayerTopology {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct NetworkTopology {
     input_size: usize,
     layers: Vec<LayerTopology>,
@@ -127,6 +128,18 @@ impl NeuralNetworkLayer {
 pub struct NeuralNetwork {
     pub topology: NetworkTopology,
     pub layers: Vec<NeuralNetworkLayer>,
+}
+
+impl Serialize for NeuralNetwork {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("NeuralNetwork", 2)?;
+        state.serialize_field("topology", &self.topology)?;
+        state.serialize_field("parameters", &self.parameters())?;
+        state.end()
+    }
 }
 
 impl NeuralNetwork {

@@ -39,7 +39,7 @@ pub struct BaseNode {
     // if None, then the current node leans to the ground.
     pub mesh_contact: Option<FaceId>,
     pub last_position: Point,
-    pub radius: f32
+    pub radius: f32,
 }
 
 impl BaseNode {
@@ -48,7 +48,7 @@ impl BaseNode {
             id,
             mesh_contact: None,
             last_position: position,
-            radius
+            radius,
         }
     }
     pub fn new_mesh_contact(id: SupportNodeId, contact: FaceId, graph: &SurfaceGraph) -> Self {
@@ -56,7 +56,7 @@ impl BaseNode {
             id,
             mesh_contact: Some(contact),
             last_position: graph.get_triangle(contact).center(),
-            radius: 3.0
+            radius: 3.0,
         }
     }
     pub fn repair_position(&self, prev_point: &NodeReference, graph: &SurfaceGraph) -> Self {
@@ -101,9 +101,11 @@ impl MiddleNode {
     ) -> Self {
         let mut to_return = self.clone();
         // anchor still present
-        if let Some(g) = genome.try_get_gene(self.anchor.to) && g.leans_on(self.id) {
+        if let Some(g) = genome.try_get_gene(self.anchor.to)
+            && g.leans_on(self.id)
+        {
             to_return.last_position = g.get_position() + self.anchor.offset;
-            return to_return
+            return to_return;
         }
         // repairing the anchor with a new node
         to_return.anchor.to = prev_point.id;
@@ -246,17 +248,25 @@ struct DumpedSupportStructureGene {
 
 impl Serialize for SupportStructureGene {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: serde::Serializer {
-        let s = DumpedSupportStructureGene { nodes: self.nodes.iter().map(|(k,v)| (*k, v.clone())).collect() };
+    where
+        S: serde::Serializer,
+    {
+        let s = DumpedSupportStructureGene {
+            nodes: self.nodes.iter().map(|(k, v)| (*k, v.clone())).collect(),
+        };
         s.serialize(serializer)
     }
 }
 
 impl<'de> Deserialize<'de> for SupportStructureGene {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: serde::Deserializer<'de> {
+    where
+        D: serde::Deserializer<'de>,
+    {
         let d = DumpedSupportStructureGene::deserialize(deserializer)?;
-        let r = Self { nodes: d.nodes.into_iter().collect() };
+        let r = Self {
+            nodes: d.nodes.into_iter().collect(),
+        };
         Ok(r)
     }
 }
@@ -345,7 +355,6 @@ impl SupportStructureGene {
     }
 
     pub fn repair(&mut self, graph: &SurfaceGraph, rand: &Random) {
-
         // todo: there is a bug in the function, and the entire thing could probably be simplified
         self.repair_floating_nodes(rand);
         return;
@@ -429,7 +438,9 @@ impl SupportStructureGene {
                     self.repair_node_position(*x, Some(&this_point), repaired_nodes, visited, graph)
                 });
 
-                let Some(SupportNode::Contact(n)) = self.nodes.get_mut(&id) else { panic!() };
+                let Some(SupportNode::Contact(n)) = self.nodes.get_mut(&id) else {
+                    panic!()
+                };
                 n.leans_on = lean_on;
                 repaired_nodes.insert(id);
             }
@@ -441,7 +452,9 @@ impl SupportStructureGene {
                 let mut repaired = n.repair_position(self, pp);
 
                 // update the last position of self, before progressing on the downward nodes
-                let Some(SupportNode::Middle(n)) = self.nodes.get_mut(&id) else { panic!() };
+                let Some(SupportNode::Middle(n)) = self.nodes.get_mut(&id) else {
+                    panic!()
+                };
                 n.last_position = repaired.last_position;
 
                 repaired.leans_on.retain(|x| {

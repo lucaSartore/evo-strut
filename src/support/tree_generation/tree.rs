@@ -38,10 +38,7 @@ impl Tree {
         self.nodes
             .iter()
             .skip(1) // skipping the route
-            .map(|x| (
-                x.point,
-                self.nodes[x.father].point
-            ))
+            .map(|x| (x.point, self.nodes[x.father].point))
             // ordering by the height of the node
             .sorted_by_key(|x| Cost::new(x.0.z))
     }

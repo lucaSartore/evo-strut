@@ -1,13 +1,13 @@
 use super::*;
 use crate::models::{IoSettings, SurfaceGraph};
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use baby_shark::{
     io::{read_from_file, write_to_file},
     mesh::corner_table::CornerTableF,
     remeshing::incremental::IncrementalRemesher,
 };
-use std::{fs::File, io::BufReader, path::Path};
 use std::sync::Arc;
+use std::{fs::File, io::BufReader, path::Path};
 
 pub fn read(name: &str) -> Result<CornerTableF> {
     let r = read_from_file::<CornerTableF>(Path::new(name));
@@ -47,12 +47,12 @@ where
     }
 }
 
-pub enum LoadingStageOutput<TB> 
+pub enum LoadingStageOutput<TB>
 where
     TB: PipelineBehaviourTrait,
 {
     MeshLoaded(Pipeline<LoadedState, TB>),
-    StructureLoaded(Pipeline<SupportStructureRefinedState, TB>)
+    StructureLoaded(Pipeline<SupportStructureRefinedState, TB>),
 }
 
 impl<TB> LoadingStage<TB>
@@ -85,7 +85,7 @@ where
                 graph,
             };
             let pipeline = Pipeline::from_state(state);
-            return Ok(LoadingStageOutput::MeshLoaded(pipeline))
+            return Ok(LoadingStageOutput::MeshLoaded(pipeline));
         };
 
         let file = File::open(path)?;
@@ -95,10 +95,10 @@ where
             settings: input.state.settings,
             graph,
             connection_points: ContactPointsGene::default(),
-            support_structures: serde_json::from_reader(reader)?
+            support_structures: serde_json::from_reader(reader)?,
         };
         let pipeline = Pipeline::from_state(state);
 
-        return Ok(LoadingStageOutput::StructureLoaded(pipeline))
+        return Ok(LoadingStageOutput::StructureLoaded(pipeline));
     }
 }

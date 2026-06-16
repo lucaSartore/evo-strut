@@ -12,7 +12,7 @@ use crate::{
         ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait,
     },
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use log::debug;
 use std::marker::PhantomData;
 
@@ -57,7 +57,7 @@ where
             graph: input.state.graph,
             connection_points: merged,
             critical: input.state.critical,
-            floating_regions: input.state.floating_regions
+            floating_regions: input.state.floating_regions,
         }))
     }
 }

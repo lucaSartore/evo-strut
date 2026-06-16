@@ -1,4 +1,4 @@
-use rand::{prelude::*, TryRng};
+use rand::{TryRng, prelude::*};
 use rand_distr::{Distribution, Normal, SkewNormal, Uniform, weighted::WeightedIndex};
 use std::{convert::Infallible, ops::DerefMut, sync::Mutex};
 
@@ -95,22 +95,25 @@ impl Random {
 
     // Returns a random element with weighted probabilities
     publish!(choose_weighted = _choose_weighted<'a, T>(options: &'a [T], weights: &[f32]) -> Option<&'a T>);
-    fn _choose_weighted<'a, T>(&self, options: &'a [T], weights: &[f32], r: &mut impl R) -> Option<&'a T> {
-
+    fn _choose_weighted<'a, T>(
+        &self,
+        options: &'a [T],
+        weights: &[f32],
+        r: &mut impl R,
+    ) -> Option<&'a T> {
         // Ensure we have options and that the weights align with the options
         if options.is_empty() || options.len() != weights.len() {
             return None;
         }
 
-        // Create the weighted index distribution. 
+        // Create the weighted index distribution.
         // This fails if weights are negative, NaN, or all zeros.
         let dist = WeightedIndex::new(weights).ok()?;
-        
+
         // Sample an index and return the corresponding option
         let idx = dist.sample(r);
         options.get(idx)
     }
-
 
     // Returns a random element from the slice.
     // Panics if the slice is empty.

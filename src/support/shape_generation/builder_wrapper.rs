@@ -1,23 +1,22 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use anyhow::anyhow;
-use baby_shark::{geometry::{primitives::triangle3::Triangle3}, io::IndexedBuilder};
+use baby_shark::{geometry::primitives::triangle3::Triangle3, io::IndexedBuilder};
 use hashbrown::HashMap;
 
 use crate::models::Point;
 
-
 /// utility structure used to build CONVEX polygons
 /// the structure automatically ensures that the faces
 /// are paced facing outward.
-pub struct BuilderWrapper<TBuilder, TM> 
+pub struct BuilderWrapper<TBuilder, TM>
 where
     TBuilder: IndexedBuilder<f32, TM>,
 {
     _marker: PhantomData<TM>,
     builder: TBuilder,
     positions: HashMap<usize, Point>,
-    polygon_center: Point
+    polygon_center: Point,
 }
 
 fn map_err<TV, TE>(value: std::result::Result<TV, TE>) -> anyhow::Result<TV>
@@ -31,13 +30,12 @@ impl<TBuilder, TM> BuilderWrapper<TBuilder, TM>
 where
     TBuilder: IndexedBuilder<f32, TM>,
 {
-    pub fn new(builder: TBuilder, polygon_center: Point) -> Self
-    {
+    pub fn new(builder: TBuilder, polygon_center: Point) -> Self {
         Self {
             _marker: Default::default(),
             builder,
             polygon_center,
-            positions: HashMap::default()
+            positions: HashMap::default(),
         }
     }
 

@@ -1,5 +1,5 @@
 use super::*;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use log::info;
 use rayon::prelude::*;
 

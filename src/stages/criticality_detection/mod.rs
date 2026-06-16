@@ -1,13 +1,14 @@
 use hashbrown::{HashMap, HashSet};
 use itertools::Itertools;
-use smallvec::{smallvec, SmallVec};
+use smallvec::{SmallVec, smallvec};
 use std::marker::PhantomData;
 
 use crate::{
     evolution::Cost,
     models::{FaceId, Point, PointId, Settings, SurfaceGraph, Triangle},
     stages::{
-        CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait, criticality_detection::propagation::{CostWithArea, KnownCosts}
+        CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait,
+        criticality_detection::propagation::{CostWithArea, KnownCosts},
     },
 };
 
@@ -134,14 +135,19 @@ impl PropagationBasedCriticalityDetector {
             .collect()
     }
 
-
-    pub fn calculate_unit_costs(graph: &SurfaceGraph, settings: &Settings) -> HashMap<FaceId, Cost> {
+    pub fn calculate_unit_costs(
+        graph: &SurfaceGraph,
+        settings: &Settings,
+    ) -> HashMap<FaceId, Cost> {
         Self::calculate_costs(graph, settings)
             .iter()
             .map(|(k, v)| (*k, v.unit_cost))
             .collect()
     }
-    pub fn calculate_costs(graph: &SurfaceGraph, settings: &Settings) -> HashMap<FaceId, CostWithArea> {
+    pub fn calculate_costs(
+        graph: &SurfaceGraph,
+        settings: &Settings,
+    ) -> HashMap<FaceId, CostWithArea> {
         let known_costs: HashMap<FaceId, Cost> = graph
             .iter_triangles(None)
             .filter(|x| is_triangle_close_to_the_ground(x, settings))

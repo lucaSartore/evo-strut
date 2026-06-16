@@ -1,7 +1,10 @@
-use anyhow::{ anyhow, Result };
+use anyhow::{Result, anyhow};
 use baby_shark::{io::Builder, mesh::corner_table::CornerTableF, voxel::volume::Volume};
 
-use crate::{models::Point, support::shape_generation::{ShapeGenerator, builder_wrapper::BuilderWrapper, to_volumes}};
+use crate::{
+    models::Point,
+    support::shape_generation::{ShapeGenerator, builder_wrapper::BuilderWrapper, to_volumes},
+};
 
 #[derive(Debug)]
 pub struct Sphere {
@@ -13,7 +16,6 @@ impl Sphere {
         Self { center, radius }
     }
 }
-
 
 impl ShapeGenerator for Sphere {
     fn build(&self, voxel_size: f32) -> Result<Volume> {
@@ -33,8 +35,7 @@ impl ShapeGenerator for Sphere {
             .max(3.) as usize;
 
         let top = builder.add_vertex(self.center + Point::UPWARD.to_scaled(self.radius))?;
-        let bottom =
-            builder.add_vertex(self.center + Point::DOWNWARD.to_scaled(self.radius))?;
+        let bottom = builder.add_vertex(self.center + Point::DOWNWARD.to_scaled(self.radius))?;
 
         let mut rings = Vec::with_capacity(latitude_segments - 1);
         for latitude in 1..latitude_segments {
@@ -64,11 +65,7 @@ impl ShapeGenerator for Sphere {
                 let current = &rings[latitude];
                 let next = &rings[latitude + 1];
 
-                builder.add_face(
-                    current[longitude],
-                    next[longitude],
-                    next[next_longitude],
-                )?;
+                builder.add_face(current[longitude], next[longitude], next[next_longitude])?;
                 builder.add_face(
                     current[longitude],
                     next[next_longitude],
