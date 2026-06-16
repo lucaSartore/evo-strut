@@ -46,16 +46,25 @@ where
                 SimpleContactPointsGrouper::optimize(&input.state, attempt_id)?;
             let cost = Cost::new(cost_log.final_cost);
             if cost < best_cost {
-                best = Some(result);
+                best = Some((result, cost_log));
                 best_cost = cost
             }
         }
+
+        let (result, cost_log) = best.expect("can't be empty");
+        save_optimization_artifact(
+            &input.state.settings,
+            "contact_points_grouping.json",
+            &result,
+            &cost_log,
+        )?;
+
 
         Ok(Pipeline::from_state(ContactPointsGroupedState {
             settings: input.state.settings,
             graph: input.state.graph,
             connection_points: input.state.connection_points,
-            grouper: best.expect("can't be empty"),
+            grouper: result,
             floating_regions: input.state.floating_regions,
         }))
     }
@@ -79,6 +88,7 @@ impl ContactPointsGrouper for SimpleContactPointsGrouper {
         let connection_points = &status.connection_points;
         let graph = &status.graph;
         let s = &settings.contact_points_grouping_settings;
+
 
         type Behaviour<'a> = EvolverBehaviour<
             ContactPointGroupingMutator<'a>,
@@ -124,12 +134,6 @@ impl ContactPointsGrouper for SimpleContactPointsGrouper {
         );
 
         let (result, cost_log) = evolver.run_once()?;
-        save_optimization_artifact(
-            settings,
-            format!("contact_points_grouping_attempt_{attempt_id}.json"),
-            &result,
-            &cost_log,
-        )?;
         Ok((result, cost_log))
     }
 }
