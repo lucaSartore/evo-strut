@@ -3,12 +3,12 @@ mod models;
 mod stages;
 mod support;
 
-use std::{fs, path::PathBuf};
+use std::{fs, path::PathBuf, time::{SystemTime, UNIX_EPOCH}};
 
 use anyhow::Context;
 use clap::Parser;
 use env_logger::Builder;
-use log::{LevelFilter, error};
+use log::{LevelFilter, error, info};
 
 use crate::{
     models::Settings,
@@ -84,5 +84,11 @@ fn run() -> anyhow::Result<()> {
         SimpleSupportStructureOptimizer,
         SimpleSupportStructureRefiner,
     >;
-    Pipeline::<StartedState, Behaviour>::run(settings)
+
+    let start = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+    let to_return = Pipeline::<StartedState, Behaviour>::run(settings);
+    let end = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+    let duration = end - start;
+    info!("total execution time was: {} [s]", duration.as_secs());
+    to_return
 }
