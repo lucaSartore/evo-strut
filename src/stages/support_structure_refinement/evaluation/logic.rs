@@ -1,6 +1,6 @@
 use std::f32;
 
-use crate::{evolution::Random, models::{MaterialStiffnessSettings, SupportStructureRefinementSettings}, stages::{contact_points_grouping, support_structure_refinement::evaluation::graph::Neighbor}};
+use crate::{evolution::Random, models::{MaterialStiffnessSettings, SupportStructureRefinementSettings}, stages::{contact_points_grouping, support_structure_refinement::evaluation::{graph::Neighbor, stiffness::calculate_beam_stiffness}}};
 use hashbrown::HashMap;
 use smallvec::{smallvec, SmallVec};
 
@@ -197,7 +197,7 @@ fn evaluate_single_support_stiffness(
         let stiffness =
             stiffness_series(base_stiffness, from, new_to, radius, &s.material_stiffness_settings);
         let c = compliance_value(s, &stiffness);
-        cost += s.non_stiffness_cost * c;
+        cost += s.non_stiffness_cost * (c - s.non_stiffness_threshold).max(0.0);
     }
     cost
 }

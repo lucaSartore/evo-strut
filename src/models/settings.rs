@@ -310,7 +310,7 @@ impl Default for ContactPointsGroupingSettings {
         let max_num_groups = 25;
 
         Self {
-            group_cost_penalty: 10000.,
+            group_cost_penalty: 23000.,
             area_minimization_weight: 50.,
             volume_minimization_weight: 30.,
             num_generations: 2000,
@@ -432,7 +432,7 @@ impl Default for SupportStructureOptimizationSettings {
     fn default() -> Self {
         Self {
             num_generations: 5000,
-            patience: 50,
+            patience: 500,
             generation_size: 100,
             tournament_size: 10,
             num_elite_individuals: 10,
@@ -481,6 +481,9 @@ pub struct SupportStructureRefinementSettings {
     /// cost associated with the support being not stiff enough
     /// unit of measure: cost/(mm/N)
     pub non_stiffness_cost: f32,
+    /// complacence threshold under which no cost will be applied
+    /// unit of measure: mm/N
+    pub non_stiffness_threshold: f32,
     /// resolution used when integrating over a beam stiffness to calculate the cost
     /// unit of measure: mm
     pub stiffness_cost_integration_size: f32,
@@ -534,7 +537,8 @@ impl Default for SupportStructureRefinementSettings {
             num_elite_individuals: 10,
             cost_for_support_area: 2.5,
             cost_for_support_too_steep: 15.0,
-            non_stiffness_cost: 1.,
+            non_stiffness_cost: 2.,
+            non_stiffness_threshold: 10.,
             stiffness_cost_integration_size: 1.0,
             cone_area_cost: 2.0,
             cone_too_steep_cost: 10.0,

@@ -92,6 +92,7 @@ impl SimpleSupportStructureOptimizer {
             ElitistNextGenSelectorSettings,
             SupportStructureInitializerSettings<'a>,
         >;
+        //todo: hard-coded value
         Evolver::<Behaviour<'a>>::run_n_times(
             1,
             &SupportStructureMutatorSettings::new(settings, graph),

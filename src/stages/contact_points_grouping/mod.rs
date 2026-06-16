@@ -38,7 +38,8 @@ where
 
         let mut best = None;
         let mut best_cost = Cost::new(f32::MAX);
-        for _ in 0..10 {
+        // todo: hard-coded value
+        for _ in 0..5 {
             let (result, cost) = SimpleContactPointsGrouper::optimize(&input.state)?;
             if cost < best_cost {
                 best = Some(result);
