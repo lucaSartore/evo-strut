@@ -55,5 +55,13 @@ FILES_TO_COPY=(
 )
 
 for FILE in "${FILES_TO_COPY[@]}"; do
-    if
+    if [ -f "$FILE" ]; then
+        cp "$FILE" "$TARGET_DIR/"
+    else
+        echo "Warning: Required file '${FILE}' not found. Skipping."
+    fi
+done
+
+echo "Successfully completed test: ${TEST_NAME}"
+echo "Results stored in: ${TARGET_DIR}"
 
