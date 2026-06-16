@@ -6,7 +6,7 @@ use crate::{
     support::graph_circle::find_circle,
 };
 use hashbrown::{HashMap, HashSet};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 
 #[derive(Debug, Copy, Clone, Default, Serialize, Deserialize)]
 pub struct ContactPointShape {
@@ -48,6 +48,21 @@ impl ContactPointShape {
 #[derive(Debug, Clone, Default)]
 pub struct ContactPointsGene {
     pub contact_points: HashMap<FaceId, ContactPointShape>,
+}
+
+impl Serialize for ContactPointsGene {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut contact_points = self
+            .contact_points
+            .iter()
+            .map(|(face, shape)| (*face, *shape))
+            .collect::<Vec<_>>();
+        contact_points.sort_by_key(|(face, _)| *face);
+        contact_points.serialize(serializer)
+    }
 }
 
 impl ContactPointsGene {

@@ -1,30 +1,38 @@
 use core::f32;
-use std::{ fmt::Debug };
+use std::fmt::Debug;
 
 use hashbrown::{HashMap, HashSet};
-use itertools::{Itertools};
+use itertools::Itertools;
+use serde::Serialize;
 use smallvec::smallvec;
 
 use crate::{
     evolution::{Cost, Random},
     models::{FaceId, Point, Settings, SurfaceGraph},
     stages::support_structure_refinement::{
-            BaseNode, ContactNode, MiddleNode, PositionAnchor, SupportNode, SupportNodeId,
-            SupportStructureGene,
-        }, support::{convex_hull::ConvexHull, neural_network::{ActivationFunction, LayerTopology, NetworkTopology, NetworkWeightInitialization, NeuralNetwork}},
+        BaseNode, ContactNode, MiddleNode, PositionAnchor, SupportNode, SupportNodeId,
+        SupportStructureGene,
+    },
+    support::{
+        convex_hull::ConvexHull,
+        neural_network::{
+            ActivationFunction, LayerTopology, NetworkTopology, NetworkWeightInitialization,
+            NeuralNetwork,
+        },
+    },
 };
 
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, Serialize)]
 pub struct ContactPoint {
     pub face: FaceId,
     pub position: Point,
-    pub radius: f32
+    pub radius: f32,
 }
 
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, Serialize)]
 pub struct SupportPoint {
     pub position: Point,
-    pub num_contacts: u32
+    pub num_contacts: u32,
 }
 
 impl SupportPoint {
@@ -38,12 +46,12 @@ impl SupportPoint {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct SupportStructureOptimizationGene {
     pub contacts: Vec<ContactPoint>,
     pub supports: Vec<SupportPoint>,
     pub contact_radius: NeuralNetwork,
-    pub convex_hull: ConvexHull
+    pub convex_hull: ConvexHull,
 }
 
 impl SupportStructureOptimizationGene {
@@ -53,7 +61,7 @@ impl SupportStructureOptimizationGene {
             contacts,
             supports: vec![],
             contact_radius: Self::random_network(random),
-            convex_hull
+            convex_hull,
         }
     }
 
@@ -66,7 +74,8 @@ impl SupportStructureOptimizationGene {
                 LayerTopology::new(1, ActivationFunction::Sigmoid)
                     .expect("invalid default contact-point grouping output layer"),
             ],
-        ).unwrap();
+        )
+        .unwrap();
         let initialization = NetworkWeightInitialization::He;
         NeuralNetwork::random(topology, initialization, random).unwrap()
     }
@@ -87,12 +96,22 @@ impl SupportStructureOptimizationGene {
         }
     }
 
-    pub fn random_point_close_to(&self, original_position: Point, alpha: f32, min_angle_rad: f32, rand: &Random) -> Point {
+    pub fn random_point_close_to(
+        &self,
+        original_position: Point,
+        alpha: f32,
+        min_angle_rad: f32,
+        rand: &Random,
+    ) -> Point {
         // probabilities that are too small risk to make this function slow
         assert!(alpha > 0.001);
-        let options: Vec<_> = self.all_points_positions()
-            .filter(|x| *x != original_position && Point::horizon_angle(*x, original_position) > min_angle_rad)
-            .map(|x| (x, (x-original_position).norm_sq()))
+        let options: Vec<_> = self
+            .all_points_positions()
+            .filter(|x| {
+                *x != original_position
+                    && Point::horizon_angle(*x, original_position) > min_angle_rad
+            })
+            .map(|x| (x, (x - original_position).norm_sq()))
             .sorted_by_key(|x| Cost::new(x.1))
             .map(|x| x.0)
             .collect();
@@ -120,7 +139,8 @@ impl SupportStructureOptimizationGene {
     }
 
     pub fn all_points_positions(&self) -> impl Iterator<Item = Point> {
-        self.contacts.iter()
+        self.contacts
+            .iter()
             .map(|x| x.position)
             .chain(self.supports.iter().map(|x| x.position))
     }
@@ -141,11 +161,14 @@ struct RawStructureBuilder<'a> {
     pub position_to_id: HashMap<Point, SupportNodeId>,
     pub random: Random,
     pub settings: &'a Settings,
-    pub supports: HashSet<Point>
+    pub supports: HashSet<Point>,
 }
 
 impl<'a> RawStructureBuilder<'a> {
-    pub fn new(settings: &'a Settings, optimization_structure: &'a SupportStructureOptimizationGene) -> Self {
+    pub fn new(
+        settings: &'a Settings,
+        optimization_structure: &'a SupportStructureOptimizationGene,
+    ) -> Self {
         // node zero is added as a placeholder, so that the we can use it for anchors, and then
         // remove it and repairing the structure
         let mut raw_structure = SupportStructureGene {
@@ -157,7 +180,7 @@ impl<'a> RawStructureBuilder<'a> {
                 id: SupportNodeId(0),
                 mesh_contact: None,
                 last_position: Point::DOWNWARD.to_scaled(10e20),
-                radius: 3.
+                radius: 3.,
             }),
         );
 
@@ -169,7 +192,7 @@ impl<'a> RawStructureBuilder<'a> {
             // it only effect IDs, so we can put an unseeded value here
             random: Random::UnSeededRandom,
             settings,
-            supports: HashSet::new()
+            supports: HashSet::new(),
         }
     }
 
@@ -185,7 +208,12 @@ impl<'a> RawStructureBuilder<'a> {
 
     fn insert_points(&mut self) {
         let mut elements = vec![];
-        let contacts_set: HashSet<_> = self.optimization_structure.contacts.iter().map(|x| x.position).collect();
+        let contacts_set: HashSet<_> = self
+            .optimization_structure
+            .contacts
+            .iter()
+            .map(|x| x.position)
+            .collect();
         let mut contacts: Vec<_> = self
             .optimization_structure
             .contacts
@@ -239,7 +267,7 @@ impl<'a> RawStructureBuilder<'a> {
                     anchor: PositionAnchor::new(SupportNodeId(0), Point::ZERO, Point::ZERO),
                     last_position: position,
                     leans_on: vec![],
-                    radius: s.radius(self.optimization_structure)
+                    radius: s.radius(self.optimization_structure),
                 };
                 SupportNode::Middle(n)
             }
@@ -260,10 +288,7 @@ impl<'a> RawStructureBuilder<'a> {
             .add_leans_on(to_id);
     }
 
-
-
     fn find_supporters(&self, position: Point, num_contacts: usize) -> Vec<Point> {
-
         let valid_points: Vec<_> = self
             .supports
             .iter()
@@ -276,7 +301,8 @@ impl<'a> RawStructureBuilder<'a> {
             .map(|x| {
                 let distance = (*x - position).abs();
                 (x, Cost::new(distance))
-            }).collect();
+            })
+            .collect();
 
         return valid_points
             .iter()
@@ -286,18 +312,17 @@ impl<'a> RawStructureBuilder<'a> {
             .unique()
             .collect();
     }
-
 }
 
 enum QueuedPoint {
     Contact(ContactPoint),
-    Support(SupportPoint)
+    Support(SupportPoint),
 }
 impl QueuedPoint {
     pub fn position(&self) -> Point {
         match self {
             QueuedPoint::Contact(p) => p.position,
-            QueuedPoint::Support(p) => p.position
+            QueuedPoint::Support(p) => p.position,
         }
     }
     pub fn height(&self) -> f32 {
@@ -306,7 +331,7 @@ impl QueuedPoint {
     pub fn num_contacts(&self) -> usize {
         match self {
             QueuedPoint::Contact(_) => 1,
-            QueuedPoint::Support(p) => p.num_contacts as usize
+            QueuedPoint::Support(p) => p.num_contacts as usize,
         }
     }
 }

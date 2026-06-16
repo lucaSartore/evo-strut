@@ -11,6 +11,7 @@ use crate::{
     stages::{
         ContactPointsDecidedState, ContactPointsGroupedState, Pipeline, PipelineBehaviourTrait,
         SupportStructureOptimizedState, floating_region_detection::FloatingRegion,
+        save_optimization_artifact,
     },
 };
 
@@ -55,7 +56,9 @@ where
 }
 
 pub trait SupportStructureOptimizer {
-    fn optimize(status: &ContactPointsGroupedState) -> Result<Vec<SupportStructureOptimizationGene>>;
+    fn optimize(
+        status: &ContactPointsGroupedState,
+    ) -> Result<Vec<SupportStructureOptimizationGene>>;
 }
 
 pub struct SimpleSupportStructureOptimizer {}
@@ -64,11 +67,11 @@ impl SimpleSupportStructureOptimizer {
     fn optimize_group<'a>(
         status: &'a ContactPointsGroupedState,
         group: &'a SupportStructureOptimizationGene,
+        group_id: usize,
     ) -> Result<SupportStructureOptimizationGene> {
         let floating_surfaces = FloatingRegion::filter_array(
-            &status.floating_regions, 
-            group.contacts.iter()
-            .map(|x| x.face)
+            &status.floating_regions,
+            group.contacts.iter().map(|x| x.face),
         );
         let settings = &status.settings;
         let mesh = &status.graph.mesh.original;
@@ -93,7 +96,7 @@ impl SimpleSupportStructureOptimizer {
             SupportStructureInitializerSettings<'a>,
         >;
         //todo: hard-coded value
-        Evolver::<Behaviour<'a>>::run_n_times(
+        let (result, cost_log) = Evolver::<Behaviour<'a>>::run_n_times(
             1,
             &SupportStructureMutatorSettings::new(settings, graph),
             &SupportStructureCrossoverSettings::new(settings),
@@ -111,12 +114,21 @@ impl SimpleSupportStructureOptimizer {
             },
             &SupportStructureInitializerSettings::new(settings, graph, group),
             Random::UnSeededRandom,
-        ).map(|x| x.0)
+        )?;
+        save_optimization_artifact(
+            settings,
+            format!("support_structure_optimization_group_{group_id}.json"),
+            &result,
+            &cost_log,
+        )?;
+        Ok(result)
     }
 }
 
 impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
-    fn optimize<'a>(status: &'a ContactPointsGroupedState) -> Result<Vec<SupportStructureOptimizationGene>> {
+    fn optimize<'a>(
+        status: &'a ContactPointsGroupedState,
+    ) -> Result<Vec<SupportStructureOptimizationGene>> {
         let groups = status.grouper.to_groups(
             &status.connection_points,
             &status.graph,
@@ -128,7 +140,7 @@ impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
 
         for (i, g) in groups.iter().enumerate() {
             debug!("starting optimization for group {i}");
-            let optimized = Self::optimize_group(status, &g);
+            let optimized = Self::optimize_group(status, &g, i);
             to_return.push(optimized?);
         }
         Ok(to_return)

@@ -83,6 +83,8 @@ pub struct IoSettings {
     pub output_file_path: String,
     /// output file with the supports in a json format
     pub output_json_path: String,
+    /// directory where optimization genes and cost logs are saved as json
+    pub optimization_logs_dir_path: Option<String>,
     /// optionally add a path where to load the json supports
     /// if this is provided, the program will simply export
     /// a mesh output without re-optimizing the structure
@@ -110,6 +112,7 @@ impl Default for IoSettings {
             input_json_path: None,
             output_file_path: "test_meshes/output.stl".into(),
             output_json_path: "test_meshes/output.json".into(),
+            optimization_logs_dir_path: Some("optimization_logs".into()),
             target_edge_length: 0.,
         }
     }

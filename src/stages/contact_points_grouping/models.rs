@@ -1,4 +1,5 @@
 use hashbrown::HashMap;
+use serde::Serialize;
 use std::fmt::Debug;
 
 use crate::{
@@ -7,13 +8,13 @@ use crate::{
     stages::{
         contact_point_optimization::ContactPointsGene,
         support_structure_optimization::{
-            mutation::SupportStructureMutator, ContactPoint, SupportStructureOptimizationGene,
+            ContactPoint, SupportStructureOptimizationGene, mutation::SupportStructureMutator,
         },
     },
     support::neural_network::NeuralNetwork,
 };
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct ContactPointGroupingGene {
     pub network: NeuralNetwork,
 }
@@ -55,9 +56,7 @@ impl ContactPointGroupingGene {
 
         grouped
             .into_values()
-            .map(|x| {
-                SupportStructureOptimizationGene::from_contacts(x, rand)
-            })
+            .map(|x| SupportStructureOptimizationGene::from_contacts(x, rand))
             .collect()
     }
 

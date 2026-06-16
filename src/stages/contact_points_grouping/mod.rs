@@ -3,10 +3,13 @@ use std::marker::PhantomData;
 
 use crate::{
     evolution::{
-        Cost, ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour, PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random, TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings
+        Cost, ElitistNextGenSelector, ElitistNextGenSelectorSettings, Evolver, EvolverBehaviour,
+        PatienceBasedTerminationStrategy, PatienceBasedTerminationStrategySettings, Random,
+        TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings,
     },
     stages::{
-        ContactPointsDecidedState, ContactPointsGroupedState, Pipeline, PipelineBehaviourTrait, SupportStructureOptimizedState, support_structure_refinement::evaluation::SupportStructureEvaluatorSettings
+        ContactPointsDecidedState, ContactPointsGroupedState, Pipeline, PipelineBehaviourTrait,
+        save_optimization_artifact,
     },
 };
 
@@ -35,12 +38,13 @@ where
     pub fn execute(
         input: Pipeline<ContactPointsDecidedState, TB>,
     ) -> Result<Pipeline<ContactPointsGroupedState, TB>> {
-
         let mut best = None;
         let mut best_cost = Cost::new(f32::MAX);
         // todo: hard-coded value
-        for _ in 0..5 {
-            let (result, cost) = SimpleContactPointsGrouper::optimize(&input.state)?;
+        for attempt_id in 0..5 {
+            let (result, cost_log) =
+                SimpleContactPointsGrouper::optimize(&input.state, attempt_id)?;
+            let cost = Cost::new(cost_log.final_cost);
             if cost < best_cost {
                 best = Some(result);
                 best_cost = cost
@@ -52,19 +56,25 @@ where
             graph: input.state.graph,
             connection_points: input.state.connection_points,
             grouper: best.expect("can't be empty"),
-            floating_regions: input.state.floating_regions
+            floating_regions: input.state.floating_regions,
         }))
     }
 }
 
 pub trait ContactPointsGrouper {
-    fn optimize(status: &ContactPointsDecidedState) -> Result<(ContactPointGroupingGene, Cost)>;
+    fn optimize(
+        status: &ContactPointsDecidedState,
+        attempt_id: usize,
+    ) -> Result<(ContactPointGroupingGene, crate::evolution::CostLog)>;
 }
 
 pub struct SimpleContactPointsGrouper {}
 
 impl ContactPointsGrouper for SimpleContactPointsGrouper {
-    fn optimize<'a>(status: &'a ContactPointsDecidedState) -> Result<(ContactPointGroupingGene, Cost)> {
+    fn optimize<'a>(
+        status: &'a ContactPointsDecidedState,
+        attempt_id: usize,
+    ) -> Result<(ContactPointGroupingGene, crate::evolution::CostLog)> {
         let settings = &status.settings;
         let connection_points = &status.connection_points;
         let graph = &status.graph;
@@ -113,6 +123,13 @@ impl ContactPointsGrouper for SimpleContactPointsGrouper {
             Random::UnSeededRandom,
         );
 
-        evolver.run_once()
+        let (result, cost_log) = evolver.run_once()?;
+        save_optimization_artifact(
+            settings,
+            format!("contact_points_grouping_attempt_{attempt_id}.json"),
+            &result,
+            &cost_log,
+        )?;
+        Ok((result, cost_log))
     }
 }

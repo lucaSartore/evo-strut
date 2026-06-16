@@ -5,11 +5,12 @@ use crate::{
         TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings,
     },
     stages::{
+        ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait,
         contact_point_optimization::{
             corssover::ContactPointCrossoverSettings, evaluation::ContactPointEvaluatorSettings,
             initializer::ContactPointsInitializerSettings, mutation::ContactPointsMutatorSettings,
         },
-        ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait,
+        save_optimization_artifact,
     },
 };
 use anyhow::{Result, anyhow};
@@ -116,6 +117,13 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
             Random::UnSeededRandom,
         );
 
-        evolver.run_once().map(|x| x.0)
+        let (result, cost_log) = evolver.run_once()?;
+        save_optimization_artifact(
+            settings,
+            format!("contact_points_optimization_area_{area_id}.json"),
+            &result,
+            &cost_log,
+        )?;
+        Ok(result)
     }
 }

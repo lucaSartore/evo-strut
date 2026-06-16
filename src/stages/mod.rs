@@ -1,19 +1,23 @@
 use anyhow::Result;
+use serde::Serialize;
 use std::{
+    fs::{self, File},
+    io::BufWriter,
     marker::PhantomData,
+    path::Path,
     time::{SystemTime, UNIX_EPOCH},
 };
 
 pub mod contact_point_optimization;
 pub mod contact_points_grouping;
 pub mod criticality_detection;
-pub mod floating_region_detection;
 pub mod criticality_grouping;
+pub mod exporting;
+pub mod floating_region_detection;
 pub mod loading;
 pub mod support_structure_optimization;
 pub mod support_structure_refinement;
 pub mod visualization;
-pub mod exporting;
 
 pub use criticality_detection::{
     CriticalityDetectionStage, CriticalityDetector, OrientationBasedCriticalityDetector,
@@ -26,18 +30,56 @@ use crate::{
     stages::{
         contact_point_optimization::{
             ContactPointOptimizationStage, ContactPointOptimizer, ContactPointsGene,
-        }, contact_points_grouping::{
+        },
+        contact_points_grouping::{
             ContactPointGroupingGene, ContactPointsGrouper, ContactPointsGroupingStage,
-        }, criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage}, exporting::ExportingStage, loading::LoadingStage, support_structure_optimization::{
+        },
+        criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage},
+        exporting::ExportingStage,
+        floating_region_detection::{
+            FloatingRegion, FloatingRegionDetectionStage, FloatingRegionDetector,
+        },
+        loading::LoadingStage,
+        support_structure_optimization::{
             SupportStructureOptimizationStage, SupportStructureOptimizer,
-        }, support_structure_refinement::{
+        },
+        support_structure_refinement::{
             SupportStructureGene, SupportStructureRefinementStage, SupportStructureRefiner,
-        }, floating_region_detection::{
-            FloatingRegionDetectionStage, FloatingRegionDetector, FloatingRegion
-        }
+        },
     },
 };
 use visualization::{VisualizationStage, Visualizer};
+
+#[derive(Serialize)]
+struct OptimizationArtifact<'a, T>
+where
+    T: Serialize,
+{
+    element: &'a T,
+    cost_log: &'a crate::evolution::CostLog,
+}
+
+pub(crate) fn save_optimization_artifact<T>(
+    settings: &Settings,
+    file_name: impl AsRef<Path>,
+    element: &T,
+    cost_log: &crate::evolution::CostLog,
+) -> Result<()>
+where
+    T: Serialize,
+{
+    let Some(dir) = &settings.io_settings.optimization_logs_dir_path else {
+        return Ok(());
+    };
+
+    fs::create_dir_all(dir)?;
+    let path = Path::new(dir).join(file_name);
+    let file = File::create(path)?;
+    let writer = BufWriter::new(file);
+    let artifact = OptimizationArtifact { element, cost_log };
+    serde_json::to_writer_pretty(writer, &artifact)?;
+    Ok(())
+}
 
 pub trait PipelineBehaviourTrait {
     type TCriticalityDetection: CriticalityDetector;
@@ -62,14 +104,14 @@ pub struct PipelineBehaviour<
 }
 
 impl<
-        TCriticalityDetection: CriticalityDetector,
-        TFloatingRegionDetection: FloatingRegionDetector,
-        TCriticalityGrouping: CriticalityGrouper,
-        TContactPointOptimizer: ContactPointOptimizer,
-        TContactPointGrouper: ContactPointsGrouper,
-        TSupportStructureOptimizer: SupportStructureOptimizer,
-        TSupportSTructureRefiner: SupportStructureRefiner,
-    > PipelineBehaviourTrait
+    TCriticalityDetection: CriticalityDetector,
+    TFloatingRegionDetection: FloatingRegionDetector,
+    TCriticalityGrouping: CriticalityGrouper,
+    TContactPointOptimizer: ContactPointOptimizer,
+    TContactPointGrouper: ContactPointsGrouper,
+    TSupportStructureOptimizer: SupportStructureOptimizer,
+    TSupportSTructureRefiner: SupportStructureRefiner,
+> PipelineBehaviourTrait
     for PipelineBehaviour<
         TCriticalityDetection,
         TFloatingRegionDetection,
@@ -103,7 +145,6 @@ pub struct LoadedState {
     pub graph: SurfaceGraph,
 }
 impl PipelineState for LoadedState {}
-
 
 /// we have successfully detected all the nodes that are considered critical
 pub struct CriticalityDetectedState {
@@ -249,16 +290,13 @@ where
                     "support_structure_optimization",
                     SupportStructureOptimizationStage::<TB>::execute(p)
                 )?;
-                let p = timed!(
+                timed!(
                     "support_structure_refinement",
                     SupportStructureRefinementStage::<TB>::execute(p)
-                )?;
-                p
-            },
-            // pre-loaded struct, we can skip to exporting
-            loading::LoadingStageOutput::StructureLoaded(p) => {
-                p
+                )?
             }
+            // pre-loaded struct, we can skip to exporting
+            loading::LoadingStageOutput::StructureLoaded(p) => p,
         };
 
         let _ = timed!("exporting", ExportingStage::execute(p))?;

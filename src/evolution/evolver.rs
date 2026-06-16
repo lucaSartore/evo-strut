@@ -2,6 +2,29 @@ use super::*;
 use anyhow::{Result, anyhow};
 use log::info;
 use rayon::prelude::*;
+use serde::Serialize;
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CostLogEntry {
+    pub timestamp_unix_seconds: f64,
+    pub generation: usize,
+    pub cost: f32,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CostLog {
+    pub final_cost: f32,
+    pub running_costs: Vec<CostLogEntry>,
+    pub total_running_time_seconds: f64,
+}
+
+fn timestamp_unix_seconds() -> f64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs_f64())
+        .unwrap_or_default()
+}
 
 pub trait EvolverBehaviourTrait {
     // behaviour of the various components of teh GA
@@ -90,25 +113,34 @@ where
         next_generation_settings: &TBehaviour::SNextSel,
         population_initializer_settings: &TBehaviour::SInit,
         rand: Random,
-    ) -> Result<(TBehaviour::TGene, Cost)> {
+    ) -> Result<(TBehaviour::TGene, CostLog)> {
         assert!(n >= 1, "N can't be zero");
         (0..n)
-            .map(|_| Self::new(
-                mutation_settings,
-                crossover_settings,
-                termination_settings,
-                evaluation_settings,
-                crossover_selection_settings,
-                next_generation_settings,
-                population_initializer_settings,
-                rand.seeded_copy()
-            ).run_once())
-            .min_by_key(|x| x.as_ref().map(|y| y.1).unwrap_or(Cost::MAX))
+            .map(|_| {
+                Self::new(
+                    mutation_settings,
+                    crossover_settings,
+                    termination_settings,
+                    evaluation_settings,
+                    crossover_selection_settings,
+                    next_generation_settings,
+                    population_initializer_settings,
+                    rand.seeded_copy(),
+                )
+                .run_once()
+            })
+            .min_by_key(|x| {
+                x.as_ref()
+                    .map(|y| Cost::new(y.1.final_cost))
+                    .unwrap_or(Cost::MAX)
+            })
             .expect("iter should always contain one element")
     }
 
-    pub fn run_once(&self) -> Result<(TBehaviour::TGene, Cost)> {
+    pub fn run_once(&self) -> Result<(TBehaviour::TGene, CostLog)> {
         let best = |x: &[Cost]| x.iter().copied().min().unwrap_or(Cost::MAX);
+        let start = Instant::now();
+        let mut running_costs = vec![];
 
         let initial_count = self.population_initializer.get_initial_individuals();
         let mut current_gen: Vec<_> = (0..initial_count)
@@ -165,6 +197,11 @@ where
             info!("Generation {counter} best cost was {best_cost}");
 
             if counter % 10 == 0 {
+                running_costs.push(CostLogEntry {
+                    timestamp_unix_seconds: timestamp_unix_seconds(),
+                    generation: counter,
+                    cost: best_cost.as_f32(),
+                });
                 self.evaluator.visualize(best)?;
             }
         }
@@ -177,7 +214,14 @@ where
                 "Unable to find best individual, the list was empty"
             ))?;
         self.evaluator.visualize(&x.0)?;
-        Ok((x.0, *x.1))
+        Ok((
+            x.0,
+            CostLog {
+                final_cost: x.1.as_f32(),
+                running_costs,
+                total_running_time_seconds: start.elapsed().as_secs_f64(),
+            },
+        ))
     }
 }
 
@@ -218,22 +262,22 @@ pub struct EvolverBehaviour<
 }
 
 impl<
-        TMutator,
-        TCrossover,
-        TTermination,
-        TEvaluator,
-        TCrossoverSelector,
-        TNextGenSelector,
-        TPopulationInitializer,
-        TGene,
-        SMut,
-        SCross,
-        STerm,
-        SEval,
-        SCrossSel,
-        SNextSel,
-        SInit,
-    > EvolverBehaviourTrait
+    TMutator,
+    TCrossover,
+    TTermination,
+    TEvaluator,
+    TCrossoverSelector,
+    TNextGenSelector,
+    TPopulationInitializer,
+    TGene,
+    SMut,
+    SCross,
+    STerm,
+    SEval,
+    SCrossSel,
+    SNextSel,
+    SInit,
+> EvolverBehaviourTrait
     for EvolverBehaviour<
         TMutator,
         TCrossover,
