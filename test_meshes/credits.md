@@ -7,4 +7,4 @@ There there are the original sources where I found the models:
 
 1) [dragon.stl](https://makerworld.com/it/models/666708-dragon)
 
-
+2) [armadillo.stl](https://graphics.stanford.edu/data/3Dscanrep/)
