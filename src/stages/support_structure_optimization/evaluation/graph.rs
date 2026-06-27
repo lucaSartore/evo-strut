@@ -21,7 +21,6 @@ pub struct Neighbor {
 #[derive(Debug, Clone)]
 pub struct Node {
     pub id: SupportNodeId,
-    pub contact: bool,
     pub position: Point,
     pub visited: bool,
     pub distance_from_source: f32,
@@ -51,6 +50,7 @@ impl StructureGraph {
         id
     }
 
+    #[allow(dead_code)]
     pub fn reset_all_nodes(&mut self) {
         for (_, n) in self.nodes.iter_mut() {
             n.visited = false;
@@ -159,7 +159,6 @@ impl StructureGraph {
         neighbors: &[SupportNodeId],
         supported: bool,
         radius: f32,
-        contact: bool
     ) {
         let mut new_node = Node {
             id,
@@ -169,7 +168,6 @@ impl StructureGraph {
             neighbors: smallvec![],
             supported,
             radius,
-            contact
         };
 
         for n_id in neighbors {
@@ -194,26 +192,29 @@ impl StructureGraph {
         self.nodes.iter().map(|x| (x.1.position, *x.0)).collect()
     }
 
+    #[allow(dead_code)]
     pub fn add_link(&mut self, from_id: SupportNodeId, to_id: SupportNodeId) {
         let from_position = self
             .nodes
             .get(&from_id)
             .expect("node shall be found")
             .position;
-        let to = self
-            .nodes
-            .get_mut(&to_id)
-            .expect("node shall be found");
+        let to = self.nodes.get_mut(&to_id).expect("node shall be found");
 
         let distance = (from_position - to.position).abs();
 
-        to.neighbors.push(Neighbor { id: from_id, distance });
+        to.neighbors.push(Neighbor {
+            id: from_id,
+            distance,
+        });
 
-        self
-            .nodes
+        self.nodes
             .get_mut(&from_id)
             .expect("node shall be found")
             .neighbors
-            .push(Neighbor { id: to_id, distance });
+            .push(Neighbor {
+                id: to_id,
+                distance,
+            });
     }
 }

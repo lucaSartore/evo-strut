@@ -1,23 +1,21 @@
 use crate::{
     evolution::{Mutator, Random},
-    models::{Settings, SurfaceGraph},
+    models::Settings,
     stages::contact_points_grouping::models::ContactPointGroupingGene,
 };
 
 pub struct ContactPointGroupingMutatorSettings<'a> {
     settings: &'a Settings,
-    graph: &'a SurfaceGraph,
 }
 
 impl<'a> ContactPointGroupingMutatorSettings<'a> {
-    pub fn new(settings: &'a Settings, graph: &'a SurfaceGraph) -> Self {
-        Self { settings, graph }
+    pub fn new(settings: &'a Settings) -> Self {
+        Self { settings }
     }
 }
 
 pub struct ContactPointGroupingMutator<'a> {
     pub settings: &'a Settings,
-    pub graph: &'a SurfaceGraph,
     pub rand: Random,
 }
 
@@ -27,7 +25,6 @@ impl<'a> Mutator<ContactPointGroupingGene, ContactPointGroupingMutatorSettings<'
     fn new(settings: &ContactPointGroupingMutatorSettings<'a>, rand: Random) -> Self {
         Self {
             settings: settings.settings,
-            graph: settings.graph,
             rand,
         }
     }

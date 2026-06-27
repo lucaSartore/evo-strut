@@ -3,8 +3,8 @@ use serde::Serialize;
 use std::fmt::Debug;
 
 use crate::{
-    evolution::{Cost, Random},
-    models::{Settings, SurfaceGraph},
+    evolution::Cost,
+    models::SurfaceGraph,
     stages::{
         contact_point_optimization::ContactPointsGene,
         support_structure_optimization::{ContactPoint, SupportStructureOptimizationGene},
@@ -22,8 +22,6 @@ impl ContactPointGroupingGene {
         &self,
         points: &ContactPointsGene,
         graph: &SurfaceGraph,
-        settings: &Settings,
-        rand: &Random,
     ) -> Vec<SupportStructureOptimizationGene> {
         let mut grouped = HashMap::<usize, Vec<_>>::default();
 

@@ -45,9 +45,7 @@ where
         // let merged = TB::TContactPointOptimizer::optimize(&input.state, 0)?;
         println!("num grouped areas: {}", input.state.grouped_areas.len());
         let results: Result<Vec<_>> = (0..input.state.grouped_areas.len())
-            .map(|i| {
-                TB::TContactPointOptimizer::optimize(&input.state, i)
-            })
+            .map(|i| TB::TContactPointOptimizer::optimize(&input.state, i))
             .collect();
         let merged = ContactPointsGene::merge_many(results?)
             .ok_or(anyhow!("merging of multiple genes failed"))?;
@@ -78,7 +76,6 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
         let area_hash = &status.grouped_areas_hashes[area_id];
         let settings = &status.settings;
         let graph = &status.graph;
-        let critical = &status.critical;
         let s = &settings.contact_points_optimization_settings;
         type Behaviour<'a> = EvolverBehaviour<
             ContactPointMutator<'a>,
@@ -99,12 +96,12 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
         >;
         let evolver = Evolver::<Behaviour<'a>>::new(
             &ContactPointsMutatorSettings::new(settings, graph, area, area_hash),
-            &ContactPointCrossoverSettings::new(settings, area, graph),
+            &ContactPointCrossoverSettings::new(area, graph),
             &PatienceBasedTerminationStrategySettings {
                 max_generations: s.num_generations,
                 patience: s.patience,
             },
-            &ContactPointEvaluatorSettings::new(graph, settings, area, critical, area_id),
+            &ContactPointEvaluatorSettings::new(graph, settings, area, area_id),
             &TournamentBasedCrossoverSelectionSettings {
                 k: s.tournament_size,
             },
@@ -112,7 +109,7 @@ impl ContactPointOptimizer for SimpleContactPointOptimizer {
                 num_novel_individual: s.generation_size - s.num_elite_individuals,
                 num_elite_individual: s.num_elite_individuals,
             },
-            &ContactPointsInitializerSettings::new(settings, graph, area, area_hash),
+            &ContactPointsInitializerSettings::new(settings, graph, area),
             Random::UnSeededRandom,
         );
 

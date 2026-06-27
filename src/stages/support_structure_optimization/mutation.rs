@@ -23,7 +23,7 @@ pub mod remove_point;
 
 pub struct SupportStructureMutator<'a> {
     pub settings: &'a Settings,
-    pub graph: &'a SurfaceGraph,
+    pub _graph: &'a SurfaceGraph,
     pub rand: Random,
 }
 
@@ -33,7 +33,7 @@ impl<'a> Mutator<SupportStructureOptimizationGene, SupportStructureMutatorSettin
     fn new(settings: &SupportStructureMutatorSettings<'a>, rand: Random) -> Self {
         Self {
             settings: settings.settings,
-            graph: settings.graph,
+            _graph: settings.graph,
             rand,
         }
     }

@@ -1,39 +1,22 @@
-use rerun::external::glam::usize;
-
 use crate::{
     evolution::{PopulationInitializer, Random},
-    models::{Settings, SurfaceGraph},
-    stages::{
-        contact_point_optimization::ContactPointsGene,
-        contact_points_grouping::models::ContactPointGroupingGene,
-    },
+    models::Settings,
+    stages::contact_points_grouping::models::ContactPointGroupingGene,
     support::neural_network::NeuralNetwork,
 };
 
 pub struct ContactPointGroupingInitializerSettings<'a> {
     settings: &'a Settings,
-    contact_points: &'a ContactPointsGene,
-    graph: &'a SurfaceGraph,
 }
 
 impl<'a> ContactPointGroupingInitializerSettings<'a> {
-    pub fn new(
-        settings: &'a Settings,
-        contact_points: &'a ContactPointsGene,
-        graph: &'a SurfaceGraph,
-    ) -> Self {
-        Self {
-            settings,
-            contact_points,
-            graph,
-        }
+    pub fn new(settings: &'a Settings) -> Self {
+        Self { settings }
     }
 }
 
 pub struct ContactPointGroupingInitializer<'a> {
     settings: &'a Settings,
-    contact_points: &'a ContactPointsGene,
-    graph: &'a SurfaceGraph,
     rand: Random,
 }
 
@@ -47,8 +30,6 @@ impl<'a>
     ) -> Self {
         Self {
             settings: settings.settings,
-            contact_points: settings.contact_points,
-            graph: settings.graph,
             rand,
         }
     }

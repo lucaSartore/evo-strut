@@ -1,21 +1,15 @@
 use super::models::ContactPointsGene;
 use crate::evolution::*;
-use crate::models::{FaceId, Plane, Settings, SurfaceGraph};
+use crate::models::{FaceId, Plane, SurfaceGraph};
 
 pub struct ContactPointCrossoverSettings<'a> {
-    settings: &'a Settings,
     available_options: &'a [FaceId],
     graph: &'a SurfaceGraph,
 }
 
 impl<'a> ContactPointCrossoverSettings<'a> {
-    pub fn new(
-        settings: &'a Settings,
-        available_options: &'a [FaceId],
-        graph: &'a SurfaceGraph,
-    ) -> Self {
+    pub fn new(available_options: &'a [FaceId], graph: &'a SurfaceGraph) -> Self {
         Self {
-            settings,
             available_options,
             graph,
         }
@@ -23,7 +17,6 @@ impl<'a> ContactPointCrossoverSettings<'a> {
 }
 
 pub struct ContactPointCrossover<'a> {
-    settings: &'a Settings,
     available_options: &'a [FaceId],
     graph: &'a SurfaceGraph,
     rand: Random,
@@ -34,7 +27,6 @@ impl<'a> Crossover<ContactPointsGene, ContactPointCrossoverSettings<'a>>
 {
     fn new(settings: &ContactPointCrossoverSettings<'a>, rand: Random) -> Self {
         Self {
-            settings: settings.settings,
             available_options: settings.available_options,
             graph: settings.graph,
             rand,

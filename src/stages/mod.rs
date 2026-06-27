@@ -38,7 +38,8 @@ use crate::{
         },
         loading::LoadingStage,
         support_structure_optimization::{
-            SupportStructureOptimizationGene, SupportStructureOptimizationStage, SupportStructureOptimizer
+            SupportStructureOptimizationGene, SupportStructureOptimizationStage,
+            SupportStructureOptimizer,
         },
     },
 };
@@ -94,7 +95,7 @@ pub struct PipelineBehaviour<
     TSSO: SupportStructureOptimizer,
     // TSSR: SupportStructureRefiner,
 > {
-    _t: PhantomData<(TD, TFD, TG, TCPO, TCPG, TSSO/*, TSSR*/)>,
+    _t: PhantomData<(TD, TFD, TG, TCPO, TCPG, TSSO /*, TSSR*/)>,
 }
 
 impl<
@@ -190,6 +191,7 @@ impl PipelineState for ContactPointsGroupedState {}
 pub struct SupportStructureOptimizedState {
     pub settings: Settings,
     pub graph: SurfaceGraph,
+    #[allow(dead_code)]
     pub connection_points: ContactPointsGene,
     pub support_structures: Vec<SupportStructureOptimizationGene>,
 }

@@ -75,7 +75,7 @@ impl Default for FloatingRegionDetectionSettings {
     fn default() -> Self {
         Self {
             stiffness_threshold_area_multiplier: 1.,
-            split_height: 10.
+            split_height: 10.,
         }
     }
 }
@@ -447,7 +447,7 @@ pub struct SupportStructureOptimizationSettings {
     /// unit of measure: deg
     pub max_support_angle: f32,
     /// the density of support points used to initialize the structure
-    pub initial_point_density: f32
+    pub initial_point_density: f32,
 }
 
 impl Default for SupportStructureOptimizationSettings {
@@ -476,7 +476,7 @@ impl Default for SupportStructureOptimizationSettings {
             point_mutation_std_range: (0.5, 5.),
             point_mutation_probability_range: (0.05, 0.4),
             max_support_angle: 30.,
-            initial_point_density: 0.0001
+            initial_point_density: 0.0001,
         }
     }
 }
@@ -542,7 +542,7 @@ pub struct SupportStructureCostSettings {
     pub floating_regions_equivalent_beam_radius: f32,
     /// weight for the floating regions complacence cost
     /// unit of measure: cost * N / mm
-    pub floating_region_cost_weight: f32
+    pub floating_region_cost_weight: f32,
 }
 
 impl Default for SupportStructureCostSettings {
@@ -564,7 +564,7 @@ impl Default for SupportStructureCostSettings {
             collision_check_intervals: 2.,
             collision_penalization: 200.,
             floating_regions_equivalent_beam_radius: 1.5,
-            floating_region_cost_weight: 80.
+            floating_region_cost_weight: 80.,
         }
     }
 }

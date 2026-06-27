@@ -6,7 +6,9 @@ use baby_shark::{io::write_to_file, voxel::prelude::MeshToVolume};
 use crate::{
     models::{Point, SupportSettings, SurfaceGraph},
     stages::{
-        MeshExportedState, Pipeline, PipelineBehaviourTrait, SupportStructureOptimizedState, support_structure_optimization::{SupportNodeId, evaluation::logic::GraphDescriptor}, visualization::visualize_final_supports
+        support_structure_optimization::{evaluation::logic::GraphDescriptor, SupportNodeId},
+        visualization::visualize_final_supports,
+        MeshExportedState, Pipeline, PipelineBehaviourTrait, SupportStructureOptimizedState,
     },
     support::shape_generation::{Circle, ShapeFactory, Sphere, TruncatedCone},
 };
@@ -25,28 +27,24 @@ impl ExportingStage {
 
     fn add_cones(builder: &mut ShapeFactory, s: &GraphDescriptor, settings: &SupportSettings) {
         let point_to_pos = |x: &SupportNodeId| s.details[x].position;
-        s.details
-            .values()
-            .filter(|x| x.is_contact)
-            .for_each(|x| {
-                let cone_top = x.position;
-                let radius = x.radius.max(settings.min_cone_radius);
-                s.edges[&x.id]
-                    .iter()
-                    .map(point_to_pos)
-                    .filter(|x| x.z < cone_top.z)
-                    .for_each(|cone_base| {
+        s.details.values().filter(|x| x.is_contact).for_each(|x| {
+            let cone_top = x.position;
+            let radius = x.radius.max(settings.min_cone_radius);
+            s.edges[&x.id]
+                .iter()
+                .map(point_to_pos)
+                .filter(|x| x.z < cone_top.z)
+                .for_each(|cone_base| {
                     Self::add_cone(builder, cone_base, cone_top, radius, settings)
                 });
-            })
+        })
     }
 
     fn add_beams(builder: &mut ShapeFactory, s: &GraphDescriptor, settings: &SupportSettings) {
         let is_contact = |x: SupportNodeId| s.details[&x].is_contact;
         let point_to_pos = |x: SupportNodeId| s.details[&x].position;
         let point_to_rad = |x: SupportNodeId| s.details[&x].radius;
-        s
-            .edges
+        s.edges
             .iter()
             .filter(|x| !is_contact(*x.0))
             .flat_map(|(node, adjacent)| {
@@ -169,14 +167,10 @@ impl ExportingStage {
         let settings = &input.state.settings;
         let support_settings = &settings.support_settings;
 
-        input
-            .state
-            .support_structures
-            .iter()
-            .for_each(|gene| {
-                let descriptor = gene.to_graph_descriptor(&input.state.graph, &input.state.settings);
-                Self::add_support_structure(&mut builder, &descriptor, support_settings);
-            });
+        input.state.support_structures.iter().for_each(|gene| {
+            let descriptor = gene.to_graph_descriptor(&input.state.graph, &input.state.settings);
+            Self::add_support_structure(&mut builder, &descriptor, support_settings);
+        });
 
         // cutting out the mesh we are printing from the area of supports
         let volume = MeshToVolume::default()

@@ -124,12 +124,9 @@ impl SupportStructureOptimizer for SimpleSupportStructureOptimizer {
     fn optimize<'a>(
         status: &'a ContactPointsGroupedState,
     ) -> Result<Vec<SupportStructureOptimizationGene>> {
-        let groups = status.grouper.to_groups(
-            &status.connection_points,
-            &status.graph,
-            &status.settings,
-            &Random::UnSeededRandom,
-        );
+        let groups = status
+            .grouper
+            .to_groups(&status.connection_points, &status.graph);
 
         let mut to_return = vec![];
 

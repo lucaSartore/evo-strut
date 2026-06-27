@@ -96,6 +96,7 @@ pub struct NeuralNetworkLayer {
 }
 
 impl NeuralNetworkLayer {
+    #[allow(dead_code)]
     pub fn new(weights: DMatrix<NetworkValue>, biases: DVector<NetworkValue>) -> Result<Self> {
         if weights.nrows() == 0 || weights.ncols() == 0 {
             bail!(
@@ -115,10 +116,12 @@ impl NeuralNetworkLayer {
         Ok(Self { weights, biases })
     }
 
+    #[allow(dead_code)]
     pub fn weights(&self) -> &DMatrix<NetworkValue> {
         &self.weights
     }
 
+    #[allow(dead_code)]
     pub fn biases(&self) -> &DVector<NetworkValue> {
         &self.biases
     }
@@ -209,10 +212,12 @@ impl NeuralNetwork {
         Self::new(topology, layers)
     }
 
+    #[allow(dead_code)]
     pub fn topology(&self) -> &NetworkTopology {
         &self.topology
     }
 
+    #[allow(dead_code)]
     pub fn layers(&self) -> &[NeuralNetworkLayer] {
         &self.layers
     }

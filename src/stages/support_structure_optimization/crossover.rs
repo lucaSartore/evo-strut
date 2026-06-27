@@ -2,7 +2,6 @@ use super::SupportStructureOptimizationGene;
 use crate::{
     evolution::{Crossover, Random},
     models::{Plane, Settings},
-    support::neural_network::NetworkCrossoverSettings,
 };
 
 pub struct SupportStructureCrossoverSettings<'a> {
@@ -16,7 +15,7 @@ impl<'a> SupportStructureCrossoverSettings<'a> {
 }
 
 pub struct SupportStructureCrossover<'a> {
-    settings: &'a Settings,
+    _settings: &'a Settings,
     rand: Random,
 }
 
@@ -25,7 +24,7 @@ impl<'a> Crossover<SupportStructureOptimizationGene, SupportStructureCrossoverSe
 {
     fn new(settings: &SupportStructureCrossoverSettings<'a>, rand: Random) -> Self {
         Self {
-            settings: settings.settings,
+            _settings: settings.settings,
             rand,
         }
     }

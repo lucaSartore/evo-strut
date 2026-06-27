@@ -45,7 +45,7 @@ impl<'a>
             group_template: settings.group_template,
             mutator: SupportStructureMutator {
                 settings: settings.settings,
-                graph: settings.graph,
+                _graph: settings.graph,
                 rand,
             },
         }
@@ -61,7 +61,10 @@ impl<'a>
         let mut g = self.group_template.clone();
 
         // randomly generating some points
-        let support_density = self.settings.support_structure_optimization_settings.initial_point_density;
+        let support_density = self
+            .settings
+            .support_structure_optimization_settings
+            .initial_point_density;
         let convex_hull = &g.convex_hull;
         let area = convex_hull.area();
         let height = g.max_height();

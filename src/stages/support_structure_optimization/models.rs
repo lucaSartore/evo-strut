@@ -6,15 +6,11 @@ use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    evolution::{Cost, Random}, models::{FaceId, Point, Settings, SurfaceGraph}, stages::support_structure_optimization::evaluation::logic::GraphDescriptor, support::{
-        convex_hull::ConvexHull,
-        neural_network::{
-            ActivationFunction, LayerTopology, NetworkTopology, NetworkWeightInitialization,
-            NeuralNetwork,
-        },
-    }
+    evolution::{Cost, Random},
+    models::{FaceId, Point, Settings, SurfaceGraph},
+    stages::support_structure_optimization::evaluation::logic::GraphDescriptor,
+    support::convex_hull::ConvexHull,
 };
-
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct SupportNodeId(pub u32);
@@ -49,7 +45,11 @@ impl SupportStructureOptimizationGene {
         }
     }
 
-    pub fn to_graph_descriptor(&self, graph: &SurfaceGraph, settings: &Settings) -> GraphDescriptor {
+    pub fn to_graph_descriptor(
+        &self,
+        graph: &SurfaceGraph,
+        settings: &Settings,
+    ) -> GraphDescriptor {
         let builder = RawGraphBuilder::new(settings, self);
         builder.build(graph)
     }
@@ -156,7 +156,7 @@ impl<'a> RawGraphBuilder<'a> {
         self.raw_structure
     }
 
-    fn insert_points(&mut self, graph: &SurfaceGraph) {
+    fn insert_points(&mut self, _graph: &SurfaceGraph) {
         let mut elements = vec![];
         let contacts_set: HashSet<_> = self
             .optimization_structure
@@ -199,12 +199,14 @@ impl<'a> RawGraphBuilder<'a> {
             return *k;
         }
         let (position, contact, radius) = match node {
-            QueuedPoint::Contact(p) => {
-                (p.position, true, p.radius)
-            }
+            QueuedPoint::Contact(p) => (p.position, true, p.radius),
             QueuedPoint::Support(s) => {
                 self.supports.insert(position);
-                (s.position, false, self.settings.support_settings.beam_radius)
+                (
+                    s.position,
+                    false,
+                    self.settings.support_settings.beam_radius,
+                )
             }
         };
 
@@ -214,7 +216,8 @@ impl<'a> RawGraphBuilder<'a> {
     pub fn add_node(&mut self, position: Point, contact: bool, radius: f32) -> SupportNodeId {
         let id = self.raw_structure.new_random_id(&self.random);
         let supported = position.z == 0.;
-        self.raw_structure.add_node(id, position, supported, contact, radius);
+        self.raw_structure
+            .add_node(id, position, supported, contact, radius);
         self.position_to_id.insert(position, id);
         id
     }
@@ -226,13 +229,16 @@ impl<'a> RawGraphBuilder<'a> {
     }
 
     fn find_supporters(&mut self, position: Point, num_contacts: usize) -> Vec<Point> {
-        let angle_threshold = self.settings.support_structure_optimization_settings.max_support_angle;
+        let angle_threshold = self
+            .settings
+            .support_structure_optimization_settings
+            .max_support_angle;
         let valid_points: Vec<_> = self
             .supports
             .iter()
             .filter(|x| {
                 Point::horizon_angle(**x, position) > angle_threshold.to_radians()
-                && **x != position
+                    && **x != position
             })
             .map(|x| {
                 let distance = (*x - position).abs();
@@ -247,7 +253,7 @@ impl<'a> RawGraphBuilder<'a> {
             .map(|x| *x.0)
             .unique()
             .collect();
-            
+
         if !p.is_empty() {
             return p;
         }

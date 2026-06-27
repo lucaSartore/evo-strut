@@ -1,5 +1,3 @@
-use hashbrown::HashSet;
-
 use crate::{
     evolution::{PopulationInitializer, Random},
     models::{FaceId, Settings, SurfaceGraph},
@@ -10,21 +8,14 @@ pub struct ContactPointsInitializerSettings<'a> {
     pub settings: &'a Settings,
     pub graph: &'a SurfaceGraph,
     pub options: &'a [FaceId],
-    pub options_hash: &'a HashSet<FaceId>,
 }
 
 impl<'a> ContactPointsInitializerSettings<'a> {
-    pub fn new(
-        settings: &'a Settings,
-        graph: &'a SurfaceGraph,
-        options: &'a [FaceId],
-        options_hash: &'a HashSet<FaceId>,
-    ) -> Self {
+    pub fn new(settings: &'a Settings, graph: &'a SurfaceGraph, options: &'a [FaceId]) -> Self {
         Self {
             settings,
             graph,
             options,
-            options_hash,
         }
     }
 }

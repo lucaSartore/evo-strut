@@ -22,10 +22,8 @@ use crate::{
         criticality_detection::PropagationBasedCriticalityDetector,
         criticality_grouping::DistanceBasedCriticalityGrouper,
         floating_region_detection::AreaBasedFloatingRegionDetector,
-        support_structure_optimization::SimpleSupportStructureOptimizer,
-        Pipeline,
-        PipelineBehaviour,
-        StartedState,
+        support_structure_optimization::SimpleSupportStructureOptimizer, Pipeline,
+        PipelineBehaviour, StartedState,
     },
 };
 

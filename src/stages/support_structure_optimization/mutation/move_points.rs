@@ -13,11 +13,14 @@ pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureOpti
     let sp = &s.point_mutation_probability_range;
     let mutation_probability = rand.next_distribution(&RandomDistribution::InRange {
         low: sp.0,
-        high: sp.1
+        high: sp.1,
     });
 
     let sr = &s.point_mutation_std_range;
-    let mutation_std = rand.next_distribution(&RandomDistribution::InRange { low: sr.0, high: sr.1 });
+    let mutation_std = rand.next_distribution(&RandomDistribution::InRange {
+        low: sr.0,
+        high: sr.1,
+    });
 
     for p in gene.supports.iter_mut() {
         if rand.random_choice(mutation_probability) {

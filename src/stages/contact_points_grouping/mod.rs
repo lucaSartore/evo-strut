@@ -38,7 +38,11 @@ where
     pub fn execute(
         input: Pipeline<ContactPointsDecidedState, TB>,
     ) -> Result<Pipeline<ContactPointsGroupedState, TB>> {
-        let attempts = input.state.settings.contact_points_grouping_settings.num_attempts;
+        let attempts = input
+            .state
+            .settings
+            .contact_points_grouping_settings
+            .num_attempts;
         let mut best = None;
         let mut best_cost = Cost::new(f32::MAX);
         for attempt_id in 0..attempts {
@@ -81,7 +85,7 @@ pub struct SimpleContactPointsGrouper {}
 impl ContactPointsGrouper for SimpleContactPointsGrouper {
     fn optimize<'a>(
         status: &'a ContactPointsDecidedState,
-        attempt_id: usize,
+        _attempt_id: usize,
     ) -> Result<(ContactPointGroupingGene, crate::evolution::CostLog)> {
         let settings = &status.settings;
         let connection_points = &status.connection_points;
@@ -105,15 +109,11 @@ impl ContactPointsGrouper for SimpleContactPointsGrouper {
             ElitistNextGenSelectorSettings,
             ContactPointGroupingInitializerSettings<'a>,
         >;
-        let grouping_evaluator_settings = ContactPointGroupingEvaluatorSettings::new(
-            settings,
-            graph,
-            Random::UnSeededRandom,
-            connection_points,
-        );
+        let grouping_evaluator_settings =
+            ContactPointGroupingEvaluatorSettings::new(settings, graph, connection_points);
 
         let evolver = Evolver::<Behaviour<'a>>::new(
-            &ContactPointGroupingMutatorSettings::new(settings, graph),
+            &ContactPointGroupingMutatorSettings::new(settings),
             &ContactPointsGroupingSettings::new(settings),
             &PatienceBasedTerminationStrategySettings {
                 max_generations: s.num_generations,
@@ -127,7 +127,7 @@ impl ContactPointsGrouper for SimpleContactPointsGrouper {
                 num_novel_individual: s.generation_size - s.num_elite_individuals,
                 num_elite_individual: s.num_elite_individuals,
             },
-            &ContactPointGroupingInitializerSettings::new(settings, connection_points, graph),
+            &ContactPointGroupingInitializerSettings::new(settings),
             Random::UnSeededRandom,
         );
 

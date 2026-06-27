@@ -8,7 +8,8 @@ use crate::{
     evolution::Evaluator,
     models::{Settings, SurfaceGraph},
     stages::{
-        floating_region_detection::FloatingRegion, support_structure_optimization::SupportStructureOptimizationGene
+        floating_region_detection::FloatingRegion,
+        support_structure_optimization::SupportStructureOptimizationGene,
     },
 };
 
@@ -17,7 +18,6 @@ pub mod logic;
 mod stiffness;
 pub mod visualization;
 
-
 pub struct SupportStructureEvaluatorSettings<'a> {
     pub settings: &'a Settings,
     pub graph: &'a SurfaceGraph,
@@ -25,8 +25,18 @@ pub struct SupportStructureEvaluatorSettings<'a> {
     pub floating_region: Vec<FloatingRegion>,
 }
 impl<'a> SupportStructureEvaluatorSettings<'a> {
-    pub fn new(settings: &'a Settings, graph: &'a SurfaceGraph, mesh: &'a CornerTable<f32>, floating_region: Vec<FloatingRegion>) -> Self {
-        Self { settings, graph, mesh, floating_region }
+    pub fn new(
+        settings: &'a Settings,
+        graph: &'a SurfaceGraph,
+        mesh: &'a CornerTable<f32>,
+        floating_region: Vec<FloatingRegion>,
+    ) -> Self {
+        Self {
+            settings,
+            graph,
+            mesh,
+            floating_region,
+        }
     }
 }
 

@@ -35,6 +35,7 @@ impl ShapeFactory {
         }
     }
 
+    #[allow(dead_code)]
     pub fn add_positive_volume(&mut self, volume: Volume) {
         self.positive_volumes.push(volume);
     }
@@ -48,6 +49,7 @@ impl ShapeFactory {
         self.positive_shapes.push(Box::new(shape));
     }
 
+    #[allow(dead_code)]
     pub fn add_negative_shape<T>(&mut self, shape: T)
     where
         T: ShapeGenerator + 'static + Sync,

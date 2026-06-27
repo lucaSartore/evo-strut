@@ -2,10 +2,11 @@ use std::collections::VecDeque;
 
 use crate::{
     evolution::Random,
-    models::{MaterialStiffnessSettings, SupportStructureCostSettings}, stages::support_structure_optimization::SupportStructureOptimizationGene,
+    models::{MaterialStiffnessSettings, SupportStructureCostSettings},
+    stages::support_structure_optimization::SupportStructureOptimizationGene,
 };
 use hashbrown::HashMap;
-use smallvec::{SmallVec, smallvec};
+use smallvec::SmallVec;
 
 use crate::{
     evolution::Cost,
@@ -14,7 +15,8 @@ use crate::{
         evaluation::{
             graph::StructureGraph,
             stiffness::{stiffness_parallel, stiffness_series, Stiffness},
-        }, SupportNodeId,
+        },
+        SupportNodeId,
     },
 };
 
@@ -24,7 +26,7 @@ pub struct DescriptorNodeDetails {
     pub id: SupportNodeId,
     pub position: Point,
     pub radius: f32,
-    pub is_contact: bool
+    pub is_contact: bool,
 }
 
 #[derive(Default)]
@@ -35,25 +37,35 @@ pub struct GraphDescriptor {
     pub edges: HashMap<SupportNodeId, SmallVec<[SupportNodeId; 4]>>,
 }
 impl GraphDescriptor {
-    pub fn add_node(&mut self, id: SupportNodeId, position: Point, supported: bool, is_contact: bool, radius: f32) {
+    pub fn add_node(
+        &mut self,
+        id: SupportNodeId,
+        position: Point,
+        _supported: bool,
+        is_contact: bool,
+        radius: f32,
+    ) {
         self.nodes.push(id);
-        self.details.insert(id, DescriptorNodeDetails { id, position, radius, is_contact });
+        self.details.insert(
+            id,
+            DescriptorNodeDetails {
+                id,
+                position,
+                radius,
+                is_contact,
+            },
+        );
     }
 
     pub fn sort(&mut self) {
-        self.nodes.sort_by_key(|x| Cost::new(self.details[x].position.z));
+        self.nodes
+            .sort_by_key(|x| Cost::new(self.details[x].position.z));
     }
 
     pub fn add_link(&mut self, from_id: SupportNodeId, to_id: SupportNodeId) {
-        self.edges
-            .entry(from_id)
-            .or_default()
-            .push(to_id);
+        self.edges.entry(from_id).or_default().push(to_id);
 
-        self.edges
-            .entry(to_id)
-            .or_default()
-            .push(from_id);
+        self.edges.entry(to_id).or_default().push(from_id);
     }
 
     pub fn new_random_id(&self, rand: &Random) -> SupportNodeId {
@@ -68,40 +80,6 @@ impl GraphDescriptor {
     fn is_id_present(&self, id: SupportNodeId) -> bool {
         self.details.contains_key(&id)
     }
-
-}
-
-fn cost_of_single_cone(
-    base: Point,
-    circle_center: Point,
-    circle_radius: f32,
-    settings: &Settings,
-) -> f32 {
-    let s = &settings.support_structure_cost_settings;
-    if base.z >= circle_center.z {
-        return s.cost_of_un_feasible_cone;
-    }
-    let vec = circle_center - base;
-    let height = vec.z.abs();
-
-    let base_offset = (vec.x.powi(2) + vec.y.powi(2)).sqrt();
-
-    //approximated area of the cone
-    let side = ((base_offset + circle_radius).powi(2) + height.powi(2)).sqrt();
-    let area = side * circle_radius * std::f32::consts::PI;
-
-    let steepness = f32::atan(height / (circle_radius + base_offset)).to_degrees();
-    let threshold = 90. - settings.criticality_settings.support_overhanging_angle;
-
-    let mut cost = 0.;
-    // steepness cost
-    if steepness < threshold {
-        cost += (threshold - steepness) * s.cone_too_steep_cost * side;
-    }
-    // area cost
-    cost += area * s.cone_area_cost;
-
-    cost
 }
 
 fn evaluate_steepness_cost(descriptor: &GraphDescriptor, settings: &Settings) -> Cost {
@@ -307,7 +285,6 @@ fn evaluate_stiffness_cost(
             &descriptor.edges[node],
             node_position.z == 0.,
             node_radius,
-            node_descriptor.is_contact
         );
     }
     cost += floating_regions_collector.dump_costs(s, f32::MAX, &mut graph, surface);
@@ -336,12 +313,18 @@ fn evaluate_floating_regions_stiffness_cost(
 
     let id = graph.new_random_id(&Random::UnSeededRandom);
 
-    graph.add_node(id, center, &neighbors, false, s.floating_regions_equivalent_beam_radius, false);
+    graph.add_node(
+        id,
+        center,
+        &neighbors,
+        false,
+        s.floating_regions_equivalent_beam_radius,
+    );
 
     let stiffness = evaluate_single_node_stiffness(s, &mut graph, id);
     let compliance = compliance_value(s, &stiffness);
 
-    (compliance - r.compliance_threshold).max(0.) *s.floating_region_cost_weight
+    (compliance - r.compliance_threshold).max(0.) * s.floating_region_cost_weight
 }
 
 fn evaluate_collision_cost(
@@ -386,7 +369,9 @@ impl<'a> FloatingRegionsCollector<'a> {
         surface: &SurfaceGraph,
     ) -> f32 {
         let mut c = 0.;
-        while let Some(e) = self.elements.front() && e.0 < until_height {
+        while let Some(e) = self.elements.front()
+            && e.0 < until_height
+        {
             let (_, region) = self.elements.pop_front().expect("can't be None");
             c += evaluate_floating_regions_stiffness_cost(s, graph.clone(), surface, region);
         }
@@ -415,8 +400,7 @@ pub fn evaluate_cost(
     let descriptor = gene.to_graph_descriptor(surface, settings);
     let steepness_cost = evaluate_steepness_cost(&descriptor, settings);
     let length_cost = evaluate_length_cost(&descriptor, settings);
-    let stiffness_cost =
-        evaluate_stiffness_cost(surface, &descriptor, settings, floating_regions);
+    let stiffness_cost = evaluate_stiffness_cost(surface, &descriptor, settings, floating_regions);
     let collision_cost = evaluate_collision_cost(&descriptor, volume, settings);
 
     steepness_cost + length_cost + stiffness_cost + collision_cost

@@ -114,6 +114,7 @@ impl ConvexHull {
         self.total_area
     }
 
+    #[allow(dead_code)]
     pub fn perimeter(&self) -> f32 {
         let points = &self.vertexes;
 

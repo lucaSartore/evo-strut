@@ -1,5 +1,4 @@
 use crate::models::MeshId;
-use crate::models::MeshVector;
 use crate::stages::contact_point_optimization::evaluation::additional_cost::AdditionalCosts;
 use crate::stages::criticality_detection::propagation::*;
 use crate::stages::criticality_detection::PropagationBasedCriticalityDetector;
@@ -20,7 +19,6 @@ pub struct ContactPointEvaluatorSettings<'a> {
     pub graph: &'a SurfaceGraph,
     pub settings: &'a Settings,
     pub area: &'a [FaceId],
-    pub critical: &'a MeshVector<FaceId, bool>,
     pub area_index: usize,
 }
 impl<'a> ContactPointEvaluatorSettings<'a> {
@@ -28,14 +26,12 @@ impl<'a> ContactPointEvaluatorSettings<'a> {
         graph: &'a SurfaceGraph,
         settings: &'a Settings,
         area: &'a [FaceId],
-        critical: &'a MeshVector<FaceId, bool>,
         area_index: usize,
     ) -> Self {
         Self {
             graph,
             settings,
             area,
-            critical,
             area_index,
         }
     }
