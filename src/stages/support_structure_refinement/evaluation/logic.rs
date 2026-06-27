@@ -1,4 +1,4 @@
-use std::f32;
+use std::{collections::VecDeque};
 
 use crate::{
     evolution::Random,
@@ -11,6 +11,7 @@ use crate::{
     },
 };
 use hashbrown::HashMap;
+use itertools::Itertools;
 use smallvec::{SmallVec, smallvec};
 
 use crate::{
@@ -190,8 +191,8 @@ fn evaluate_length_cost(descriptor: &GraphDescriptor, settings: &Settings) -> Co
                     let len = (node_descriptor.position - neighbour_descriptor.position).abs();
                     let radius = (node_descriptor.radius + neighbour_descriptor.radius) / 2.;
                     // approximated surface o the cone plus the sphere area
-                    len * radius * 2.0 * f32::consts::PI
-                        + node_descriptor.radius.powi(2) * 4. * f32::consts::PI
+                    len * radius * 2.0 * std::f32::consts::PI
+                        + node_descriptor.radius.powi(2) * 4. * std::f32::consts::PI
                 })
                 .sum();
             len
@@ -315,12 +316,14 @@ fn evaluate_stiffness_cost(
     floating_regions: &[FloatingRegion],
 ) -> Cost {
     let s = &settings.support_structure_refinement_settings;
+    let mut floating_regions_collector = FloatingRegionsCollector::new(floating_regions, surface);
     let mut cost = 0.;
     let mut graph = Graph::new();
     for node in &descriptor.nodes {
         let node_descriptor = &descriptor.details[node];
         let node_position = node_descriptor.position;
         let node_radius = node_descriptor.radius;
+        cost += floating_regions_collector.dump_costs(s, node_position.z, &mut graph, surface);
         let supporters: Vec<_> = descriptor.edges[node]
             .iter()
             .filter(|x| graph.nodes.contains_key(*x))
@@ -346,43 +349,40 @@ fn evaluate_stiffness_cost(
             node_radius,
         );
     }
-    Cost::new(cost) + evaluate_floating_regions_stiffness_cost(s, graph, surface, floating_regions)
+    cost += floating_regions_collector.dump_costs(s, f32::MAX, &mut graph, surface);
+    Cost::new(cost)
 }
 
 fn evaluate_floating_regions_stiffness_cost(
     s: &SupportStructureRefinementSettings,
-    mut graph: Graph,
+    graph: &mut Graph,
     surface: &SurfaceGraph,
-    floating_regions: &[FloatingRegion],
-) -> Cost {
-    let mut cost = 0.;
+    r: &FloatingRegion,
+) -> f32 {
     let pos_to_node_id = graph.build_pos_to_node_id();
-    for r in floating_regions.iter() {
-        let faces_positions: Vec<_> = r
-            .faces()
-            .iter()
-            .map(|x| surface.get_triangle(*x).center())
-            .collect();
+    let faces_positions: Vec<_> = r
+        .faces()
+        .iter()
+        .map(|x| surface.get_triangle(*x).center())
+        .collect();
 
-        let center = faces_positions
-            .iter()
-            .fold(Point::ZERO, |acc, v| acc + *v)
-            .to_scaled(0.1 / faces_positions.len() as f32);
+    let center = faces_positions
+        .iter()
+        .fold(Point::ZERO, |acc, v| acc + *v)
+        .to_scaled(0.1 / faces_positions.len() as f32);
 
-        let neighbors: Vec<_> = faces_positions.iter().map(|x| pos_to_node_id[x]).collect();
+    let neighbors: Vec<_> = faces_positions.iter().map(|x| pos_to_node_id[x]).collect();
 
-        let id = graph.new_random_id(&Random::UnSeededRandom);
+    let id = graph.new_random_id(&Random::UnSeededRandom);
 
-        // todo: hard codded value
-        graph.add_node(id, center, &neighbors, false, 3.0);
+    // todo: hard codded value
+    graph.add_node(id, center, &neighbors, false, 3.0);
 
-        let stiffness = evaluate_single_node_stiffness(s, &mut graph, id);
-        let compliance = compliance_value(s, &stiffness);
+    let stiffness = evaluate_single_node_stiffness(s, graph, id);
+    let compliance = compliance_value(s, &stiffness);
 
-        // todo: hard codded value
-        cost += (compliance - r.compliance_threshold).max(0.) * 100.;
-    }
-    Cost::new(cost)
+    // todo: hard codded value
+    (compliance - r.compliance_threshold).max(0.) * 100.
 }
 
 fn evaluate_collision_cost(
@@ -412,6 +412,41 @@ fn evaluate_collision_cost(
         }
     }
     Cost::new(cost)
+}
+
+struct FloatingRegionsCollector<'a> {
+    elements: VecDeque<(f32, &'a FloatingRegion)>
+}
+
+impl<'a> FloatingRegionsCollector<'a> {
+    pub fn dump_costs(
+        &mut self,
+        s: &SupportStructureRefinementSettings,
+        until_height: f32,
+        graph: &mut Graph,
+        surface: &SurfaceGraph,
+    ) -> f32 {
+        let mut c = 0.;
+        while let Some(e) = self.elements.front() && e.0 < until_height {
+            let (_, region) = self.elements.pop_front().expect("can't be None");
+            c += evaluate_floating_regions_stiffness_cost(s, graph, surface, region);
+        }
+        c
+    }
+
+    pub fn new(regions: &'a [FloatingRegion], surface: & SurfaceGraph) -> Self {
+        let mut elements = Vec::new();
+        for r in regions {
+            elements.push((
+                r.height(surface),
+                r
+            ));
+        }
+        elements.sort_by_key(|x| Cost::new(x.0));
+        Self {
+            elements: elements.into_iter().collect()
+        }
+    }
 }
 
 pub fn evaluate_cost(

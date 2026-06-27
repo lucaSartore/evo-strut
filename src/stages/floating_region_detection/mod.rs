@@ -3,10 +3,9 @@ use rerun::external::image::imageops::colorops::contrast_in_place;
 use std::marker::PhantomData;
 
 use crate::{
-    models::{FaceId, Settings, SurfaceGraph, Triangle},
-    stages::{
+    evolution::Cost, models::{FaceId, Settings, SurfaceGraph, Triangle}, stages::{
         CriticalityDetectedState, FloatingRegionsDetectedStage, Pipeline, PipelineBehaviourTrait,
-    },
+    }
 };
 
 pub struct FloatingRegionDetectionStage<TB>
@@ -70,6 +69,16 @@ impl FloatingRegion {
             faces: self.faces.iter().copied().filter(condition).collect(),
             compliance_threshold: self.compliance_threshold,
         }
+    }
+
+    pub fn height(&self, surface: &SurfaceGraph) -> f32 {
+        self.faces()
+            .iter()
+            .map(|x| Cost::new(surface.get_triangle(*x).center().z))
+            .max()
+            .expect("region shall always have at least one point")
+            .as_f32()
+            
     }
 }
 
