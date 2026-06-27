@@ -52,7 +52,7 @@ where
     TB: PipelineBehaviourTrait,
 {
     MeshLoaded(Pipeline<LoadedState, TB>),
-    StructureLoaded(Pipeline<SupportStructureRefinedState, TB>),
+    StructureLoaded(Pipeline<SupportStructureOptimizedState, TB>),
 }
 
 impl<TB> LoadingStage<TB>
@@ -91,11 +91,13 @@ where
         let file = File::open(path)?;
         let reader = BufReader::new(file);
 
-        let state = SupportStructureRefinedState {
+        let state = SupportStructureOptimizedState {
             settings: input.state.settings,
             graph,
             connection_points: ContactPointsGene::default(),
-            support_structures: serde_json::from_reader(reader)?,
+            // support_structures: serde_json::from_reader(reader)?,
+            // todo: implement deserialization for structure above
+            support_structures: panic!()
         };
         let pipeline = Pipeline::from_state(state);
 

@@ -21,7 +21,7 @@ mod initializer;
 use initializer::{SupportStructureInitializer, SupportStructureInitializerSettings};
 pub mod mutation;
 use mutation::{SupportStructureMutator, SupportStructureMutatorSettings};
-mod evaluation;
+pub mod evaluation;
 use evaluation::{SupportStructureEvaluator, SupportStructureEvaluatorSettings};
 mod models;
 pub use models::*;
@@ -42,14 +42,10 @@ where
     ) -> Result<Pipeline<SupportStructureOptimizedState, TB>> {
         let result = TB::TSupportStructureOptimizer::optimize(&input.state)?;
 
-        let support_structures = result
-            .into_iter()
-            .map(|x| x.to_full_gene(&input.state.graph, &input.state.settings))
-            .collect();
         Ok(Pipeline::from_state(SupportStructureOptimizedState {
             settings: input.state.settings,
             graph: input.state.graph,
-            support_structures,
+            support_structures: result,
             connection_points: input.state.connection_points,
         }))
     }

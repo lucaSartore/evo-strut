@@ -12,11 +12,11 @@ pub mod contact_point_optimization;
 pub mod contact_points_grouping;
 pub mod criticality_detection;
 pub mod criticality_grouping;
-pub mod exporting;
+// pub mod exporting;
 pub mod floating_region_detection;
 pub mod loading;
 pub mod support_structure_optimization;
-pub mod support_structure_refinement;
+// pub mod support_structure_refinement;
 pub mod visualization;
 
 pub use criticality_detection::{CriticalityDetectionStage, CriticalityDetector};
@@ -33,17 +33,17 @@ use crate::{
             ContactPointGroupingGene, ContactPointsGrouper, ContactPointsGroupingStage,
         },
         criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage},
-        exporting::ExportingStage,
+        // exporting::ExportingStage,
         floating_region_detection::{
             FloatingRegion, FloatingRegionDetectionStage, FloatingRegionDetector,
         },
         loading::LoadingStage,
         support_structure_optimization::{
-            SupportStructureOptimizationStage, SupportStructureOptimizer,
+            SupportStructureOptimizationGene, SupportStructureOptimizationStage, SupportStructureOptimizer
         },
-        support_structure_refinement::{
-            SupportStructureGene, SupportStructureRefinementStage, SupportStructureRefiner,
-        },
+        // support_structure_refinement::{
+        //     SupportStructureGene, SupportStructureRefinementStage, SupportStructureRefiner,
+        // },
     },
 };
 use visualization::{VisualizationStage, Visualizer};
@@ -86,7 +86,7 @@ pub trait PipelineBehaviourTrait {
     type TContactPointOptimizer: ContactPointOptimizer;
     type TContactPointGrouper: ContactPointsGrouper;
     type TSupportStructureOptimizer: SupportStructureOptimizer;
-    type TSupportStructureRefiner: SupportStructureRefiner;
+    // type TSupportStructureRefiner: SupportStructureRefiner;
 }
 
 pub struct PipelineBehaviour<
@@ -96,9 +96,9 @@ pub struct PipelineBehaviour<
     TCPO: ContactPointOptimizer,
     TCPG: ContactPointsGrouper,
     TSSO: SupportStructureOptimizer,
-    TSSR: SupportStructureRefiner,
+    // TSSR: SupportStructureRefiner,
 > {
-    _t: PhantomData<(TD, TFD, TG, TCPO, TCPG, TSSO, TSSR)>,
+    _t: PhantomData<(TD, TFD, TG, TCPO, TCPG, TSSO/*, TSSR*/)>,
 }
 
 impl<
@@ -108,7 +108,7 @@ impl<
         TContactPointOptimizer: ContactPointOptimizer,
         TContactPointGrouper: ContactPointsGrouper,
         TSupportStructureOptimizer: SupportStructureOptimizer,
-        TSupportSTructureRefiner: SupportStructureRefiner,
+        // TSupportSTructureRefiner: SupportStructureRefiner,
     > PipelineBehaviourTrait
     for PipelineBehaviour<
         TCriticalityDetection,
@@ -117,7 +117,7 @@ impl<
         TContactPointOptimizer,
         TContactPointGrouper,
         TSupportStructureOptimizer,
-        TSupportSTructureRefiner,
+        // TSupportSTructureRefiner,
     >
 {
     type TCriticalityDetection = TCriticalityDetection;
@@ -126,7 +126,7 @@ impl<
     type TContactPointOptimizer = TContactPointOptimizer;
     type TContactPointGrouper = TContactPointGrouper;
     type TSupportStructureOptimizer = TSupportStructureOptimizer;
-    type TSupportStructureRefiner = TSupportSTructureRefiner;
+    // type TSupportStructureRefiner = TSupportSTructureRefiner;
 }
 
 pub trait PipelineState {}
@@ -195,17 +195,17 @@ pub struct SupportStructureOptimizedState {
     pub settings: Settings,
     pub graph: SurfaceGraph,
     pub connection_points: ContactPointsGene,
-    pub support_structures: Vec<SupportStructureGene>,
+    pub support_structures: Vec<SupportStructureOptimizationGene>,
 }
 impl PipelineState for SupportStructureOptimizedState {}
 
-pub struct SupportStructureRefinedState {
-    pub settings: Settings,
-    pub graph: SurfaceGraph,
-    pub connection_points: ContactPointsGene,
-    pub support_structures: Vec<SupportStructureGene>,
-}
-impl PipelineState for SupportStructureRefinedState {}
+// pub struct SupportStructureRefinedState {
+//     pub settings: Settings,
+//     pub graph: SurfaceGraph,
+//     pub connection_points: ContactPointsGene,
+//     pub support_structures: Vec<SupportStructureGene>,
+// }
+// impl PipelineState for SupportStructureRefinedState {}
 
 pub struct MeshExportedState {}
 impl PipelineState for MeshExportedState {}
@@ -288,16 +288,17 @@ where
                     "support_structure_optimization",
                     SupportStructureOptimizationStage::<TB>::execute(p)
                 )?;
-                timed!(
-                    "support_structure_refinement",
-                    SupportStructureRefinementStage::<TB>::execute(p)
-                )?
+                // timed!(
+                //     "support_structure_refinement",
+                //     SupportStructureRefinementStage::<TB>::execute(p)
+                // )?
             }
             // pre-loaded struct, we can skip to exporting
-            loading::LoadingStageOutput::StructureLoaded(p) => p,
+            // loading::LoadingStageOutput::StructureLoaded(p) => p,
+            loading::LoadingStageOutput::StructureLoaded(p) => panic!()
         };
 
-        let _ = timed!("exporting", ExportingStage::execute(p))?;
+        // let _ = timed!("exporting", ExportingStage::execute(p))?;
         Ok(())
     }
 }

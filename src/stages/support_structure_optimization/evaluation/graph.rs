@@ -8,7 +8,7 @@ use crate::{
     models::Point,
     stages::{
         criticality_detection::propagation::QueuedElement,
-        support_structure_refinement::SupportNodeId,
+        support_structure_optimization::SupportNodeId,
     },
 };
 
@@ -21,6 +21,7 @@ pub struct Neighbor {
 #[derive(Debug, Clone)]
 pub struct Node {
     pub id: SupportNodeId,
+    pub contact: bool,
     pub position: Point,
     pub visited: bool,
     pub distance_from_source: f32,
@@ -30,13 +31,13 @@ pub struct Node {
 }
 
 #[derive(Debug, Clone)]
-pub struct Graph {
+pub struct StructureGraph {
     pub nodes: HashMap<SupportNodeId, Node>,
 }
 
-impl Graph {
-    pub fn new() -> Graph {
-        Graph {
+impl StructureGraph {
+    pub fn new() -> StructureGraph {
+        StructureGraph {
             nodes: HashMap::default(),
         }
     }
@@ -151,9 +152,6 @@ impl Graph {
             .filter(|x| x.0.distance_from_source < node.distance_from_source)
     }
 
-    // add a node with a list of neighbors.
-    // return a subset of the list of added neighbors (that represent the subset of the neighbors
-    // that were already present in the graph)
     pub fn add_node(
         &mut self,
         id: SupportNodeId,
@@ -161,6 +159,7 @@ impl Graph {
         neighbors: &[SupportNodeId],
         supported: bool,
         radius: f32,
+        contact: bool
     ) {
         let mut new_node = Node {
             id,
@@ -170,6 +169,7 @@ impl Graph {
             neighbors: smallvec![],
             supported,
             radius,
+            contact
         };
 
         for n_id in neighbors {
@@ -192,5 +192,28 @@ impl Graph {
 
     pub fn build_pos_to_node_id(&self) -> HashMap<Point, SupportNodeId> {
         self.nodes.iter().map(|x| (x.1.position, *x.0)).collect()
+    }
+
+    pub fn add_link(&mut self, from_id: SupportNodeId, to_id: SupportNodeId) {
+        let from_position = self
+            .nodes
+            .get(&from_id)
+            .expect("node shall be found")
+            .position;
+        let to = self
+            .nodes
+            .get_mut(&to_id)
+            .expect("node shall be found");
+
+        let distance = (from_position - to.position).abs();
+
+        to.neighbors.push(Neighbor { id: from_id, distance });
+
+        self
+            .nodes
+            .get_mut(&from_id)
+            .expect("node shall be found")
+            .neighbors
+            .push(Neighbor { id: to_id, distance });
     }
 }

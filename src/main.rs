@@ -23,7 +23,9 @@ use crate::{
         criticality_grouping::DistanceBasedCriticalityGrouper,
         floating_region_detection::AreaBasedFloatingRegionDetector,
         support_structure_optimization::SimpleSupportStructureOptimizer,
-        support_structure_refinement::SimpleSupportStructureRefiner, Pipeline, PipelineBehaviour,
+        // support_structure_refinement::SimpleSupportStructureRefiner,
+        Pipeline,
+        PipelineBehaviour,
         StartedState,
     },
 };
@@ -90,7 +92,7 @@ fn run() -> anyhow::Result<()> {
         SimpleContactPointOptimizer,
         SimpleContactPointsGrouper,
         SimpleSupportStructureOptimizer,
-        SimpleSupportStructureRefiner,
+        // SimpleSupportStructureRefiner,
     >;
 
     let start = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();

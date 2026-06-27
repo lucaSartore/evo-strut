@@ -1,23 +1,22 @@
 use baby_shark::{
-    mesh::corner_table::CornerTableF,
+    mesh::corner_table::{CornerTable, CornerTableF},
     voxel::{prelude::MeshToVolume, volume::Volume},
 };
-use rand_distr::num_traits::Float;
 use rerun::RecordingStream;
 
 use crate::{
     evolution::Evaluator,
     models::{Settings, SurfaceGraph},
     stages::{
-        floating_region_detection::FloatingRegion,
-        support_structure_refinement::SupportStructureGene,
+        floating_region_detection::FloatingRegion, support_structure_optimization::SupportStructureOptimizationGene
     },
 };
 
-// mod graph;
-// pub mod logic;
-// mod stiffness;
-// mod visualization;
+pub mod graph;
+pub mod logic;
+mod stiffness;
+pub mod visualization;
+
 
 pub struct SupportStructureEvaluatorSettings<'a> {
     pub settings: &'a Settings,
@@ -25,20 +24,9 @@ pub struct SupportStructureEvaluatorSettings<'a> {
     pub mesh: &'a CornerTableF,
     pub floating_region: Vec<FloatingRegion>,
 }
-
 impl<'a> SupportStructureEvaluatorSettings<'a> {
-    pub fn new(
-        settings: &'a Settings,
-        graph: &'a SurfaceGraph,
-        mesh: &'a CornerTableF,
-        floating_region: Vec<FloatingRegion>,
-    ) -> Self {
-        Self {
-            settings,
-            graph,
-            mesh,
-            floating_region,
-        }
+    pub fn new(settings: &'a Settings, graph: &'a SurfaceGraph, mesh: &'a CornerTable<f32>, floating_region: Vec<FloatingRegion>) -> Self {
+        Self { settings, graph, mesh, floating_region }
     }
 }
 
@@ -50,7 +38,7 @@ pub struct SupportStructureEvaluator<'a> {
     floating_regions: Vec<FloatingRegion>,
 }
 
-impl<'a> Evaluator<SupportStructureGene, SupportStructureEvaluatorSettings<'a>>
+impl<'a> Evaluator<SupportStructureOptimizationGene, SupportStructureEvaluatorSettings<'a>>
     for SupportStructureEvaluator<'a>
 {
     fn new(settings: &SupportStructureEvaluatorSettings<'a>) -> Self {
@@ -72,7 +60,7 @@ impl<'a> Evaluator<SupportStructureGene, SupportStructureEvaluatorSettings<'a>>
         }
     }
 
-    fn evaluate(&self, gene: &SupportStructureGene) -> crate::evolution::Cost {
+    fn evaluate(&self, gene: &SupportStructureOptimizationGene) -> crate::evolution::Cost {
         logic::evaluate_cost(
             gene,
             self.graph,
@@ -82,7 +70,7 @@ impl<'a> Evaluator<SupportStructureGene, SupportStructureEvaluatorSettings<'a>>
         )
     }
 
-    fn visualize(&self, gene: &SupportStructureGene) -> anyhow::Result<()> {
-        visualization::visualize(&self.stream, gene, self.graph)
+    fn visualize(&self, gene: &SupportStructureOptimizationGene) -> anyhow::Result<()> {
+        visualization::visualize(&self.stream, gene, self.graph, self.settings)
     }
 }

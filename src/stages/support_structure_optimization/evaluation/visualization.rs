@@ -1,10 +1,7 @@
 use crate::{
-    models::{Point, SurfaceGraph},
+    models::{Point, Settings, SurfaceGraph},
     stages::{
-        support_structure_refinement::{
-            evaluation::logic::genome_to_graph_descriptor, SupportNode, SupportStructureGene,
-        },
-        visualization::Color,
+        support_structure_optimization::SupportStructureOptimizationGene, visualization::Color
     },
 };
 use anyhow::Result;
@@ -12,10 +9,11 @@ use rerun::RecordingStream;
 
 pub fn visualize(
     rec: &RecordingStream,
-    gene: &SupportStructureGene,
+    gene: &SupportStructureOptimizationGene,
     mesh: &SurfaceGraph,
+    settings: &Settings
 ) -> Result<()> {
-    let descriptor = genome_to_graph_descriptor(gene);
+    let descriptor = gene.to_graph_descriptor(mesh, settings);
     let colors = vec![Color::Green; mesh.count_vertices()];
 
     rec.log(
@@ -41,20 +39,24 @@ pub fn visualize(
 
     rec.log("support_structure", &rerun::LineStrips3D::new(lines))?;
 
-    let cones: Vec<[Point; 2]> = gene
-        .nodes
-        .iter()
-        .flat_map(|(_, x)| {
-            if let SupportNode::Contact(n) = x {
-                Some(n.leans_on.iter().map(|support| {
-                    let sp = descriptor.details[support].position;
-                    [
-                        [sp, n.position + Point::new(0., n.radius, 0.)],
-                        [sp, n.position + Point::new(0., -n.radius, 0.)],
-                        [sp, n.position + Point::new(n.radius, 0., 0.)],
-                        [sp, n.position + Point::new(-n.radius, 0., 0.)],
-                    ]
-                }))
+    let cones: Vec<[Point; 2]> = descriptor
+        .details
+        .values()
+        .flat_map(|x| {
+            if x.is_contact {
+                let values = descriptor
+                    .edges[&x.id]
+                    .iter()
+                    .map(|neighbor_id| {
+                        let sp = descriptor.details[neighbor_id].position;
+                        [
+                            [sp, x.position + Point::new(0., x.radius, 0.)],
+                            [sp, x.position + Point::new(0., -x.radius, -1.)],
+                            [sp, x.position + Point::new(x.radius, 0., 0.)],
+                            [sp, x.position + Point::new(-x.radius, 0., 0.)],
+                        ]
+                    });
+                Some(values)
             } else {
                 None
             }

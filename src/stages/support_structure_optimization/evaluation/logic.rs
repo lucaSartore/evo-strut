@@ -2,20 +2,19 @@ use std::collections::VecDeque;
 
 use crate::{
     evolution::Random,
-    models::{MaterialStiffnessSettings, SupportStructureRefinementSettings},
+    models::{MaterialStiffnessSettings, SupportStructureRefinementSettings}, stages::support_structure_optimization::SupportStructureOptimizationGene,
 };
 use hashbrown::HashMap;
-use smallvec::SmallVec;
+use smallvec::{SmallVec, smallvec};
 
 use crate::{
     evolution::Cost,
     models::Point,
-    stages::support_structure_refinement::{
+    stages::support_structure_optimization::{
         evaluation::{
-            graph::Graph,
+            graph::StructureGraph,
             stiffness::{stiffness_parallel, stiffness_series, Stiffness},
-        },
-        SupportNode, SupportNodeId,
+        }, SupportNodeId,
     },
 };
 
@@ -25,53 +24,51 @@ pub struct DescriptorNodeDetails {
     pub id: SupportNodeId,
     pub position: Point,
     pub radius: f32,
+    pub is_contact: bool
 }
+
+#[derive(Default)]
 pub struct GraphDescriptor {
     /// nodes with relative position ordered by height
     pub nodes: Vec<SupportNodeId>,
     pub details: HashMap<SupportNodeId, DescriptorNodeDetails>,
     pub edges: HashMap<SupportNodeId, SmallVec<[SupportNodeId; 4]>>,
 }
+impl GraphDescriptor {
+    pub fn add_node(&mut self, id: SupportNodeId, position: Point, supported: bool, is_contact: bool, radius: f32) {
+        self.nodes.push(id);
+        self.details.insert(id, DescriptorNodeDetails { id, position, radius, is_contact });
+    }
 
-pub fn genome_to_graph_descriptor(gene: &SupportStructureGene) -> GraphDescriptor {
-    let mut nodes = vec![];
-    let mut details = HashMap::new();
-    let mut edges = HashMap::new();
-    for (_, g) in gene.nodes.iter() {
-        let (node_id, position, adj) = match g {
-            SupportNode::Contact(n) => (n.id, n.position, &n.leans_on),
-            SupportNode::Base(n) => (n.id, n.last_position, &vec![]),
-            SupportNode::Middle(n) => (n.id, n.last_position, &n.leans_on),
-        };
-        let radius = g.radius();
-        nodes.push(node_id);
-        details.insert(
-            node_id,
-            DescriptorNodeDetails {
-                id: node_id,
-                position,
-                radius,
-            },
-        );
-        for n in adj {
-            edges.entry(*n).or_insert(vec![]).push(node_id);
+    pub fn sort(&mut self) {
+        self.nodes.sort_by_key(|x| Cost::new(self.details[x].position.z));
+    }
+
+    pub fn add_link(&mut self, from_id: SupportNodeId, to_id: SupportNodeId) {
+        self.edges
+            .entry(from_id)
+            .or_default()
+            .push(to_id);
+
+        self.edges
+            .entry(to_id)
+            .or_default()
+            .push(from_id);
+    }
+
+    pub fn new_random_id(&self, rand: &Random) -> SupportNodeId {
+        let id = SupportNodeId(rand.next_u32());
+        // re-generate it, as it is already taken
+        if self.is_id_present(id) {
+            return self.new_random_id(rand);
         }
-        edges
-            .entry(node_id)
-            .or_insert(vec![])
-            .append(&mut adj.clone());
+        id
     }
 
-    nodes.sort_by_key(|x| Cost::new(details[x].position.z));
-
-    GraphDescriptor {
-        nodes,
-        details,
-        edges: edges
-            .into_iter()
-            .map(|(k, v)| (k, v.into_iter().collect()))
-            .collect(),
+    fn is_id_present(&self, id: SupportNodeId) -> bool {
+        self.details.contains_key(&id)
     }
+
 }
 
 fn cost_of_single_cone(
@@ -105,35 +102,6 @@ fn cost_of_single_cone(
     cost += area * s.cone_area_cost;
 
     cost
-}
-
-fn evaluate_cones_cost(
-    gene: &SupportStructureGene,
-    descriptor: &GraphDescriptor,
-    settings: &Settings,
-) -> Cost {
-    let cost: f32 = gene
-        .nodes
-        .iter()
-        .flat_map(|(_, n)| {
-            if let SupportNode::Contact(c) = n {
-                Some(c)
-            } else {
-                None
-            }
-        })
-        .flat_map(|x| {
-            x.leans_on.iter().map(|y| {
-                cost_of_single_cone(
-                    descriptor.details[y].position,
-                    x.position,
-                    x.radius,
-                    settings,
-                )
-            })
-        })
-        .sum();
-    Cost::new(cost)
 }
 
 fn evaluate_steepness_cost(descriptor: &GraphDescriptor, settings: &Settings) -> Cost {
@@ -243,7 +211,7 @@ fn compliance_value(s: &SupportStructureRefinementSettings, stiffness: &Stiffnes
 // recursively evaluate the stiffness of a graph
 fn evaluate_stiffness<'b, 'a: 'b>(
     point: SupportNodeId,
-    graph: &Graph,
+    graph: &StructureGraph,
     cache: &'a mut HashMap<SupportNodeId, Stiffness>,
     settings: &MaterialStiffnessSettings,
 ) {
@@ -283,7 +251,7 @@ fn evaluate_stiffness<'b, 'a: 'b>(
 // distances
 fn evaluate_single_node_stiffness(
     s: &SupportStructureRefinementSettings,
-    graph: &mut Graph,
+    graph: &mut StructureGraph,
     to_evaluate: SupportNodeId,
 ) -> Stiffness {
     let visited_nodes = graph.mark_distances(to_evaluate);
@@ -310,12 +278,12 @@ fn evaluate_stiffness_cost(
     let s = &settings.support_structure_refinement_settings;
     let mut floating_regions_collector = FloatingRegionsCollector::new(floating_regions, surface);
     let mut cost = 0.;
-    let mut graph = Graph::new();
+    let mut graph = StructureGraph::new();
     for node in &descriptor.nodes {
         let node_descriptor = &descriptor.details[node];
         let node_position = node_descriptor.position;
         let node_radius = node_descriptor.radius;
-        cost += floating_regions_collector.dump_costs(s, node_position.z, &mut graph, surface);
+        cost += floating_regions_collector.dump_costs(s, node_position.z, &graph, surface);
         let supporters: Vec<_> = descriptor.edges[node]
             .iter()
             .filter(|x| graph.nodes.contains_key(*x))
@@ -339,6 +307,7 @@ fn evaluate_stiffness_cost(
             &descriptor.edges[node],
             node_position.z == 0.,
             node_radius,
+            node_descriptor.is_contact
         );
     }
     cost += floating_regions_collector.dump_costs(s, f32::MAX, &mut graph, surface);
@@ -347,7 +316,7 @@ fn evaluate_stiffness_cost(
 
 fn evaluate_floating_regions_stiffness_cost(
     s: &SupportStructureRefinementSettings,
-    mut graph: Graph,
+    mut graph: StructureGraph,
     surface: &SurfaceGraph,
     r: &FloatingRegion,
 ) -> f32 {
@@ -368,7 +337,7 @@ fn evaluate_floating_regions_stiffness_cost(
     let id = graph.new_random_id(&Random::UnSeededRandom);
 
     // todo: hard codded value
-    graph.add_node(id, center, &neighbors, false, 3.0);
+    graph.add_node(id, center, &neighbors, false, 3.0, false);
 
     let stiffness = evaluate_single_node_stiffness(s, &mut graph, id);
     let compliance = compliance_value(s, &stiffness);
@@ -415,7 +384,7 @@ impl<'a> FloatingRegionsCollector<'a> {
         &mut self,
         s: &SupportStructureRefinementSettings,
         until_height: f32,
-        graph: &Graph,
+        graph: &StructureGraph,
         surface: &SurfaceGraph,
     ) -> f32 {
         let mut c = 0.;
@@ -439,13 +408,13 @@ impl<'a> FloatingRegionsCollector<'a> {
 }
 
 pub fn evaluate_cost(
-    gene: &SupportStructureGene,
+    gene: &SupportStructureOptimizationGene,
     surface: &SurfaceGraph,
     volume: &Volume,
     settings: &Settings,
     floating_regions: &[FloatingRegion],
 ) -> Cost {
-    let descriptor = genome_to_graph_descriptor(gene);
+    let descriptor = gene.to_graph_descriptor(surface, settings);
     let steepness_cost = evaluate_steepness_cost(&descriptor, settings);
     let length_cost = evaluate_length_cost(&descriptor, settings);
     let stiffness_cost =
