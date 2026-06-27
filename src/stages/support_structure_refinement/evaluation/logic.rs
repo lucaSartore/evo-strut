@@ -297,7 +297,7 @@ fn evaluate_single_node_stiffness(
     let mut cache = HashMap::default();
     evaluate_stiffness(
         to_evaluate,
-        &graph,
+        graph,
         &mut cache,
         &s.material_stiffness_settings,
     );

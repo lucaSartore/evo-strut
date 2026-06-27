@@ -110,6 +110,8 @@ impl Graph {
         for supporter in self.get_supports(this) {
             let weighted_supports: SmallVec<[_; 4]> = self
                 .get_supported(supporter)
+                // inverting the distance, so that closer nodes
+                // have an higher weight
                 .map(|x| (x.0, 1.0 / x.1))
                 .collect();
 
