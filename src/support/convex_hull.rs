@@ -2,9 +2,9 @@ use crate::{
     evolution::{Cost, Random},
     models::Point,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ConvexHull {
     pub vertexes: Vec<Point>,
     pub triangles: Vec<[Point; 3]>,

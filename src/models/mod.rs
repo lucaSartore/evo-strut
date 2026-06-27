@@ -8,7 +8,7 @@ use std::{
 mod settings;
 pub use settings::{
     IoSettings, MaterialStiffnessSettings, Settings, SupportSettings,
-    SupportStructureRefinementSettings,
+    SupportStructureCostSettings,
 };
 
 mod point;

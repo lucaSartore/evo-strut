@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use crate::{
     evolution::Random,
-    models::{MaterialStiffnessSettings, SupportStructureRefinementSettings}, stages::support_structure_optimization::SupportStructureOptimizationGene,
+    models::{MaterialStiffnessSettings, SupportStructureCostSettings}, stages::support_structure_optimization::SupportStructureOptimizationGene,
 };
 use hashbrown::HashMap;
 use smallvec::{SmallVec, smallvec};
@@ -77,7 +77,7 @@ fn cost_of_single_cone(
     circle_radius: f32,
     settings: &Settings,
 ) -> f32 {
-    let s = &settings.support_structure_refinement_settings;
+    let s = &settings.support_structure_cost_settings;
     if base.z >= circle_center.z {
         return s.cost_of_un_feasible_cone;
     }
@@ -133,7 +133,7 @@ fn evaluate_steepness_cost(descriptor: &GraphDescriptor, settings: &Settings) ->
     Cost::new(
         distance_times_angle
             * settings
-                .support_structure_refinement_settings
+                .support_structure_cost_settings
                 .cost_for_support_too_steep,
     )
 }
@@ -162,7 +162,7 @@ fn evaluate_length_cost(descriptor: &GraphDescriptor, settings: &Settings) -> Co
     Cost::new(
         surface
             * settings
-                .support_structure_refinement_settings
+                .support_structure_cost_settings
                 .cost_for_support_area,
     )
 }
@@ -174,7 +174,7 @@ fn evaluate_single_support_stiffness(
     radius: f32,
     settings: &Settings,
 ) -> f32 {
-    let s = &settings.support_structure_refinement_settings;
+    let s = &settings.support_structure_cost_settings;
     let to_integrate = Point::interpolate(from, to, s.stiffness_cost_integration_size);
     let vector = to - from;
     let mut cost = 0.;
@@ -194,7 +194,7 @@ fn evaluate_single_support_stiffness(
     cost
 }
 
-fn compliance_value(s: &SupportStructureRefinementSettings, stiffness: &Stiffness) -> f32 {
+fn compliance_value(s: &SupportStructureCostSettings, stiffness: &Stiffness) -> f32 {
     let Some(compliance) = stiffness.0.try_inverse() else {
         // zero matrix mean node is somehow floating, we need
         // to add maximum cost
@@ -250,7 +250,7 @@ fn evaluate_stiffness<'b, 'a: 'b>(
 // evaluate the stiffness of a single node given a graph, and then reset the graph to leave no
 // distances
 fn evaluate_single_node_stiffness(
-    s: &SupportStructureRefinementSettings,
+    s: &SupportStructureCostSettings,
     graph: &mut StructureGraph,
     to_evaluate: SupportNodeId,
 ) -> Stiffness {
@@ -275,7 +275,7 @@ fn evaluate_stiffness_cost(
     settings: &Settings,
     floating_regions: &[FloatingRegion],
 ) -> Cost {
-    let s = &settings.support_structure_refinement_settings;
+    let s = &settings.support_structure_cost_settings;
     let mut floating_regions_collector = FloatingRegionsCollector::new(floating_regions, surface);
     let mut cost = 0.;
     let mut graph = StructureGraph::new();
@@ -315,7 +315,7 @@ fn evaluate_stiffness_cost(
 }
 
 fn evaluate_floating_regions_stiffness_cost(
-    s: &SupportStructureRefinementSettings,
+    s: &SupportStructureCostSettings,
     mut graph: StructureGraph,
     surface: &SurfaceGraph,
     r: &FloatingRegion,
@@ -352,7 +352,7 @@ fn evaluate_collision_cost(
     settings: &Settings,
 ) -> Cost {
     let mut cost = 0.;
-    let s = &settings.support_structure_refinement_settings;
+    let s = &settings.support_structure_cost_settings;
     let interval_distance = s.collision_check_intervals;
     let collision_cost = s.collision_penalization;
     for (node_id, neighbors) in descriptor.edges.iter() {
@@ -382,7 +382,7 @@ struct FloatingRegionsCollector<'a> {
 impl<'a> FloatingRegionsCollector<'a> {
     pub fn dump_costs(
         &mut self,
-        s: &SupportStructureRefinementSettings,
+        s: &SupportStructureCostSettings,
         until_height: f32,
         graph: &StructureGraph,
         surface: &SurfaceGraph,

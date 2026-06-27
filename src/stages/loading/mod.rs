@@ -36,14 +36,6 @@ where
             remesher.remesh(&mut mesh, settings.target_edge_length);
         }
         Ok(mesh)
-
-        // let mut remesher = VoxelRemesher::default()
-        //     .with_voxel_size(settings.voxel_size);
-        // let mesh = match remesher.remesh(&mesh) {
-        //     Some(m) => m,
-        //     None => return Err(anyhow!("fail to execute re-meshing"))
-        // };
-        // Ok(mesh)
     }
 }
 
@@ -95,9 +87,7 @@ where
             settings: input.state.settings,
             graph,
             connection_points: ContactPointsGene::default(),
-            // support_structures: serde_json::from_reader(reader)?,
-            // todo: implement deserialization for structure above
-            support_structures: panic!()
+            support_structures: serde_json::from_reader(reader)?,
         };
         let pipeline = Pipeline::from_state(state);
 

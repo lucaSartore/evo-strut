@@ -54,7 +54,7 @@ impl ContactPointGroupingGene {
 
         grouped
             .into_values()
-            .map(|x| SupportStructureOptimizationGene::from_contacts(x, rand))
+            .map(|x| SupportStructureOptimizationGene::from_contacts(x))
             .collect()
     }
 

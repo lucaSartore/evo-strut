@@ -23,7 +23,6 @@ use crate::{
         criticality_grouping::DistanceBasedCriticalityGrouper,
         floating_region_detection::AreaBasedFloatingRegionDetector,
         support_structure_optimization::SimpleSupportStructureOptimizer,
-        // support_structure_refinement::SimpleSupportStructureRefiner,
         Pipeline,
         PipelineBehaviour,
         StartedState,

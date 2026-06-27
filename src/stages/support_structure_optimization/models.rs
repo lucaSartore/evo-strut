@@ -4,7 +4,6 @@ use std::fmt::Debug;
 use hashbrown::{HashMap, HashSet};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use super::evaluation::graph::StructureGraph;
 
 use crate::{
     evolution::{Cost, Random}, models::{FaceId, Point, Settings, SurfaceGraph}, stages::support_structure_optimization::evaluation::logic::GraphDescriptor, support::{
@@ -20,62 +19,41 @@ use crate::{
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct SupportNodeId(pub u32);
 
-#[derive(Clone, Debug, Copy, Serialize)]
+#[derive(Clone, Debug, Copy, Serialize, Deserialize)]
 pub struct ContactPoint {
     pub face: FaceId,
     pub position: Point,
     pub radius: f32,
 }
 
-#[derive(Clone, Debug, Copy, Serialize)]
+#[derive(Clone, Debug, Copy, Serialize, Deserialize)]
 pub struct SupportPoint {
     pub position: Point,
     pub num_contacts: u32,
 }
 
 impl SupportPoint {
-    pub fn radius(&self, full_gene: &SupportStructureOptimizationGene) -> f32 {
-        // let p: [f32; 3] = self.position.into();
-        // let output = full_gene.contact_radius.evaluate(&p).expect("network evaluation failed")[0];
+    pub fn radius(&self) -> f32 {
         // todo: hardcoded values
-        // println!("output: {output}");
-        // return output * (5. - 1.5) + 0.5;
         1.5
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SupportStructureOptimizationGene {
     pub contacts: Vec<ContactPoint>,
     pub supports: Vec<SupportPoint>,
-    pub contact_radius: NeuralNetwork,
     pub convex_hull: ConvexHull,
 }
 
 impl SupportStructureOptimizationGene {
-    pub fn from_contacts(contacts: Vec<ContactPoint>, random: &Random) -> Self {
+    pub fn from_contacts(contacts: Vec<ContactPoint>) -> Self {
         let convex_hull = ConvexHull::new(contacts.iter().map(|x| x.position).collect());
         Self {
             contacts,
             supports: vec![],
-            contact_radius: Self::random_network(random),
             convex_hull,
         }
-    }
-
-    pub fn random_network(random: &Random) -> NeuralNetwork {
-        let topology = NetworkTopology::new(
-            3,
-            vec![
-                // LayerTopology::new(16, ActivationFunction::Relu)
-                //     .expect("invalid default contact-point grouping hidden layer"),
-                LayerTopology::new(1, ActivationFunction::Sigmoid)
-                    .expect("invalid default contact-point grouping output layer"),
-            ],
-        )
-        .unwrap();
-        let initialization = NetworkWeightInitialization::He;
-        NeuralNetwork::random(topology, initialization, random).unwrap()
     }
 
     pub fn to_graph_descriptor(&self, graph: &SurfaceGraph, settings: &Settings) -> GraphDescriptor {

@@ -29,7 +29,7 @@ pub struct Settings {
     pub support_structure_optimization_settings: SupportStructureOptimizationSettings,
     /// parameters that control the optimization of the
     /// support structure.
-    pub support_structure_refinement_settings: SupportStructureRefinementSettings,
+    pub support_structure_cost_settings: SupportStructureCostSettings,
     /// settings that define how the support structure is generated
     pub support_settings: SupportSettings,
 }
@@ -460,23 +460,7 @@ impl Default for SupportStructureOptimizationSettings {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SupportStructureRefinementSettings {
-    /// number of generations optimized
-    pub num_generations: usize,
-    /// patience when optimizing (if the score does not improve
-    /// for more than `patience` generations the optimization process will
-    /// be interrupted)
-    pub patience: usize,
-    /// the number of individuals in a generation
-    pub generation_size: usize,
-    /// the size of the tournaments made to select the individuals for crossover.
-    /// The tradeoffs are:
-    ///  - High tournament size => high selection pressure => fast to converge, may lose diversity
-    ///    too early
-    ///  - Small tournament size => slow selection process => slow to converge, preserve diversity
-    pub tournament_size: usize,
-    /// number of individual generated/evaluated in every generation
-    pub num_elite_individuals: usize,
+pub struct SupportStructureCostSettings {
     /// cost for every mm^2 of surface area of supports
     /// unit of measure: cost/mm^2
     pub cost_for_support_area: f32,
@@ -532,14 +516,9 @@ pub struct SupportStructureRefinementSettings {
     pub collision_penalization: f32,
 }
 
-impl Default for SupportStructureRefinementSettings {
+impl Default for SupportStructureCostSettings {
     fn default() -> Self {
         Self {
-            num_generations: 1,
-            patience: 50,
-            generation_size: 100,
-            tournament_size: 10,
-            num_elite_individuals: 10,
             cost_for_support_area: 2.5,
             cost_for_support_too_steep: 15.0,
             non_stiffness_cost: 2.,

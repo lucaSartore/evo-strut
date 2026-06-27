@@ -42,7 +42,7 @@ impl<'a> Evaluator<SupportStructureOptimizationGene, SupportStructureEvaluatorSe
     for SupportStructureEvaluator<'a>
 {
     fn new(settings: &SupportStructureEvaluatorSettings<'a>) -> Self {
-        let s = &settings.settings.support_structure_refinement_settings;
+        let s = &settings.settings.support_structure_cost_settings;
         let volume = MeshToVolume::default()
             .with_voxel_size(s.collision_volume_voxel_size)
             .convert(settings.mesh)

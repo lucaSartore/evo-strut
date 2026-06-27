@@ -80,7 +80,6 @@ impl<'a>
             });
         }
         g.supports.append(&mut to_add);
-        g.contact_radius = SupportStructureOptimizationGene::random_network(&self.mutator.rand);
         g
     }
 }

@@ -12,11 +12,10 @@ pub mod contact_point_optimization;
 pub mod contact_points_grouping;
 pub mod criticality_detection;
 pub mod criticality_grouping;
-// pub mod exporting;
+pub mod exporting;
 pub mod floating_region_detection;
 pub mod loading;
 pub mod support_structure_optimization;
-// pub mod support_structure_refinement;
 pub mod visualization;
 
 pub use criticality_detection::{CriticalityDetectionStage, CriticalityDetector};
@@ -33,7 +32,7 @@ use crate::{
             ContactPointGroupingGene, ContactPointsGrouper, ContactPointsGroupingStage,
         },
         criticality_grouping::{CriticalityGrouper, CriticalityGroupingStage},
-        // exporting::ExportingStage,
+        exporting::ExportingStage,
         floating_region_detection::{
             FloatingRegion, FloatingRegionDetectionStage, FloatingRegionDetector,
         },
@@ -41,9 +40,6 @@ use crate::{
         support_structure_optimization::{
             SupportStructureOptimizationGene, SupportStructureOptimizationStage, SupportStructureOptimizer
         },
-        // support_structure_refinement::{
-        //     SupportStructureGene, SupportStructureRefinementStage, SupportStructureRefiner,
-        // },
     },
 };
 use visualization::{VisualizationStage, Visualizer};
@@ -284,21 +280,15 @@ where
                     "contact_points_grouping",
                     ContactPointsGroupingStage::<TB>::execute(p)
                 )?;
-                let p = timed!(
+                timed!(
                     "support_structure_optimization",
                     SupportStructureOptimizationStage::<TB>::execute(p)
-                )?;
-                // timed!(
-                //     "support_structure_refinement",
-                //     SupportStructureRefinementStage::<TB>::execute(p)
-                // )?
+                )?
             }
-            // pre-loaded struct, we can skip to exporting
-            // loading::LoadingStageOutput::StructureLoaded(p) => p,
-            loading::LoadingStageOutput::StructureLoaded(p) => panic!()
+            loading::LoadingStageOutput::StructureLoaded(p) => p,
         };
 
-        // let _ = timed!("exporting", ExportingStage::execute(p))?;
+        let _ = timed!("exporting", ExportingStage::execute(p))?;
         Ok(())
     }
 }
