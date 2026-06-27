@@ -1,14 +1,14 @@
 use hashbrown::{HashMap, HashSet};
 use itertools::Itertools;
-use smallvec::{SmallVec, smallvec};
+use smallvec::{smallvec, SmallVec};
 use std::marker::PhantomData;
 
 use crate::{
     evolution::Cost,
     models::{FaceId, Point, PointId, Settings, SurfaceGraph, Triangle},
     stages::{
-        CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait,
         criticality_detection::propagation::{CostWithArea, KnownCosts},
+        CriticalityDetectedState, LoadedState, Pipeline, PipelineBehaviourTrait,
     },
 };
 

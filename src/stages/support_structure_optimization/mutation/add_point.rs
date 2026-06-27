@@ -1,7 +1,7 @@
 use crate::{
     models::Point,
     stages::support_structure_optimization::{
-        SupportPoint, models::SupportStructureOptimizationGene,
+        models::SupportStructureOptimizationGene, SupportPoint,
     },
     support::random_distribution::RandomDistribution,
 };

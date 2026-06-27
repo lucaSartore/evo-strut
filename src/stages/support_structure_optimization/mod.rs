@@ -9,9 +9,9 @@ use crate::{
         TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings,
     },
     stages::{
+        floating_region_detection::FloatingRegion, save_optimization_artifact,
         ContactPointsDecidedState, ContactPointsGroupedState, Pipeline, PipelineBehaviourTrait,
-        SupportStructureOptimizedState, floating_region_detection::FloatingRegion,
-        save_optimization_artifact,
+        SupportStructureOptimizedState,
     },
 };
 

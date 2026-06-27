@@ -1,17 +1,17 @@
 use crate::models::MeshId;
 use crate::models::MeshVector;
 use crate::stages::contact_point_optimization::evaluation::additional_cost::AdditionalCosts;
-use crate::stages::criticality_detection::PropagationBasedCriticalityDetector;
 use crate::stages::criticality_detection::propagation::*;
+use crate::stages::criticality_detection::PropagationBasedCriticalityDetector;
 use crate::{
     evolution::{Cost, Evaluator},
     models::{FaceId, Point, Settings, SurfaceGraph},
     stages::{contact_point_optimization::models::ContactPointsGene, visualization::Color},
 };
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use hashbrown::HashMap;
-use rerun::RecordingStream;
 use rerun::external::glam::usize;
+use rerun::RecordingStream;
 use std::collections::HashSet;
 
 mod additional_cost;

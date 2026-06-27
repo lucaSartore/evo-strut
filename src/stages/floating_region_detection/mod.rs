@@ -3,9 +3,11 @@ use rerun::external::image::imageops::colorops::contrast_in_place;
 use std::marker::PhantomData;
 
 use crate::{
-    evolution::Cost, models::{FaceId, Settings, SurfaceGraph, Triangle}, stages::{
+    evolution::Cost,
+    models::{FaceId, Settings, SurfaceGraph, Triangle},
+    stages::{
         CriticalityDetectedState, FloatingRegionsDetectedStage, Pipeline, PipelineBehaviourTrait,
-    }
+    },
 };
 
 pub struct FloatingRegionDetectionStage<TB>
@@ -88,7 +90,6 @@ impl FloatingRegion {
             .expect("region shall always have at least one point")
             .as_f32()
     }
-
 
     pub fn split_off(&self, height: f32, surface: &SurfaceGraph) -> Vec<FloatingRegion> {
         let mut to_return = vec![];

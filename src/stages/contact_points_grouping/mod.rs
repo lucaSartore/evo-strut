@@ -8,8 +8,8 @@ use crate::{
         TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings,
     },
     stages::{
-        ContactPointsDecidedState, ContactPointsGroupedState, Pipeline, PipelineBehaviourTrait,
-        save_optimization_artifact,
+        save_optimization_artifact, ContactPointsDecidedState, ContactPointsGroupedState, Pipeline,
+        PipelineBehaviourTrait,
     },
 };
 
@@ -59,7 +59,6 @@ where
             &cost_log,
         )?;
 
-
         Ok(Pipeline::from_state(ContactPointsGroupedState {
             settings: input.state.settings,
             graph: input.state.graph,
@@ -88,7 +87,6 @@ impl ContactPointsGrouper for SimpleContactPointsGrouper {
         let connection_points = &status.connection_points;
         let graph = &status.graph;
         let s = &settings.contact_points_grouping_settings;
-
 
         type Behaviour<'a> = EvolverBehaviour<
             ContactPointGroupingMutator<'a>,

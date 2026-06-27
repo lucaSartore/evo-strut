@@ -1,4 +1,4 @@
-use std::{collections::VecDeque};
+use std::collections::VecDeque;
 
 use crate::{
     evolution::Random,
@@ -12,17 +12,17 @@ use crate::{
 };
 use hashbrown::HashMap;
 use itertools::Itertools;
-use smallvec::{SmallVec, smallvec};
+use smallvec::{smallvec, SmallVec};
 
 use crate::{
     evolution::Cost,
     models::Point,
     stages::support_structure_refinement::{
-        SupportNode, SupportNodeId,
         evaluation::{
             graph::Graph,
-            stiffness::{Stiffness, stiffness_parallel, stiffness_series},
+            stiffness::{stiffness_parallel, stiffness_series, Stiffness},
         },
+        SupportNode, SupportNodeId,
     },
 };
 
@@ -415,7 +415,7 @@ fn evaluate_collision_cost(
 }
 
 struct FloatingRegionsCollector<'a> {
-    elements: VecDeque<(f32, &'a FloatingRegion)>
+    elements: VecDeque<(f32, &'a FloatingRegion)>,
 }
 
 impl<'a> FloatingRegionsCollector<'a> {
@@ -434,17 +434,14 @@ impl<'a> FloatingRegionsCollector<'a> {
         c
     }
 
-    pub fn new(regions: &'a [FloatingRegion], surface: & SurfaceGraph) -> Self {
+    pub fn new(regions: &'a [FloatingRegion], surface: &SurfaceGraph) -> Self {
         let mut elements = Vec::new();
         for r in regions {
-            elements.push((
-                r.max_height(surface),
-                r
-            ));
+            elements.push((r.max_height(surface), r));
         }
         elements.sort_by_key(|x| Cost::new(x.0));
         Self {
-            elements: elements.into_iter().collect()
+            elements: elements.into_iter().collect(),
         }
     }
 }

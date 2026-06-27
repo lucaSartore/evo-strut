@@ -104,14 +104,14 @@ pub struct PipelineBehaviour<
 }
 
 impl<
-    TCriticalityDetection: CriticalityDetector,
-    TFloatingRegionDetection: FloatingRegionDetector,
-    TCriticalityGrouping: CriticalityGrouper,
-    TContactPointOptimizer: ContactPointOptimizer,
-    TContactPointGrouper: ContactPointsGrouper,
-    TSupportStructureOptimizer: SupportStructureOptimizer,
-    TSupportSTructureRefiner: SupportStructureRefiner,
-> PipelineBehaviourTrait
+        TCriticalityDetection: CriticalityDetector,
+        TFloatingRegionDetection: FloatingRegionDetector,
+        TCriticalityGrouping: CriticalityGrouper,
+        TContactPointOptimizer: ContactPointOptimizer,
+        TContactPointGrouper: ContactPointsGrouper,
+        TSupportStructureOptimizer: SupportStructureOptimizer,
+        TSupportSTructureRefiner: SupportStructureRefiner,
+    > PipelineBehaviourTrait
     for PipelineBehaviour<
         TCriticalityDetection,
         TFloatingRegionDetection,

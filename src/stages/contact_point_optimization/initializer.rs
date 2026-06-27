@@ -3,7 +3,7 @@ use hashbrown::HashSet;
 use crate::{
     evolution::{PopulationInitializer, Random},
     models::{FaceId, Settings, SurfaceGraph},
-    stages::contact_point_optimization::{ContactPointShape, models::ContactPointsGene},
+    stages::contact_point_optimization::{models::ContactPointsGene, ContactPointShape},
 };
 
 pub struct ContactPointsInitializerSettings<'a> {

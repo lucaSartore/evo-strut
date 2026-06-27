@@ -8,7 +8,7 @@ use crate::{
     stages::{
         contact_point_optimization::ContactPointsGene,
         support_structure_optimization::{
-            ContactPoint, SupportStructureOptimizationGene, mutation::SupportStructureMutator,
+            mutation::SupportStructureMutator, ContactPoint, SupportStructureOptimizationGene,
         },
     },
     support::neural_network::NeuralNetwork,

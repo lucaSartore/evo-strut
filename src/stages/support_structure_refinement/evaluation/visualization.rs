@@ -2,7 +2,7 @@ use crate::{
     models::{Point, SurfaceGraph},
     stages::{
         support_structure_refinement::{
-            SupportNode, SupportStructureGene, evaluation::logic::genome_to_graph_descriptor,
+            evaluation::logic::genome_to_graph_descriptor, SupportNode, SupportStructureGene,
         },
         visualization::Color,
     },

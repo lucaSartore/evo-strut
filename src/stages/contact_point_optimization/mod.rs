@@ -5,15 +5,15 @@ use crate::{
         TournamentBasedCrossoverSelection, TournamentBasedCrossoverSelectionSettings,
     },
     stages::{
-        ContactPointsDecidedState, CriticalityGroupedState, Pipeline, PipelineBehaviourTrait,
         contact_point_optimization::{
             corssover::ContactPointCrossoverSettings, evaluation::ContactPointEvaluatorSettings,
             initializer::ContactPointsInitializerSettings, mutation::ContactPointsMutatorSettings,
         },
-        save_optimization_artifact,
+        save_optimization_artifact, ContactPointsDecidedState, CriticalityGroupedState, Pipeline,
+        PipelineBehaviourTrait,
     },
 };
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use log::debug;
 use std::marker::PhantomData;
 

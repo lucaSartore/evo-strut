@@ -3,24 +3,28 @@ mod models;
 mod stages;
 mod support;
 
-use std::{fs, path::PathBuf, time::{SystemTime, UNIX_EPOCH}};
+use std::{
+    fs,
+    path::PathBuf,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use anyhow::Context;
 use clap::Parser;
 use env_logger::Builder;
-use log::{LevelFilter, error, info};
+use log::{error, info, LevelFilter};
 
 use crate::{
     models::Settings,
     stages::{
-        Pipeline, PipelineBehaviour, StartedState,
         contact_point_optimization::SimpleContactPointOptimizer,
         contact_points_grouping::SimpleContactPointsGrouper,
         criticality_detection::PropagationBasedCriticalityDetector,
         criticality_grouping::DistanceBasedCriticalityGrouper,
         floating_region_detection::AreaBasedFloatingRegionDetector,
         support_structure_optimization::SimpleSupportStructureOptimizer,
-        support_structure_refinement::SimpleSupportStructureRefiner,
+        support_structure_refinement::SimpleSupportStructureRefiner, Pipeline, PipelineBehaviour,
+        StartedState,
     },
 };
 
@@ -70,10 +74,14 @@ fn run() -> anyhow::Result<()> {
     };
 
     // writing the settings used
-    let serialized = serde_json::to_string_pretty(&settings)
-        .context("failed to serialize default settings")?;
-    fs::write(&settings.io_settings.output_settings_path, serialized)
-        .with_context(|| format!("failed to write settings to {}", settings.io_settings.output_settings_path))?;
+    let serialized =
+        serde_json::to_string_pretty(&settings).context("failed to serialize default settings")?;
+    fs::write(&settings.io_settings.output_settings_path, serialized).with_context(|| {
+        format!(
+            "failed to write settings to {}",
+            settings.io_settings.output_settings_path
+        )
+    })?;
 
     type Behaviour = PipelineBehaviour<
         PropagationBasedCriticalityDetector,

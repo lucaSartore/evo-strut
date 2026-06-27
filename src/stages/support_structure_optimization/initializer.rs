@@ -2,7 +2,7 @@ use crate::{
     evolution::PopulationInitializer,
     models::{Settings, SurfaceGraph},
     stages::support_structure_optimization::{
-        SupportPoint, SupportStructureOptimizationGene, mutation::SupportStructureMutator,
+        mutation::SupportStructureMutator, SupportPoint, SupportStructureOptimizationGene,
     },
     support::convex_hull::ConvexHull,
 };

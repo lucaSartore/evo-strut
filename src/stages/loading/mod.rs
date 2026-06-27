@@ -1,6 +1,6 @@
 use super::*;
 use crate::models::{IoSettings, SurfaceGraph};
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use baby_shark::{
     io::{read_from_file, write_to_file},
     mesh::corner_table::CornerTableF,

@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use baby_shark::{
     io::Builder,
     mesh::{

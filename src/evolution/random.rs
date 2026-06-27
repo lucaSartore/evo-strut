@@ -1,5 +1,5 @@
-use rand::{TryRng, prelude::*};
-use rand_distr::{Distribution, Normal, SkewNormal, Uniform, weighted::WeightedIndex};
+use rand::{prelude::*, TryRng};
+use rand_distr::{weighted::WeightedIndex, Distribution, Normal, SkewNormal, Uniform};
 use std::{convert::Infallible, ops::DerefMut, sync::Mutex};
 
 use crate::support::random_distribution::RandomDistribution;

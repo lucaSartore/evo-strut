@@ -1,5 +1,5 @@
-use kdtree::KdTree;
 use kdtree::distance::squared_euclidean;
+use kdtree::KdTree;
 use log::warn;
 use rerun::external::crossbeam::epoch::default_collector;
 use std::{cell::RefCell, collections::HashMap};

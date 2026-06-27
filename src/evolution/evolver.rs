@@ -1,5 +1,5 @@
 use super::*;
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use log::info;
 use rayon::prelude::*;
 use serde::Serialize;
@@ -262,22 +262,22 @@ pub struct EvolverBehaviour<
 }
 
 impl<
-    TMutator,
-    TCrossover,
-    TTermination,
-    TEvaluator,
-    TCrossoverSelector,
-    TNextGenSelector,
-    TPopulationInitializer,
-    TGene,
-    SMut,
-    SCross,
-    STerm,
-    SEval,
-    SCrossSel,
-    SNextSel,
-    SInit,
-> EvolverBehaviourTrait
+        TMutator,
+        TCrossover,
+        TTermination,
+        TEvaluator,
+        TCrossoverSelector,
+        TNextGenSelector,
+        TPopulationInitializer,
+        TGene,
+        SMut,
+        SCross,
+        STerm,
+        SEval,
+        SCrossSel,
+        SNextSel,
+        SInit,
+    > EvolverBehaviourTrait
     for EvolverBehaviour<
         TMutator,
         TCrossover,

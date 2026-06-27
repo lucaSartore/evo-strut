@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use baby_shark::{
     io::Builder,
     mesh::{builder::cylinder, corner_table::CornerTableF},
@@ -9,7 +9,7 @@ use rerun::external::glam::usize;
 use crate::{
     evolution::Cost,
     models::Point,
-    support::shape_generation::{ShapeGenerator, builder_wrapper::BuilderWrapper, to_volumes},
+    support::shape_generation::{builder_wrapper::BuilderWrapper, to_volumes, ShapeGenerator},
 };
 
 #[derive(Debug, Clone)]

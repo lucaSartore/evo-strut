@@ -1,17 +1,17 @@
 use std::{fs::File, io::BufWriter, path::Path, sync::Arc};
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use baby_shark::{io::write_to_file, voxel::prelude::MeshToVolume};
 
 use crate::{
     models::{Point, SupportSettings, SurfaceGraph},
     stages::{
-        MeshExportedState, Pipeline, PipelineBehaviourTrait, SupportStructureRefinedState,
         support_structure_refinement::{
-            ContactNode, SupportNode, SupportNodeId, SupportStructureGene,
-            evaluation::logic::genome_to_graph_descriptor,
+            evaluation::logic::genome_to_graph_descriptor, ContactNode, SupportNode, SupportNodeId,
+            SupportStructureGene,
         },
         visualization::visualize_final_supports,
+        MeshExportedState, Pipeline, PipelineBehaviourTrait, SupportStructureRefinedState,
     },
     support::shape_generation::{Circle, ShapeFactory, Sphere, TruncatedCone},
 };
