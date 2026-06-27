@@ -355,7 +355,7 @@ fn evaluate_stiffness_cost(
 
 fn evaluate_floating_regions_stiffness_cost(
     s: &SupportStructureRefinementSettings,
-    graph: &mut Graph,
+    mut graph: Graph,
     surface: &SurfaceGraph,
     r: &FloatingRegion,
 ) -> f32 {
@@ -378,7 +378,7 @@ fn evaluate_floating_regions_stiffness_cost(
     // todo: hard codded value
     graph.add_node(id, center, &neighbors, false, 3.0);
 
-    let stiffness = evaluate_single_node_stiffness(s, graph, id);
+    let stiffness = evaluate_single_node_stiffness(s, &mut graph, id);
     let compliance = compliance_value(s, &stiffness);
 
     // todo: hard codded value
@@ -423,13 +423,13 @@ impl<'a> FloatingRegionsCollector<'a> {
         &mut self,
         s: &SupportStructureRefinementSettings,
         until_height: f32,
-        graph: &mut Graph,
+        graph: &Graph,
         surface: &SurfaceGraph,
     ) -> f32 {
         let mut c = 0.;
         while let Some(e) = self.elements.front() && e.0 < until_height {
             let (_, region) = self.elements.pop_front().expect("can't be None");
-            c += evaluate_floating_regions_stiffness_cost(s, graph, surface, region);
+            c += evaluate_floating_regions_stiffness_cost(s, graph.clone(), surface, region);
         }
         c
     }

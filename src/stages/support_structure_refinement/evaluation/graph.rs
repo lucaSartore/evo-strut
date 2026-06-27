@@ -19,7 +19,7 @@ pub struct Neighbor {
     pub distance: f32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Node {
     pub id: SupportNodeId,
     pub position: Point,
@@ -30,7 +30,7 @@ pub struct Node {
     pub radius: f32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Graph {
     pub nodes: HashMap<SupportNodeId, Node>,
 }
