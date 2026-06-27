@@ -4,7 +4,6 @@ use crate::{
     stages::support_structure_optimization::{
         mutation::SupportStructureMutator, SupportPoint, SupportStructureOptimizationGene,
     },
-    support::convex_hull::ConvexHull,
 };
 
 pub struct SupportStructureInitializerSettings<'a> {

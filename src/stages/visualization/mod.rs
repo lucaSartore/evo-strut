@@ -9,9 +9,7 @@ use crate::{
 use anyhow::Result;
 
 mod color;
-use baby_shark::decimation::CollapseStrategy;
 pub use color::Color;
-use nalgebra::SuperTCategoryOf;
 
 pub trait Visualizer<TS>
 where

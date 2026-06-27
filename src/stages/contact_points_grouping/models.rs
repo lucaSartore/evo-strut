@@ -7,9 +7,7 @@ use crate::{
     models::{Settings, SurfaceGraph},
     stages::{
         contact_point_optimization::ContactPointsGene,
-        support_structure_optimization::{
-            mutation::SupportStructureMutator, ContactPoint, SupportStructureOptimizationGene,
-        },
+        support_structure_optimization::{ContactPoint, SupportStructureOptimizationGene},
     },
     support::neural_network::NeuralNetwork,
 };

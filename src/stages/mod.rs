@@ -19,9 +19,7 @@ pub mod support_structure_optimization;
 pub mod support_structure_refinement;
 pub mod visualization;
 
-pub use criticality_detection::{
-    CriticalityDetectionStage, CriticalityDetector, OrientationBasedCriticalityDetector,
-};
+pub use criticality_detection::{CriticalityDetectionStage, CriticalityDetector};
 use hashbrown::HashSet;
 use log::info;
 

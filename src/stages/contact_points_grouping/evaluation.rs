@@ -1,3 +1,4 @@
+use crate::stages::visualization::Color;
 use crate::{
     evolution::{Cost, Evaluator, Random},
     models::{Settings, SurfaceGraph},
@@ -7,7 +8,6 @@ use crate::{
     },
     support::convex_hull_3d::ConvexHull3D,
 };
-use crate::{stages::visualization::Color, support::convex_hull::ConvexHull};
 use rerun::RecordingStream;
 
 pub struct ContactPointGroupingEvaluatorSettings<'a> {

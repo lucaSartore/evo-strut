@@ -10,7 +10,7 @@ use crate::{
     },
     stages::{
         floating_region_detection::FloatingRegion, save_optimization_artifact,
-        ContactPointsDecidedState, ContactPointsGroupedState, Pipeline, PipelineBehaviourTrait,
+        ContactPointsGroupedState, Pipeline, PipelineBehaviourTrait,
         SupportStructureOptimizedState,
     },
 };

@@ -1,9 +1,5 @@
 use anyhow::{anyhow, Result};
-use baby_shark::{
-    io::Builder,
-    mesh::{builder::cylinder, corner_table::CornerTableF},
-    voxel::volume::Volume,
-};
+use baby_shark::{io::Builder, mesh::corner_table::CornerTableF, voxel::volume::Volume};
 use rerun::external::glam::usize;
 
 use crate::{

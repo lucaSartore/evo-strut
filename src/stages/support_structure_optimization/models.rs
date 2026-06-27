@@ -4,7 +4,6 @@ use std::fmt::Debug;
 use hashbrown::{HashMap, HashSet};
 use itertools::Itertools;
 use serde::Serialize;
-use smallvec::smallvec;
 
 use crate::{
     evolution::{Cost, Random},

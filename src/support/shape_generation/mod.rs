@@ -1,25 +1,20 @@
 use anyhow::{anyhow, Result};
 use baby_shark::{
-    io::Builder,
-    mesh::{
-        corner_table::CornerTableF, polygon_soup::data_structure::PolygonSoup, traits::Triangles,
-    },
+    mesh::{corner_table::CornerTableF, polygon_soup::data_structure::PolygonSoup},
     voxel::{
-        meshing::ActiveVoxelsMesher,
-        prelude::{DualContouringMesher, MarchingCubesMesher, MeshToVolume},
+        prelude::{MarchingCubesMesher, MeshToVolume},
         volume::Volume,
     },
 };
 
 mod truncated_cone;
-use itertools::Itertools;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 pub use truncated_cone::{Circle, TruncatedCone};
 mod sphere;
 pub use sphere::Sphere;
 mod builder_wrapper;
 
-use crate::models::{Settings, SupportSettings};
+use crate::models::Settings;
 
 pub struct ShapeFactory {
     /// shapes that will be added to the shape

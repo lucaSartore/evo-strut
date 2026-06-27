@@ -3,16 +3,9 @@ use std::collections::VecDeque;
 use crate::{
     evolution::Random,
     models::{MaterialStiffnessSettings, SupportStructureRefinementSettings},
-    stages::{
-        contact_points_grouping,
-        support_structure_refinement::evaluation::{
-            graph::Neighbor, stiffness::calculate_beam_stiffness,
-        },
-    },
 };
 use hashbrown::HashMap;
-use itertools::Itertools;
-use smallvec::{smallvec, SmallVec};
+use smallvec::SmallVec;
 
 use crate::{
     evolution::Cost,

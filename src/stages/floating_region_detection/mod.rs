@@ -1,5 +1,4 @@
 use hashbrown::HashSet;
-use rerun::external::image::imageops::colorops::contrast_in_place;
 use std::marker::PhantomData;
 
 use crate::{

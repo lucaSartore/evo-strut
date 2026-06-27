@@ -1,6 +1,5 @@
 use hashbrown::HashMap;
 use itertools::Itertools;
-use rerun::external::re_sdk_types::impl_into_cow;
 
 use crate::{evolution::Cost, models::Point};
 

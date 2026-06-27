@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use baby_shark::{
     mesh::corner_table::CornerTableF,
     voxel::{prelude::MeshToVolume, volume::Volume},
@@ -11,7 +9,7 @@ use crate::{
     evolution::Evaluator,
     models::{Settings, SurfaceGraph},
     stages::{
-        floating_region_detection::{FloatingRegion, FloatingRegionDetector},
+        floating_region_detection::FloatingRegion,
         support_structure_refinement::SupportStructureGene,
     },
 };

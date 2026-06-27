@@ -1,7 +1,6 @@
 use crate::support::remove_random::RemoveRandom;
 use hashbrown::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
-use smallvec::SmallVec;
 
 use crate::{
     evolution::Random,

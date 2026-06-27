@@ -5,8 +5,7 @@ use std::{collections::HashSet, marker::PhantomData};
 use crate::{
     models::{FaceId, MeshVector, Point, Settings, SurfaceGraph},
     stages::{
-        CriticalityDetectedState, CriticalityGroupedState, FloatingRegionsDetectedStage, Pipeline,
-        PipelineBehaviourTrait,
+        CriticalityGroupedState, FloatingRegionsDetectedStage, Pipeline, PipelineBehaviourTrait,
     },
 };
 

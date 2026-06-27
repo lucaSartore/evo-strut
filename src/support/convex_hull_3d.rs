@@ -1,6 +1,4 @@
-use rerun::external::arrow::{compute::kernels::concat_elements, ipc::Type};
-
-use crate::{evolution::Cost, models::Point, stages::support_structure_refinement::PositionAnchor};
+use crate::models::Point;
 
 #[derive(Clone, Debug)]
 pub struct ConvexHull3D {

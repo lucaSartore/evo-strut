@@ -1,6 +1,5 @@
 use std::collections::BinaryHeap;
 
-use baby_shark::data_structures::st_tree::NodeIndex;
 use hashbrown::HashMap;
 use smallvec::{smallvec, SmallVec};
 
