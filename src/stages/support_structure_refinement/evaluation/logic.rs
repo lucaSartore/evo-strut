@@ -302,7 +302,6 @@ fn evaluate_single_node_stiffness(
 }
 
 fn evaluate_stiffness_cost(
-    gene: &SupportStructureGene,
     surface: &SurfaceGraph,
     descriptor: &GraphDescriptor,
     settings: &Settings,
@@ -338,7 +337,7 @@ fn evaluate_stiffness_cost(
             *node,
             node_position,
             &descriptor.edges[node],
-            gene.is_supported(*node),
+            node_position.z == 0.,
             node_radius,
         );
     }
@@ -447,21 +446,11 @@ pub fn evaluate_cost(
     floating_regions: &[FloatingRegion],
 ) -> Cost {
     let descriptor = genome_to_graph_descriptor(gene);
-    let cone_cost = evaluate_cones_cost(gene, &descriptor, settings);
     let steepness_cost = evaluate_steepness_cost(&descriptor, settings);
     let length_cost = evaluate_length_cost(&descriptor, settings);
     let stiffness_cost =
-        evaluate_stiffness_cost(gene, surface, &descriptor, settings, floating_regions);
+        evaluate_stiffness_cost(surface, &descriptor, settings, floating_regions);
     let collision_cost = evaluate_collision_cost(&descriptor, volume, settings);
 
-    // println!(
-    //     "cone_cost: {}, steepness_cost: {}, length_cost: {}, stiffness_cost: {}, collision_cost: {}",
-    //     cone_cost.as_f32(),
-    //     steepness_cost.as_f32(),
-    //     length_cost.as_f32(),
-    //     stiffness_cost.as_f32(),
-    //     collision_cost.as_f32()
-    // );
-
-    cone_cost + steepness_cost + length_cost + stiffness_cost + collision_cost
+    steepness_cost + length_cost + stiffness_cost + collision_cost
 }
