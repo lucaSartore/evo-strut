@@ -382,7 +382,7 @@ fn evaluate_floating_regions_stiffness_cost(
     let compliance = compliance_value(s, &stiffness);
 
     // todo: hard codded value
-    (compliance - r.compliance_threshold).max(0.) * 100.
+    (compliance - r.compliance_threshold).max(0.) * 80.
 }
 
 fn evaluate_collision_cost(
@@ -438,7 +438,7 @@ impl<'a> FloatingRegionsCollector<'a> {
         let mut elements = Vec::new();
         for r in regions {
             elements.push((
-                r.height(surface),
+                r.max_height(surface),
                 r
             ));
         }

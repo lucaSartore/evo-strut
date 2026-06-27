@@ -108,9 +108,7 @@ pub struct IoSettings {
 impl Default for IoSettings {
     fn default() -> Self {
         Self {
-            // input_file_path: "test_meshes/inclination_test.stl".into(),
-            // input_file_path: "test_meshes/inclination_test_re_meshed.stl".into(),
-            input_file_path: "test_meshes/candlestick.stl".into(),
+            input_file_path: "test_meshes/dragon_re_meshed.stl".into(),
             re_meshed_input_file_path: None,
             input_json_path: None,
             output_file_path: "test_meshes/output.stl".into(),

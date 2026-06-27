@@ -61,7 +61,7 @@ impl FloatingRegion {
             }
         }
 
-        return to_return;
+        to_return
     }
 
     pub fn filter(&self, condition: impl FnMut(&FaceId) -> bool) -> Self {
@@ -71,14 +71,36 @@ impl FloatingRegion {
         }
     }
 
-    pub fn height(&self, surface: &SurfaceGraph) -> f32 {
+    pub fn max_height(&self, surface: &SurfaceGraph) -> f32 {
         self.faces()
             .iter()
             .map(|x| Cost::new(surface.get_triangle(*x).center().z))
             .max()
             .expect("region shall always have at least one point")
             .as_f32()
-            
+    }
+
+    pub fn min_height(&self, surface: &SurfaceGraph) -> f32 {
+        self.faces()
+            .iter()
+            .map(|x| Cost::new(surface.get_triangle(*x).center().z))
+            .min()
+            .expect("region shall always have at least one point")
+            .as_f32()
+    }
+
+
+    pub fn split_off(&self, height: f32, surface: &SurfaceGraph) -> Vec<FloatingRegion> {
+        let mut to_return = vec![];
+        let min = self.min_height(surface);
+        let max = self.max_height(surface);
+        let mut current = min;
+        while current < max {
+            let region = self.filter(|x| surface.get_triangle(*x).center().z <= current);
+            to_return.push(region);
+            current += height;
+        }
+        to_return
     }
 }
 
@@ -148,10 +170,14 @@ impl FloatingRegionDetector for AreaBasedFloatingRegionDetector {
             }
 
             if !source_is_close_to_ground {
-                floating_regions.push(FloatingRegion {
+                let region = FloatingRegion {
                     compliance_threshold: Self::area_to_compliance_threshold(region_area, settings),
                     faces: region_faces,
-                });
+                };
+                // split off the region based on the height, in order to evaluate
+                // the region in multiple steps while the the structure is being built
+                let mut regions = region.split_off(10., graph); // todo: hardcoded value
+                floating_regions.append(&mut regions);
             }
         }
 
