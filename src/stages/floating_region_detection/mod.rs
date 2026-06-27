@@ -140,6 +140,7 @@ impl AreaBasedFloatingRegionDetector {
 impl FloatingRegionDetector for AreaBasedFloatingRegionDetector {
     fn detect_floating_regions(graph: &SurfaceGraph, settings: &Settings) -> Vec<FloatingRegion> {
         let mut ordered_nodes: Vec<_> = graph.iter_triangles(None).collect();
+        let split_height = settings.floating_region_detection_settings.split_height;
         ordered_nodes.sort_by(|a, b| a.center().z.total_cmp(&b.center().z));
 
         let mut visited = HashSet::new();
@@ -176,7 +177,7 @@ impl FloatingRegionDetector for AreaBasedFloatingRegionDetector {
                 };
                 // split off the region based on the height, in order to evaluate
                 // the region in multiple steps while the the structure is being built
-                let mut regions = region.split_off(10., graph); // todo: hardcoded value
+                let mut regions = region.split_off(split_height, graph);
                 floating_regions.append(&mut regions);
             }
         }

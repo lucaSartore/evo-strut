@@ -8,10 +8,10 @@ use super::*;
 
 pub fn mutate(mutator: &SupportStructureMutator, gene: &mut SupportStructureOptimizationGene) {
     let rand = &mutator.rand;
+    let s = &mutator.settings.support_structure_optimization_settings.point_mutation_std_range;
 
-    let p = gene.random_support_mut(rand).expect("can't be empty");
+    let Some(p) = gene.random_support_mut(rand) else { return };
 
-    // todo: hardcoded value
-    let mutation_std = rand.next_distribution(&RandomDistribution::InRange { low: 0.5, high: 5. });
+    let mutation_std = rand.next_distribution(&RandomDistribution::InRange { low: s.0, high: s.1 });
     p.position = Point::random(p.position, mutation_std, rand);
 }

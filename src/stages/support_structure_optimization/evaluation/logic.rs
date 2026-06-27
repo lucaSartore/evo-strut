@@ -336,14 +336,12 @@ fn evaluate_floating_regions_stiffness_cost(
 
     let id = graph.new_random_id(&Random::UnSeededRandom);
 
-    // todo: hard codded value
-    graph.add_node(id, center, &neighbors, false, 3.0, false);
+    graph.add_node(id, center, &neighbors, false, s.floating_regions_equivalent_beam_radius, false);
 
     let stiffness = evaluate_single_node_stiffness(s, &mut graph, id);
     let compliance = compliance_value(s, &stiffness);
 
-    // todo: hard codded value
-    (compliance - r.compliance_threshold).max(0.) * 80.
+    (compliance - r.compliance_threshold).max(0.) *s.floating_region_cost_weight
 }
 
 fn evaluate_collision_cost(

@@ -61,8 +61,7 @@ impl<'a>
         let mut g = self.group_template.clone();
 
         // randomly generating some points
-        // todo: hardcoded value
-        let support_density = 0.0001; // support point per mm^3
+        let support_density = self.settings.support_structure_optimization_settings.initial_point_density;
         let convex_hull = &g.convex_hull;
         let area = convex_hull.area();
         let height = g.max_height();

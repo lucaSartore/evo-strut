@@ -46,7 +46,6 @@ where
         println!("num grouped areas: {}", input.state.grouped_areas.len());
         let results: Result<Vec<_>> = (0..input.state.grouped_areas.len())
             .map(|i| {
-                // todo: process elements so that the Z field is filled up
                 TB::TContactPointOptimizer::optimize(&input.state, i)
             })
             .collect();

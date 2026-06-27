@@ -38,10 +38,10 @@ where
     pub fn execute(
         input: Pipeline<ContactPointsDecidedState, TB>,
     ) -> Result<Pipeline<ContactPointsGroupedState, TB>> {
+        let attempts = input.state.settings.contact_points_grouping_settings.num_attempts;
         let mut best = None;
         let mut best_cost = Cost::new(f32::MAX);
-        // todo: hard-coded value
-        for attempt_id in 0..5 {
+        for attempt_id in 0..attempts {
             let (result, cost_log) =
                 SimpleContactPointsGrouper::optimize(&input.state, attempt_id)?;
             let cost = Cost::new(cost_log.final_cost);

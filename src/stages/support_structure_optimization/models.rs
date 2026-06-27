@@ -32,13 +32,6 @@ pub struct SupportPoint {
     pub num_contacts: u32,
 }
 
-impl SupportPoint {
-    pub fn radius(&self) -> f32 {
-        // todo: hardcoded values
-        1.5
-    }
-}
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SupportStructureOptimizationGene {
     pub contacts: Vec<ContactPoint>,
@@ -211,8 +204,7 @@ impl<'a> RawGraphBuilder<'a> {
             }
             QueuedPoint::Support(s) => {
                 self.supports.insert(position);
-                // todo: hardcoded value
-                (s.position, false, 1.5)
+                (s.position, false, self.settings.support_settings.beam_radius)
             }
         };
 
@@ -234,13 +226,12 @@ impl<'a> RawGraphBuilder<'a> {
     }
 
     fn find_supporters(&mut self, position: Point, num_contacts: usize) -> Vec<Point> {
+        let angle_threshold = self.settings.support_structure_optimization_settings.max_support_angle;
         let valid_points: Vec<_> = self
             .supports
             .iter()
             .filter(|x| {
-                // todo: hardcoded value
-                Point::horizon_angle(**x, position) > 30.0_f32.to_radians()
-                // x.z < position.z
+                Point::horizon_angle(**x, position) > angle_threshold.to_radians()
                 && **x != position
             })
             .map(|x| {
@@ -263,8 +254,8 @@ impl<'a> RawGraphBuilder<'a> {
 
         let mut new_position = position;
         new_position.z = 0.;
-        // todo: hardcoded value
-        let id = self.add_node(new_position, false, 1.5);
+        let radius = self.settings.support_settings.beam_radius;
+        let id = self.add_node(new_position, false, radius);
         vec![self.raw_structure.details[&id].position]
     }
 }

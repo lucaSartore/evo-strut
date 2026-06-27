@@ -66,12 +66,16 @@ pub struct FloatingRegionDetectionSettings {
     /// multiplier used to convert floating region area into a stiffness threshold
     /// unit of measure: stiffness/mm^2
     pub stiffness_threshold_area_multiplier: f32,
+    /// if a floating region is taller than this
+    /// threshold, it will be split in two
+    pub split_height: f32,
 }
 
 impl Default for FloatingRegionDetectionSettings {
     fn default() -> Self {
         Self {
             stiffness_threshold_area_multiplier: 1.,
+            split_height: 10.
         }
     }
 }
@@ -308,6 +312,8 @@ pub struct ContactPointsGroupingSettings {
     pub tournament_size: usize,
     /// number of individual generated/evaluated in every generation
     pub num_elite_individuals: usize,
+    /// num of attempts to do (and pick the best)
+    pub num_attempts: usize,
 }
 
 impl Default for ContactPointsGroupingSettings {
@@ -323,6 +329,7 @@ impl Default for ContactPointsGroupingSettings {
             generation_size: 100,
             tournament_size: 10,
             num_elite_individuals: 10,
+            num_attempts: 5,
             max_num_groups,
             network_topology: NetworkTopology::new(
                 3,
@@ -396,6 +403,7 @@ pub struct SupportStructureOptimizationSettings {
     /// number of individual generated/evaluated in every generation
     pub num_elite_individuals: usize,
     /// number of points that are on generated on average when a new layer is initialized
+    pub num_attempts: usize,
     pub num_points_per_layer: RandomDistribution,
     /// multiplier for the covariance matrix used to sample the points within a layer.
     pub points_sampling_covariance_multiplier: f32,
@@ -431,6 +439,15 @@ pub struct SupportStructureOptimizationSettings {
     /// (smaller value means more precise trees, but higher computational cost)
     /// unit of measure: mm
     pub tree_creation_interpolation_size: f32,
+    /// std of the mutation that will be applied to the point
+    pub point_mutation_std_range: (f32, f32),
+    /// range of the probability that a point is mutated in the "mutate multiple points" mutation
+    pub point_mutation_probability_range: (f32, f32),
+    /// maximum angle that the program is allowed to generate in the support structure
+    /// unit of measure: deg
+    pub max_support_angle: f32,
+    /// the density of support points used to initialize the structure
+    pub initial_point_density: f32
 }
 
 impl Default for SupportStructureOptimizationSettings {
@@ -441,6 +458,7 @@ impl Default for SupportStructureOptimizationSettings {
             generation_size: 100,
             tournament_size: 10,
             num_elite_individuals: 10,
+            num_attempts: 1,
             num_points_per_layer: RandomDistribution::InRange { low: 1., high: 7. },
             points_sampling_covariance_multiplier: 0.3,
             num_initial_groups_multiplier: 0.7,
@@ -455,6 +473,10 @@ impl Default for SupportStructureOptimizationSettings {
             layer_point_motion_std: 5.,
             layer_height_motion_std: 2.5,
             tree_creation_interpolation_size: 2.0,
+            point_mutation_std_range: (0.5, 5.),
+            point_mutation_probability_range: (0.05, 0.4),
+            max_support_angle: 30.,
+            initial_point_density: 0.0001
         }
     }
 }
@@ -514,6 +536,13 @@ pub struct SupportStructureCostSettings {
     /// cost of a collision, per unit of length
     /// unit of measure: cost / mm
     pub collision_penalization: f32,
+    /// when evaluating a floating region, this is what will be used
+    /// to connect all nodes into a single point in the center of the region
+    /// unit of measure: mm
+    pub floating_regions_equivalent_beam_radius: f32,
+    /// weight for the floating regions complacence cost
+    /// unit of measure: cost * N / mm
+    pub floating_region_cost_weight: f32
 }
 
 impl Default for SupportStructureCostSettings {
@@ -534,6 +563,8 @@ impl Default for SupportStructureCostSettings {
             collision_volume_offset: 3.,
             collision_check_intervals: 2.,
             collision_penalization: 200.,
+            floating_regions_equivalent_beam_radius: 1.5,
+            floating_region_cost_weight: 80.
         }
     }
 }

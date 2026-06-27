@@ -91,9 +91,8 @@ impl SimpleSupportStructureOptimizer {
             ElitistNextGenSelectorSettings,
             SupportStructureInitializerSettings<'a>,
         >;
-        //todo: hard-coded value
         let (result, cost_log) = Evolver::<Behaviour<'a>>::run_n_times(
-            1,
+            s.num_attempts,
             &SupportStructureMutatorSettings::new(settings, graph),
             &SupportStructureCrossoverSettings::new(settings),
             &PatienceBasedTerminationStrategySettings {
