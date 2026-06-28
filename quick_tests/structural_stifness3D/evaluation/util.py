@@ -1,8 +1,36 @@
 import numpy as np
-from scipy.stats import pearsonr, spearmanr
+from scipy import stats
 from custom_types import Stiffness, Point, Settings, StiffnessResult
 
 
+def filter_stiffness_components(stiffness: StiffnessResult):
+    return {
+        k: np.asarray([v[0,0], v[1,1]])
+        for k,v in stiffness.items()
+    }
+
+def calculate_root_mean_squared_relative_error(stiffness: StiffnessResult, ground_truth: StiffnessResult, epsilon = 1e-5) -> float:
+    values = np.stack([s for s in stiffness.values()]);
+    gt = np.stack([s for s in ground_truth.values()]);
+
+    error = np.abs(values - gt)
+    denominator = np.abs(gt) + epsilon
+
+    mse = np.average((error / denominator) ** 2)
+    return mse * 100
+
+def calculate_spearman_correlation(stiffness: StiffnessResult, ground_truth: StiffnessResult, epsilon = 1e-5) -> float:
+    values = np.stack([s for s in stiffness.values()]).flatten()
+    gt = np.stack([s for s in ground_truth.values()]).flatten()
+    
+    correlation, _ = stats.spearmanr(values, gt)
+    return float(correlation) #type: ignore
+
+def calculate_pearson_correlation(stiffness: StiffnessResult, ground_truth: StiffnessResult, epsilon = 1e-5) -> float:
+    values = np.stack([s for s in stiffness.values()]).flatten()
+    gt = np.stack([s for s in ground_truth.values()]).flatten()
+    correlation, _ = stats.pearsonr(values, gt)
+    return float(correlation) #type: ignore
 
 def stiffness_series(base_stiffness: Stiffness, point_from: Point, point_to: Point, settings: Settings) -> Stiffness:
     beam_stiffness = calculate_beam_stiffness(point_from, point_to, settings)
