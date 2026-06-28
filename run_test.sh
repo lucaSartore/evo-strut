@@ -33,7 +33,9 @@ fi
 
 # 4. Run cargo run --release
 echo "Running build and execution via Cargo..."
-cargo run --release 2>&1 | tee "${TARGET_DIR}/cargo_output.log"
+# cargo run --release 2>&1 | tee "${TARGET_DIR}/cargo_output.log"
+cargo run --release > >(tee "${TARGET_DIR}/cargo_output.log") 2>&1
+echo "Done with the execution, Starting copying logs..."
 
 # 5. Copy every file inside optimization_logs into the dir you created 
 # (in a sub folder "optimization_logs")
