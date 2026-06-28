@@ -112,14 +112,14 @@ pub struct IoSettings {
 impl Default for IoSettings {
     fn default() -> Self {
         Self {
-            input_file_path: "test_meshes/dragon_re_meshed.stl".into(),
+            input_file_path: "test_meshes/dragon.stl".into(),
             re_meshed_input_file_path: None,
             input_json_path: None,
             output_file_path: "test_meshes/output.stl".into(),
             output_json_path: "test_meshes/output.json".into(),
             output_settings_path: "test_meshes/settings.json".into(),
             optimization_logs_dir_path: Some("optimization_logs".into()),
-            target_edge_length: 0.,
+            target_edge_length: 0.3,
         }
     }
 }
