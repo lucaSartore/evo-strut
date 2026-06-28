@@ -83,7 +83,6 @@ pub trait PipelineBehaviourTrait {
     type TContactPointOptimizer: ContactPointOptimizer;
     type TContactPointGrouper: ContactPointsGrouper;
     type TSupportStructureOptimizer: SupportStructureOptimizer;
-    // type TSupportStructureRefiner: SupportStructureRefiner;
 }
 
 pub struct PipelineBehaviour<
@@ -93,9 +92,8 @@ pub struct PipelineBehaviour<
     TCPO: ContactPointOptimizer,
     TCPG: ContactPointsGrouper,
     TSSO: SupportStructureOptimizer,
-    // TSSR: SupportStructureRefiner,
 > {
-    _t: PhantomData<(TD, TFD, TG, TCPO, TCPG, TSSO /*, TSSR*/)>,
+    _t: PhantomData<(TD, TFD, TG, TCPO, TCPG, TSSO)>,
 }
 
 impl<
@@ -105,7 +103,6 @@ impl<
         TContactPointOptimizer: ContactPointOptimizer,
         TContactPointGrouper: ContactPointsGrouper,
         TSupportStructureOptimizer: SupportStructureOptimizer,
-        // TSupportSTructureRefiner: SupportStructureRefiner,
     > PipelineBehaviourTrait
     for PipelineBehaviour<
         TCriticalityDetection,
@@ -114,7 +111,6 @@ impl<
         TContactPointOptimizer,
         TContactPointGrouper,
         TSupportStructureOptimizer,
-        // TSupportSTructureRefiner,
     >
 {
     type TCriticalityDetection = TCriticalityDetection;
@@ -123,7 +119,6 @@ impl<
     type TContactPointOptimizer = TContactPointOptimizer;
     type TContactPointGrouper = TContactPointGrouper;
     type TSupportStructureOptimizer = TSupportStructureOptimizer;
-    // type TSupportStructureRefiner = TSupportSTructureRefiner;
 }
 
 pub trait PipelineState {}
@@ -197,14 +192,6 @@ pub struct SupportStructureOptimizedState {
 }
 impl PipelineState for SupportStructureOptimizedState {}
 
-// pub struct SupportStructureRefinedState {
-//     pub settings: Settings,
-//     pub graph: SurfaceGraph,
-//     pub connection_points: ContactPointsGene,
-//     pub support_structures: Vec<SupportStructureGene>,
-// }
-// impl PipelineState for SupportStructureRefinedState {}
-
 pub struct MeshExportedState {}
 impl PipelineState for MeshExportedState {}
 
@@ -267,7 +254,6 @@ where
                     FloatingRegionDetectionStage::<TB>::execute(p)
                 );
                 timed!("visualizing", VisualizationStage::visualize(&p))?;
-                // return Ok(());
                 let p = timed!(
                     "criticality_grouping",
                     CriticalityGroupingStage::<TB>::execute(p)
