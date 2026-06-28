@@ -4,9 +4,7 @@ from evaluation.bottom_up_evaluator import BottomUpEvaluator
 from evaluation.dag_evaluator import DagEvaluator
 from evaluation.interface import Evaluator
 from evaluation.util import (
-    calculate_accuracy, 
-    calculate_beam_stiffness,
-    calculate_mape,
+    calculate_root_mean_squared_relative_error,
     calculate_pearson_correlation,
     calculate_spearman_correlation,
     filter_stiffness_components
@@ -75,25 +73,25 @@ def main():
                 ground_truth_values = ground_truth
                 approximated_values = stiffness
             # Calculate metrics
-            mape = calculate_mape(approximated_values, ground_truth_values)
-            pearson = calculate_pearson_correlation(approximated_values, ground_truth_values)
-            spearman = calculate_spearman_correlation(approximated_values, ground_truth_values)
+            rmsre = calculate_root_mean_squared_relative_error(approximated_values, ground_truth_values)
+            pearson = calculate_spearman_correlation(approximated_values, ground_truth_values)
+            spearman = calculate_pearson_correlation(approximated_values, ground_truth_values)
             
             # Store metrics
             struct_metrics[graph_name][eval_name] = {
-                'mape': mape,
+                'rmsre': rmsre,
                 'pearson': pearson,
                 'spearman': spearman
             }
             evaluator_metrics[eval_name][graph_name] = {
-                'mape': mape,
+                'rmsre': rmsre,
                 'pearson': pearson,
                 'spearman': spearman
             }
 
             # Print metrics for this evaluation
             print(f"\n  {eval_name}:")
-            print(f"    ├─ MAPE:              {mape:>8.2f}%")
+            print(f"    ├─ rmsre:              {rmsre:>8.2f}%")
             print(f"    ├─ Pearson Corr:     {pearson:>8.4f}")
             print(f"    └─ Spearman Corr:    {spearman:>8.4f}")
             
@@ -108,12 +106,12 @@ def main():
     
     for graph_name in sorted(struct_metrics.keys()):
         print(f"{graph_name}:")
-        print(f"{'':3}{'Evaluator':<18}{'MAPE':<12}{'Pearson':<12}{'Spearman':<12}")
+        print(f"{'':3}{'Evaluator':<18}{'Rmsre':<12}{'Pearson':<12}{'Spearman':<12}")
         print(f"{'':3}{'-'*54}")
         
         for eval_name in sorted(struct_metrics[graph_name].keys()):
             metrics = struct_metrics[graph_name][eval_name]
-            print(f"{'':3}{eval_name:<18}{metrics['mape']:<12.2f}{metrics['pearson']:<12.4f}{metrics['spearman']:<12.4f}")
+            print(f"{'':3}{eval_name:<18}{metrics['rmsre']:<12.2f}{metrics['pearson']:<12.4f}{metrics['spearman']:<12.4f}")
         print()
 
     print(f"{'='*80}")
@@ -127,32 +125,32 @@ def main():
         
         for graph_name in sorted(evaluator_metrics[eval_name].keys()):
             metrics = evaluator_metrics[eval_name][graph_name]
-            print(f"{'':3}{graph_name:<18}{metrics['mape']:<12.2f}{metrics['pearson']:<12.4f}{metrics['spearman']:<12.4f}")
+            print(f"{'':3}{graph_name:<18}{metrics['rmsre']:<12.2f}{metrics['pearson']:<12.4f}{metrics['spearman']:<12.4f}")
         
         # Print averages for this evaluator
-        mape_avg = np.mean([evaluator_metrics[eval_name][g]['mape'] for g in evaluator_metrics[eval_name]])
+        rmsre_avg = np.mean([evaluator_metrics[eval_name][g]['rmsre'] for g in evaluator_metrics[eval_name]])
         pearson_avg = np.mean([evaluator_metrics[eval_name][g]['pearson'] for g in evaluator_metrics[eval_name]])
         spearman_avg = np.mean([evaluator_metrics[eval_name][g]['spearman'] for g in evaluator_metrics[eval_name]])
         
         print(f"{'':3}{'-'*54}")
-        print(f"{'':3}{'AVERAGE':<18}{mape_avg:<12.2f}{pearson_avg:<12.4f}{spearman_avg:<12.4f}")
+        print(f"{'':3}{'AVERAGE':<18}{rmsre_avg:<12.2f}{pearson_avg:<12.4f}{spearman_avg:<12.4f}")
         print()
 
     print(f"{'='*80}")
     print("OVERALL AVERAGES")
     print(f"{'='*80}")
     
-    all_mape = []
+    all_rmsre = []
     all_pearson = []
     all_spearman = []
     
     for eval_name in evaluator_metrics:
         for graph_name in evaluator_metrics[eval_name]:
-            all_mape.append(evaluator_metrics[eval_name][graph_name]['mape'])
+            all_rmsre.append(evaluator_metrics[eval_name][graph_name]['rmsre'])
             all_pearson.append(evaluator_metrics[eval_name][graph_name]['pearson'])
             all_spearman.append(evaluator_metrics[eval_name][graph_name]['spearman'])
     
-    print(f"{'MAPE (lower is better):':<25} {np.mean(all_mape):>8.2f}%")
+    print(f"{'rmsre':<25} {np.mean(all_rmsre):>8.2f}%")
     print(f"{'Pearson Correlation:':<25} {np.mean(all_pearson):>8.4f}")
     print(f"{'Spearman Correlation:':<25} {np.mean(all_spearman):>8.4f}")
     print(f"{'='*80}\n")

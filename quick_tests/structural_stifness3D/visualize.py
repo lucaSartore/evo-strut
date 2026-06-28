@@ -42,7 +42,7 @@ class Visualizer:
 
         # draw stiffness ellipsoids
         for stiffness_result, color, label in self._stiffness_layers:
-            first_patch = True
+            first_patch = True  # Track the first patch to apply the label once per layer
             for node_id, stiffness in stiffness_result.items():
                 if node_id not in self.graph.nodes:
                     continue
@@ -84,15 +84,26 @@ class Visualizer:
                 z_rot += node.position.z
 
                 # Plot ellipsoid
+                # Only pass the label to the first surface patch drawn for this layer
+                patch_label = label if first_patch else None
+                
                 ax.plot_surface(
                     x_rot, y_rot, z_rot,
-                    rstride=4, cstride=4, color=color, alpha=0.3, linewidth=0, zorder=2
+                    rstride=4, cstride=4, color=color, alpha=0.3, linewidth=0, zorder=2,
+                    label=patch_label
                 )
+                
+                if first_patch:
+                    first_patch = False
 
         ax.set_title(title)
         ax.set_xlabel("x")
         ax.set_ylabel("y")
         ax.set_zlabel("z")
         ax.set_box_aspect([1, 1, 1])  # Equal aspect ratio
+        
+        # Display the legend containing the labeled layer items
+        ax.legend()
+        
         plt.tight_layout()
         plt.show()
