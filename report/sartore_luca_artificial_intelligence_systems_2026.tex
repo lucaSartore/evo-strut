@@ -5,9 +5,12 @@
 \usepackage{epsfig}
 \usepackage{plain}
 \usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{cleveref}
 \usepackage[paperheight=29.7cm,paperwidth=21cm,outer=1.5cm,inner=2.5cm,top=2cm,bottom=2cm]{geometry} % layout setting
 \usepackage{titlesec} % custom setup title of chanpter
 % \usepackage{newtxtext,newtxmath} % times new roman
+
 
 %%%%%%%%%%%%%%
 % support for accented letters
@@ -36,7 +39,7 @@
 %% Thanks/ Acknowledgements section is optional
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % \input{acknowledgements}
+  \input{acknowledgements}
   \clearpage
   \pagestyle{plain} % no heading, footer with centered page number
 
@@ -79,9 +82,9 @@
       % to
       %   X   Title
       
-      \titleformat{\chapter}
-        {\normalfont\Huge\bfseries}{\thechapter}{1em}{}
+      \titleformat{\chapter}{\normalfont\Huge\bfseries}{\thechapter}{1em}{}
         
+
       \titlespacing*{\chapter}{0pt}{0.59in}{0.02in}
       \titlespacing*{\section}{0pt}{0.20in}{0.02in}
       \titlespacing*{\subsection}{0pt}{0.10in}{0.02in}
@@ -111,6 +114,7 @@
       \input{results}
       \input{conclusions}
       
+
       
     \endgroup
 
