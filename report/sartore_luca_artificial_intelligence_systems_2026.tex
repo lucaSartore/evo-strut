@@ -1,18 +1,4 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% Template for Master degrees
-% DISI - Dipartimento di Ingegneria e Scienza dell’Informazione
-% DISI - Department of Information Engineering and Computer Science
-%
-% update 2020-08-30
-%
-% To generate pdf 
-% pdflatex __filename__.tex
-% bibtex __file_name__.aux
-% pdflatex __file_name__.tex
-% pdflatex __file_name__.tex
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % 2 side format
 \documentclass[epsfig,a4paper,11pt,titlepage,twoside,openany]{book}
@@ -50,7 +36,7 @@
 %% Thanks/ Acknowledgements section is optional
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \input{acknowledgements}
+  % \input{acknowledgements}
   \clearpage
   \pagestyle{plain} % no heading, footer with centered page number
 
@@ -117,13 +103,13 @@
       
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % chapters
-      %
-      % \input or \include
-      %
-      \input{chapter1}
-      \input{chapter2}
-      \input{chapter3}
-      %\input{chapter4}
+      \input{introduction}
+      \input{previous_literature}
+      \input{motivations}
+      \input{monte_carlo_stiffness_evaluation}
+      \input{support_optimization_algorithm}
+      \input{results}
+      \input{conclusions}
       
       
     \endgroup
