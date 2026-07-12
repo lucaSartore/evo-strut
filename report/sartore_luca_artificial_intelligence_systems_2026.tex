@@ -1,14 +1,47 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\newif\ifdigital
+
+% Digital version of the PDF
+\digitaltrue
+% printed version of the PDF
+% \digitalfalse 
+
 % 2 side format
-\documentclass[epsfig,a4paper,11pt,titlepage,twoside,openany]{book}
+\ifdigital
+  \documentclass[epsfig,a4paper,11pt,titlepage,twoside,openany]{book}
+\else
+  \documentclass[epsfig,a4paper,11pt,titlepage,twoside,openodd]{book}
+\fi
 \usepackage{epsfig}
 \usepackage{plain}
 \usepackage{setspace}
 \usepackage{hyperref}
 \usepackage{cleveref}
 \usepackage{siunitx}
-\usepackage[paperheight=29.7cm,paperwidth=21cm,outer=1.5cm,inner=2.5cm,top=2cm,bottom=2cm]{geometry} % layout setting
+\usepackage{geometry} % layout setting
+
+\ifdigital
+  % DIGITAL: Equal left (inner) and right (outer) margins
+  \geometry{
+    paperheight=29.7cm,
+    paperwidth=21cm,
+    total={17cm,25.7cm}, % Automatically calculates symmetric margins (2cm each side)
+    top=2cm,
+    bottom=2cm
+  }
+\else
+  % PRINT: Asymmetric margins for binding (inner=2.5cm, outer=1.5cm)
+  \geometry{
+    paperheight=29.7cm,
+    paperwidth=21cm,
+    inner=2.5cm,
+    outer=1.5cm,
+    top=2cm,
+    bottom=2cm
+  }
+\fi
+
 \usepackage{titlesec} % custom setup title of chanpter
 % \usepackage{newtxtext,newtxmath} % times new roman
 
@@ -74,8 +107,8 @@
     \begingroup
       % no page break between chapters
       % override clear page commands
-      \renewcommand{\cleardoublepage}{} 
-      \renewcommand{\clearpage}{} 
+      % \renewcommand{\cleardoublepage}{} 
+      % \renewcommand{\clearpage}{} 
       % override format of title chapter
       % from
       %   Chapter X
