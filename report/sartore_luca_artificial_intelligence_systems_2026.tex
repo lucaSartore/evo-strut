@@ -19,6 +19,9 @@
 \usepackage{hyperref}
 \usepackage{cleveref}
 \usepackage{siunitx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
 \usepackage{geometry} % layout setting
 
 \ifdigital
@@ -26,7 +29,8 @@
   \geometry{
     paperheight=29.7cm,
     paperwidth=21cm,
-    total={17cm,25.7cm}, % Automatically calculates symmetric margins (2cm each side)
+    inner=2.0cm,
+    outer=2.0cm,
     top=2cm,
     bottom=2cm
   }
@@ -54,6 +58,10 @@
 %\usepackage[applemac]{inputenc} % Mac.
 
 \singlespacing
+
+\definecolor{tablegreen}{HTML}{2E8B57}
+\definecolor{tablegold}{HTML}{B8860B}
+\definecolor{tablered}{HTML}{FF4D4D}
 
 % italian language
 %\usepackage[italian]{babel}
