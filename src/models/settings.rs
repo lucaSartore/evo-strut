@@ -119,7 +119,7 @@ impl Default for IoSettings {
             output_json_path: "test_meshes/output.json".into(),
             output_settings_path: "test_meshes/settings.json".into(),
             optimization_logs_dir_path: Some("optimization_logs".into()),
-            target_edge_length: 0.3,
+            target_edge_length: 1.0,
         }
     }
 }
