@@ -6,6 +6,7 @@ use crate::{
     stages::support_structure_optimization::SupportStructureOptimizationGene,
 };
 use hashbrown::HashMap;
+use nalgebra::DMatrix;
 use smallvec::SmallVec;
 
 use crate::{
@@ -247,6 +248,26 @@ fn evaluate_single_node_stiffness(
     base_stiffness
 }
 
+#[allow(dead_code)]
+// simulate the inversion of a matrix, to simulate how slow the algorithm would be
+// if ran using the direct stiffness method, instead of the approximated version used in here
+fn invert_stiffness_matrix(size: usize) {
+    let mut data = vec![0.0; size * size];
+    for i in 0..size {
+        for j in 0..size {
+            if i == j {
+                data[i * size + j] = size as f64 * 2.0; // Strong diagonal
+            } else {
+                data[i * size + j] = 1.0;
+            }
+        }
+    }
+
+    let matrix = DMatrix::from_vec(size, size, data);
+    let _ = matrix.try_inverse();
+}
+
+
 fn evaluate_stiffness_cost(
     surface: &SurfaceGraph,
     descriptor: &GraphDescriptor,
@@ -266,6 +287,13 @@ fn evaluate_stiffness_cost(
             .iter()
             .filter(|x| graph.nodes.contains_key(*x))
             .collect();
+
+        // line used to test what the performance impact of using accurate stiffness evaluation
+        // would be
+        // if graph.nodes.len().is_multiple_of(50) || graph.nodes.len() == descriptor.nodes.len() {
+        //     invert_stiffness_matrix(6 * graph.nodes.len());
+        // }
+
         for supporter in supporters {
             let supported_descriptor = &descriptor.details[supporter];
             let supporter_position = supported_descriptor.position;
