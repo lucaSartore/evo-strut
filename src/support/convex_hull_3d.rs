@@ -9,16 +9,15 @@ pub struct ConvexHull3D {
 
 impl ConvexHull3D {
     pub fn new(points: Vec<Point>) -> Self {
-        if points.len() < 4 {
+        let vertexes: Vec<convexhull3d::Vertex> = points.iter().copied().map(Into::into).collect();
+        let Ok(hull) = convexhull3d::ConvexHull3D::build(&vertexes) else {
+            let center = points.iter().fold(Point::ZERO, |acc, p| acc + *p);
             return Self {
                 hull: None,
                 points,
-                center: Point::ZERO,
+                center
             };
-        }
-        let vertexes: Vec<convexhull3d::Vertex> = points.iter().copied().map(Into::into).collect();
-        let hull =
-            convexhull3d::ConvexHull3D::build(&vertexes).expect("convex hull creation failed");
+        };
         let center = points
             .iter()
             .copied()
