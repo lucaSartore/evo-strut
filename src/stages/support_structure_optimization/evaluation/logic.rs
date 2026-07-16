@@ -287,7 +287,7 @@ fn evaluate_stiffness_cost(
             node_radius,
         );
     }
-    cost += floating_regions_collector.dump_costs(s, f32::MAX, &mut graph, surface);
+    cost += floating_regions_collector.dump_costs(s, f32::MAX, &graph, surface);
     Cost::new(cost)
 }
 
