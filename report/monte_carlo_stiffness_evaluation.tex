@@ -18,7 +18,7 @@ in order to achieve unmatched speed.
 
 The problem itself is extremely simple: given a structure of a support, we want to know the stiffness of it 
 in all of it points. ``Stiffness'' can be broadly defined as the amount of force that is required to move or twist the structure by a certain
-amount, and can be represented by a 6x6 stiffness matrix (more details on section \ref{sec:stiffness_def}).
+amount, and can be represented by a 6x6 stiffness matrix (more details on section \ref{sec:beam}).
 Defining the problem for an arbitrary support structure can be complicated, fortunately (as we discussed in section \ref{sec:obj})
 we have limited the support structure's search space to the ``struct'' topology (or to be more precise, a ``rigid frame'').
 The problem has two more ``boundaries conditions'', namely the requirement that it need to be as fast as possible, and the fact 
@@ -58,14 +58,20 @@ maintain the same position and orientation relatively to each others. figure \re
 \subsection{Stiffness Matrix}
 \label{sec:stiffness_matrix}
 
+Generally speaking a stiffness matrix is a $Dn \times Dn$ matrix where $D$ is the number of degrees of freedom,
+and $n$ is the number of nodes a rigid frame has, and it describe how the structure react to external forces.
+For example a three dimensional frame that has 10 points have a stiffness matrix with dimensionality $60 \times 60$
+(as the degrees of freedom are 6, namely translation and rotation along the $x$, $y$ and $z$ axis).
+The unit of measure of the stiffness matrix is $N/m$ as it represent the force that is required
+to produce a specific displacement.
+Figure \ref{fig:beam} show a Cantilever Stiffness Matrix \ref{sec:cantilever_matrixes} (a special
+case of the stiffness matrix that represent one beam anchored at one end).
+In this case, the matrix is 6x6, as there are 6 degrees of freedom in 3D space, and the frame only have
+one node that is free to move.
+The stiffness matrix provide a simple and computationally efficient relation between $\mathbf{u}$ and $\mathbf{f}$ (equation \ref{for:stiffness}).
+This of course is just a first order approximation of the real relationship, as in reality the effect is non linear,
+however it can be really precise and therefore quite useful if the displacements are small.
 
-
-% \begin{figure}[h]
-%     \centering
-%     \includegraphics[height=0.2\textheight]{images/stifness_def.png}
-%     \caption{force $\vec{f}$ applied on the beam, causing a displacement $\vec{u}$}
-%     \label{fig:stiffness_def}
-% \end{figure}
 
 
 \begin{figure}[h]
@@ -74,22 +80,22 @@ maintain the same position and orientation relatively to each others. figure \re
     \begin{minipage}[c]{0.4\textwidth}
         \centering
         \includegraphics[width=0.5\textwidth]{images/stifness_def.png}
-        \caption{Force $\vec{f}$ applied on the beam, causing a displacement $\vec{u}$}
-        \label{fig:stiffness_def}
+        \caption{Force $\mathbf{f}$ applied on the beam, causing a displacement $\mathbf{u}$}
+        \label{fig:beam}
     \end{minipage}
     \hfill % Fill the space between the two minipages
     % Right side: The Core Equation
     \begin{minipage}[c]{0.5\textwidth}
         \centering
         \begin{equation*}
-        \vec{f} = \mathbf{K}\vec{u}
+        \mathbf{f} = \mathbf{K}\mathbf{u}
         \end{equation*}
 
         \begin{center}
         Or
         \end{center}
 
-        \begin{equation*}
+        \begin{equation}
         \begin{bmatrix}
         f_{x} \\
         f_{y} \\
@@ -115,16 +121,160 @@ maintain the same position and orientation relatively to each others. figure \re
         \theta_{y} \\
         \theta_{z}
         \end{bmatrix}
-        \end{equation*}
-
-            \end{minipage}
-        \end{figure}
-
-
+        \label{for:stiffness}
+        \end{equation}
+    \end{minipage}
+\end{figure}
 
 
-\section{Existing solutions for stiffness evaluation}
-\subsection{Exact method}
-\subsection{Iterative Methods}
-\subsection{Issue with existing solutions}
 
+\subsection{Flexibility Matrix}
+\label{sec:flex_matrix}
+
+The Flexibility matrix $\mathbf{D}$ is the inverse of the stiffness, matrix
+and can be used to find the displacement given a force
+
+\begin{equation}
+\begin{split}
+    \mathbf{D} &= \mathbf{K}^{-1} \\
+    \mathbf{u} &= \mathbf{D} \mathbf{f}
+\end{split}
+\label{for:flexibility}
+\end{equation}
+
+
+
+\subsection{Cantilever Stiffness and Flexibility Matrixes}
+\label{sec:cantilever_matrixes}
+
+A Cantilever beam is a fairly well known concept in architecture, is a rigid and straight structure
+that has one side anchored. Figure \ref{fig:beam} show a vertical Cantilever beam with the
+bottom node anchored to the ground, while a force is being applied in the upper node.
+In 3 dimension, a Cantilever beam's stiffness matrix is a $6 \times 6$ dimensional matrix.
+By convention the rows and columns are ordered with the coefficients for displacement across
+the $x$, $y$ and $z$ axis first, followed by the coefficients of rotations around the same axis in the
+same order.
+
+Calculating the full stiffness matrix o a cantilever beam is a fairly straightforward process,
+and can be achieved using the Euler-Bernoulli Beam Theory \cite{beam_theory}.
+and can be done starting from the shape and dimension of the beam, as well as the property of the
+material.
+Equation \ref{for:beam_formula} show how to calculate a 6x6 stiffness matrix starting
+from the seven fundamental parameters. The formula is explicitly calculating the
+stiffness of a beam with the anchored node at $P_1=(0, 0, 0)$ and the node
+that is free to move at point $P_2 = (L, 0, 0)$ (meaning a beam of length $L$ with
+the anchored point in the origin, and extending in the same direction as the $x$ axis).
+Calculating the stiffness matrix of an arbitrary beam can be done by simply rotating
+the stiffness matrix of a beam parallel to the $x$, as shown in equation \ref{for:beam_rotation}.
+
+
+\begin{equation}
+\begin{bmatrix}
+\frac{EA}{L} & 0 & 0 & 0 & 0 & 0 \\
+0 & \frac{12EI_z}{L^3} & 0 & 0 & 0 & -\frac{6EI_z}{L^2} \\
+0 & 0 & \frac{12EI_y}{L^3} & 0 & \frac{6EI_y}{L^2} & 0 \\
+0 & 0 & 0 & \frac{GJ}{L} & 0 & 0 \\
+0 & 0 & \frac{6EI_y}{L^2} & 0 & \frac{4EI_y}{L} & 0 \\
+0 & -\frac{6EI_z}{L^2} & 0 & 0 & 0 & \frac{4EI_z}{L}
+\end{bmatrix}
+\label{for:beam_formula}
+\end{equation}
+
+\noindent~The seven parameters used to construct the stiffness matrix are defined as follow:
+
+\begin{itemize}
+\item \textbf{$E$}: Young's Modulus
+\item \textbf{$G$}: Shear Modulus
+\item \textbf{$A$}: Cross-sectional Area
+\item \textbf{$I_y, I_z$}: Second moments of area about the $y$ and $z$ axes
+\item \textbf{$J$}: Torsional constant
+\item \textbf{$L$}: Beam length
+\end{itemize}
+
+
+
+Equation \ref{for:beam_formula} can be adapted to an arbitrary beam (not just a beam that is parallel
+to the $x$ axis) using a simple transposition.
+In order to do so, let us assume that $\mathbf{B}$ is the arbitrary beam we need to find the stiffness of.
+We can start by constructing $\mathbf{B}_x$, an equivalently shaped beam, that is parallel to the $x$ axis.
+This setup is shown in figure \ref{fig:stiffness_rotation}.
+Let's call $\mathbf{K}_x$ the stiffness matrix of beam $\mathbf{B}_x$, this matrix can be easily calculated using equation \ref{for:beam_formula}.
+That we can calculate the transposition matrix $\mathbf{T}$ that translate from the frame of reference
+of $\mathbf{B}_x$ to the frame of reference of $\mathbf{B}$.
+Using the transposition matrix we can calculate the $\mathbf{K}$ (the stiffness matrix of the beam $\mathbf{B}$)
+with a simple matrix multiplication, as shown in equation \ref{for:beam_rotation}..
+
+\begin{equation}
+\mathbf{K} = \mathbf{T} \mathbf{K}_x
+\label{for:beam_rotation}
+\end{equation}
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/stiffness_rotation.png}
+    \caption{Rotation of a beam}
+    \label{fig:stiffness_rotation}
+\end{figure}
+
+\noindent
+The transposition matrix $\mathbf{T}$ is fairly straightforward to calculate and can be with a simple sequential set of steps,
+that start from $\mathbf{b}$ (the vector representing beam $\mathbf{B}$). The first step is to convert $\mathbf{b}$ into $\mathbf{n}_x$ (the unit vector 
+parallel $x$ axis of the frame of reference of beam $\mathbf{B}$). This can be done with equation \ref{for:stiffness_nx}
+
+\begin{equation}
+\mathbf{n}_x = \frac{\mathbf{b}}{\Vert{}\mathbf{b}\Vert{}}
+\label{for:stiffness_nx}
+\end{equation}
+
+\noindent
+Then, using an auxiliary vector $\mathbf{u}$ (which is an arbitrary vector with the only constraint of not being 
+parallel to $\mathbf{n}_x$ so to avoid the singularity in the cross product) we can calculate $\mathbf{n}_z$ using equation
+\ref{for:stiffness_nz}. This is the unit vector representing the $z$ axis of the beam $\mathbf{B}$.
+(Here we shall note that the choice of $\mathbf{u}$ is arbitrary only in the case in which the stiffness behavior of the
+beam is symmetrical with respect to a rotation around the $x$ axis. This is true if an only if $I_y = I_z$, this is generally
+true in the support structure generated by this thesis, but if this method is ever applied to different context this part might
+be to be refined)
+\begin{equation}
+\mathbf{n}_z = \frac{\mathbf{n}_x \times \mathbf{u}}{\Vert{}\mathbf{n}_x \times \mathbf{u}\Vert{}}
+\label{for:stiffness_nz}
+\end{equation}
+
+\noindent
+Finally we can calculate the last unit vector (the one representing the $y$ axis of $\mathbf{B}$) using the last cross product, shown
+in equation \ref{for:stiffness_ny}
+\begin{equation}
+\mathbf{n}_y = \mathbf{n}_z \times \mathbf{n}_x
+\label{for:stiffness_ny}
+\end{equation}
+
+\noindent
+Finally we can compose $\mathbf{n}_x$, $\mathbf{n}_y$, and $\mathbf{n}_z$ into a regular rotation matrix, as shown in equation
+\ref{for:rotation_mat}
+
+\begin{equation}
+\mathbf{R} = \begin{bmatrix} \mathbf{n}_x^T \\ \mathbf{n}_y^T \\ \mathbf{n}_z^T \end{bmatrix} = \begin{bmatrix} n_{x,x} & n_{x,y} & n_{x,z} \\ n_{y,x} & n_{y,y} & n_{y,z} \\ n_{z,x} & n_{z,y} & n_{z,z} \end{bmatrix}
+\label{for:rotation_mat}
+\end{equation}
+
+\noindent
+Finally to calculate the $6 \times 6$ transposition matrix $\mathbf{T}$ we can use the equation \ref{for:transposition_matrix}.
+We then finally use such matrix in the rotation equation (\ref{for:beam_rotation}) so that we can obtain the stiffness matrix
+of an arbitrary cantilever beam.
+
+
+\begin{equation}
+\mathbf{T} = \begin{bmatrix} \mathbf{R} & \mathbf{0}_{3 \times 3} \\ \mathbf{0}_{3 \times 3} & \mathbf{R} \end{bmatrix}
+\label{for:transposition_matrix}
+\end{equation}
+
+
+
+
+\section{Existing Solution for Stiffness Evaluation}
+\subsection{Direct Stiffness Method: An Overview}
+\subsection{Time Complexity}
+
+% note to self:
+% 10 iterations using exact stiffness method: 1272s
+% 10 iterations using 
