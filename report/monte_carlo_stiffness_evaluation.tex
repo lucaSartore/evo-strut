@@ -520,8 +520,8 @@ Algorithm \ref{alg:dsm} show a very compact pseudo code of the direct stiffness 
     \State $N \gets N_{df} \times \Call{size}{\text{frame}}$ \Comment{Calculate size of global matrix}
     \State $\mathbf{K} \gets \mathbf{0}_{N \times N}$ \Comment{Initialize global stiffness matrix}
     \For{$e \in \text{frame}$} \Comment{Iterate over all elements}
-        \State $\mathbf{K}_l \gets \Call{local\_stiffness}{e}$ \Comment{Compute local stiffness}
-        \State $\mathbf{K} \gets \Call{add\_stiffness}{\mathbf{K}, \mathbf{K}_l}$ \Comment{Assemble into global matrix}
+        \State $\mathbf{K}_l \gets \Call{LocalStiffness}{e}$ \Comment{Compute local stiffness}
+        \State $\mathbf{K} \gets \Call{AddStiffness}{\mathbf{K}, \mathbf{K}_l}$ \Comment{Assemble into global matrix}
     \EndFor
     \State $\mathbf{D} \gets \mathbf{K}^{-1}$ \Comment{Compute flexibility matrix}
 \end{algorithmic}
@@ -703,6 +703,20 @@ as an example, but can of course be applied to an arbitrary complex frame.
 
 \subsubsection{DAG Mehtod}
 
+The first step in the DAG method is to traverse the graph using Dijkstra's Algorithm using euclidean
+distance as the distance between nodes.
+The graph is explored starting from $P$ (the point we want to know the stiffness of) up until
+all noes have been explored.
+When visiting the graph, the algorithm mark the direction of travel of every arch, transforming
+the beam into a Directed Acyclic Graph.
+Once this is done, we can calculate the local stiffness matrix of every beam in the graph (This step, remains the same
+as before, where the direction of the beam, is the opposite of the direction of travel, and the stiffness matrix
+is calculated using the equations we described in section \ref{sec:cantilever_matrixes}).
+At this point, we can start recursively calculating the stiffness of every node, as a parallel of all the outgoing
+arches, where each arch's stiffness a ``series'' operation, between the stiffness
+of the node the arch is going to, and the stiffness of the beam that the connection represent.
+This process is described more precisely in the Algorithm \ref{alg:dag}
+
 
 \begin{figure}[h]
     \centering
@@ -712,6 +726,72 @@ as an example, but can of course be applied to an arbitrary complex frame.
 \end{figure}
 
 
+\begin{algorithm}[h]
+\label{alg:dag}
+\caption{Dag Evaluator}
+\begin{algorithmic}[1]
+    \Require $G$ is a direct acyclic graph, $\nu_0$ a node in the graph.
+    \Ensure $S_{\nu_0}$ is the local stiffness matrix of $\nu_0$
+
+    \Procedure{EvalStiffness}{$G, \nu, \mathcal{M}$}
+        \If{$\nu \in \mathcal{M}$} \Comment{Check dynamic programming table}
+            \State \Return $\mathcal{M}(\nu)$
+        \EndIf
+        \State $S_{\nu} \gets \mathbf{0}_{6 \times 6}$
+        \For{$a \in G.outgoing(\nu)$}
+            \State $S_{a} \gets \Call{EvalStiffness}{G, a.target, \mathcal{M}} \stiffseries a.stiffness$ \Comment{Calculate stiffness provided by $a$}
+            \State $S_{\nu} \gets S_{\nu} \stiffparallel S_{a}$ \Comment{Merge stiffness together, using parallel operator}
+        \EndFor
+        \State $\mathcal{M}(\nu) \gets S_{\nu}$
+        \State \Return $S_{\nu}$
+    \EndProcedure
+    
+    \Statex
+    
+    \Procedure{DAGEvaluator}{$G, \nu_0$}
+        \State $\mathcal{M} \gets \emptyset$ \Comment{Initialize empty DP table}
+        \State \Return $\Call{EvalStiffness}{G, \nu_0, \mathcal{M}}$
+    \EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+
+Applying algorithm \ref{alg:dag} on the frame shown in figure \ref{fig:dag_strategy_image}
+would result in the final stiffness $\mathbf{K}_{Peq}$ that shown in equation \ref{for:dag_eq}.
+The equation is a valid approximation of the stiffness, but it has a significant source of error.
+As we have highlighted in blue, the term $\mathbf{K}_2$ appear twice in the formulation.
+this is due to the fact that, there are two valid path in the DAG that connect point $P$ to the ground
+passing from $\mathbf{B}_2$. This results in the stiffness of beam 2 being counted twice, resulting
+in a stiffness measure that is a bit too optimistic.
+We can also have a physical interpretation of the inaccuracy: We can think that if we apply a force that
+push $P$ to the right, the node will move, until the displacement is large enough to generate a force
+that is equal and opposite to the force we applied, balancing the system.
+This balancing force will come partially from beam 5, and partially from beam 4.
+Moving down one layer, the process is repeated. Beam 5 is applying a force on beam 1, and beam
+4 is applying a force on beam 2. In this scenario beam 3, has a balancing equation, and it will transfer some load
+from one side of the frame to the other. The load will probably be transferred left to right (given that beam 4
+is longer than beam 5, and therefore less stiff.) but this depends on a variety of factors including 
+the stiffness of the beams and the geometry.
+In this scenario we can see two main sources of inaccuracy of our model. The first one is the direction of beam 3,
+that in our model is always left to right. This is probably true in most cases, but in the few cases where this is not
+true it will result in some loss of accuracy. The second one is that the forces that are applied on node $N_1$ by beam
+4 and by beam 3 are nod independent from echoers, but they are rather very correlated.
+Infact when beam 3 is pushing on node $N_1$ it is almost certain that beam 4 is doing the same,
+so the stiffness of node $N_1$ is ``shared'' between $B_3$ and $B_4$, meanwhile our model
+is acting as if there were two independent version of $B_2$, one connected to $B_3$ and one connected to
+$B_4$.
+
+
+\begin{equation}
+\begin{split}
+    \mathbf{K}_{N1} &= \mathbf{K}_2 \\
+    \mathbf{K}_{N2} &= (\mathbf{K}_{N1} \stiffseries \mathbf{K}_3) \stiffparallel \mathbf{K}_1\\
+    \mathbf{K}_{Peq} &= (\mathbf{K}_{N2} \stiffseries \mathbf{K}_{5}) \stiffparallel (\mathbf{K}_{N1} \stiffseries \mathbf{K}_{4}) \\
+    &\text{Or} \\
+    \mathbf{K}_{Peq} &= ((\mathbf{K}_{1} \stiffparallel (\colorbox{cyan!10}{$\mathbf{K}_{2}$} \stiffseries \mathbf{K}_3) ) \stiffseries \mathbf{K}_{5}) \stiffparallel (\colorbox{cyan!10}{$\mathbf{K}_{2}$} \stiffseries \mathbf{K}_4)
+\end{split}
+\label{for:dag_eq}
+\end{equation}
 
 
 
