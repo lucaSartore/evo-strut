@@ -486,6 +486,7 @@ With this notion we can define the ``$\stiffparallel$'' (parallel) operator as s
 
 
 \section{The existing solution: Direct Stiffness Method}
+\label{sec:direct_stiff_method}
 
 The Direct Stiffness Method is a well known techniques in structural engendering
 that solve exactly the problem we described in section \ref{sec:stiff_problem_statement}.
@@ -544,11 +545,192 @@ that are relevant to element $e$, making it a $o(n)$ operation.
 
 \section{Proposed solution: Monte Carlo Stiffness Evaluation}
 
+As we mention in the requirement section (\ref{sec:stiff_problem_statement}) one key 
+feature that the stiffness evaluation algorithm need to have is speed.
+This requirement is not really satisfied by the traditional method for stiffness
+evaluation (the Direct Stiffness Method \ref{sec:direct_stiff_method}),
+meaning that we need to develop a faster alternative.
+Of course in later in this thesis (more specifically in section \ref{sec:stiff_speed_cmp})
+we will provide more details on the performance of the existing solution, compared to
+ours, so that we will show more clearly why the existing solution is not fast enough.
+But before we do that we must explain how the ad-hoc solution we develop work.
+
+Of course achieving a significant improvement in computational efficiency compared
+to the state of the art solution without any reduction in feature-set is not an easy task.
+However due to the domain in which the stiffness evaluator is placed (namely the evaluation
+of support structure for additive manufacturing) it is possible to simplify the problem,
+thus making possible to significantly improve the performances.
+In particular there are two primary requirements satisfied by the direct stiffness method
+that we can remove in order to achieve a significant improvement in speed.
+The first one is the correctness requirement. The Direct Stiffness Method is an exact method,
+meaning that it find the exact stiffness of a specific frame; This is of course extremely
+important in structural engendering, as precision is key. However in our case a small
+(approximately below 15\%) error in the stiffness value is not a huge issue, as such
+a result would still be sufficient for guiding the support structure optimization process.
+The second requirement that we can remove from the problem is the need of calculating
+a global stiffness matrix.
+Infact the output of the direct stiffness method is a global stiffness matrix.
+this globality make the matrix itself quite big, and therefore makes it computationally
+expensive to transform into a global flexibility matrix using an inversion.
+This globality property have some major benefit of course, Infact with such a matrix
+we can apply a specific force to any node of the frame, and get as output the displacement
+of all the nodes in one single pass.
+However this feature is not really useful in the domain we are using the evaluator.
+By the very nature of 3D printing, the force is applied by the nozzle only to one node at a time.
+Furthermore, the cost function that we plan to apply, only care about the displacement of the node
+the nozzle is touching, this is because if that node move, the nozzle will struggle to sediment the material
+in a precise manner. however any movement in the other nodes is not considered a big issue.
+To recap, the current standard for stiffness evaluation (the direct stiffness method) is not fast enough
+for our purpose. For this reason we have developed a faster alternative that we will explain in this section.
+The speed improvement that we have achieved were made possible by two simplifications, namely
+the shift from a global stiffness matrix to a local stiffness matrix, and the fact that we have
+allowed the algorithm to provide approximated solution rather than exact ones.
+
+\subsection{Stiffness evaluation for ``Reducible'' frames}
+
+Previously we have explored some ways to create some series (\ref{sec:stiffness_series})
+and parallel (\ref{sec:stiffness_parallel}) of a series of cantilever bemas.
+This two operations can be combined recursively in order to simplify a complex frame into 
+an individual beam. If this is done correctly, we can use the stiffness matrix of the equivalent beam
+as the (local) stiffness matrix of the final point.
+We can call this process ``Reduction'' as it involve, gradually reducing a complex frame into
+a smaller and smaller frame until we reach an individual beam. Here there is a strong parallel
+to the reduction of an electronic circuit made of resistors, into a single equivalent resistance.
+The parallel does not stop, here, as just like in electronic, there are some specific structures
+that cannot be conduced back to simple parallel and series. Infact in electronic
+there is the famous Y-$\Delta$ transform \cite{ydelta} that is used when to deal with circuits
+that cannot be properly reduced with simple parallel and series rules.
+In the context of rigid reduction we can find the same issue. For example figure
+\ref{fig:reducible_frame} show a frame that is fully reducible (i.e. it can be reduced
+to a single frame, by applying a specific set of series and parallel operations).
+instead figure \ref{fig:non_reducible_frame} show a frame that is not fully reducible,
+as (like in electronic engendering) there is a $\Delta$ configuration, that does not fit
+well in neither parallel or series configuration.
+Unlike in electronic engendering however, converting from a $\Delta$ configuration into a Y
+configuration is not trivial, as each beam have a complex $6 \times 6$ stiffness matrix
+instead of being a simple scalar value in the case of a resistor.
+During our research we were unable to develop a method that (in a computationally efficient manner)
+transformed an arbitrary $\Delta$ configuration, into a Y configuration. 
+Unfortunately we are also unable to provide a proof that such a transformation is impossible,
+meaning that this part cannot be conclusive.
+Having said that, there is still a large subset of all rigid frames that does not 
+present complicated $\Delta$ configuration, and can be reduced with a simple set of 
+series and parallel operations. Meaning that this could be starting point for the stiffness
+evaluation algorithm we are trying to develop.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    % First Minipage
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[height=0.3\textheight]{images/non_problematic_frame.png}
+        \caption{A rigid frame, that is ``Reducible''}
+        \label{fig:reducible_frame}
+    \end{minipage}
+    \hfill
+    % Second Minipage
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[height=0.3\textheight]{images/problematic_frame.png}
+        \caption{A rigid frame, that is not ``Reducible''}
+        \label{fig:non_reducible_frame}
+    \end{minipage}
+\end{figure}
+
+
+Calculating the local stiffness matrix in point $P$ of the structure
+shown in figure \ref{fig:reducible_frame} using the reductio method can be achieve with a 
+simple set of steps. The first one is to understand the orientation of the beams. this involves
+starting from point $P$ and traversing the graph ina a breath first search order marking the direction
+of travel of every arch in the graph (or beam in the frame), then we can find the direction of the beam,
+as being the opposite with respect to the direction of travel in the graph.
+The result of this traversing operation can be observed in figure \ref{fig:reducible_frame_with_arrow},
+in here the arrow indicate the direction of the cantilever beam, where the tail of the arrow 
+represent the anchored point, and the arrow pointer represent the point that flexes in the beam.
+At this point we can calculate the local stiffness matrix of every individual beam, using the marked
+direction, The process of calculate such a matrix is a constant time operation, and an in depth
+explanation on the procedure is found in section \ref{sec:cantilever_matrixes} (In this step,
+it is mandatory that we use the same frame of reference for the stiffness of every beam, so that
+they can be added together using series and parallel operations).
+Finally we can apply a set of series and parallel operation in order to reduce the frame to 
+an individual beam. For the frame shown in figure \ref{fig:reducible_frame_with_arrow}
+the equivalent stiffness matrix of point $P$ ($\mathbf{K}_{Peq}$)
+can be expressed as a function of $\mathbf{K}_1 ... \mathbf{K}_4$ (the local stiffness matrix
+of the beams $\mathbf{B}_1 ... \mathbf{B}_4$) and the resulting formulation is seen in equation
+\ref{for:reduction_simple}. (where $\stiffseries$ and $\stiffparallel$ are the ``series''
+and ``parallel'' operators that we have defined in section \ref{sec:stiffness_series} and \ref{sec:stiffness_parallel}
+respectively). This reduction is not an approximation, and the resulting stiffness on point $P$ is infact 
+the exact one; This method is also quite fast, with as it is linear with respect to 
+the number of nodes in the graph, however it has the major issue of being limited in the class
+of frames that it can evaluate.
+
+
+\begin{equation}
+\begin{split}
+    \mathbf{K}_{13} &= \mathbf{K}_1 \stiffseries \mathbf{K}_3 \\
+    \mathbf{K}_{123} &= \mathbf{K}_{13} \stiffparallel \mathbf{K}_2 \\
+    \mathbf{K}_{Peq} &= \mathbf{K}_{123} \stiffseries \mathbf{K}_4 \\
+    &\text{Or} \\
+    \mathbf{K}_{Peq} &= (\mathbf{K}_2 \stiffparallel (\mathbf{K}_1 \stiffseries \mathbf{K}_3)) \stiffseries \mathbf{K}_4 
+\end{split}
+\label{for:reduction_simple}
+\end{equation}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/non_problematic_frame_with_arrows.png}
+    \caption{Reducible frame with marked beam directions}
+    \label{fig:reducible_frame_with_arrow}
+\end{figure}
+
+
+\subsection{Stiffness of ``Non-Reducible Frames''}
+
+In the previous section we have explored a method to calculate the local stiffness matrix, of a specific
+subset of the set of possible frames. In this section we will try to extend the algorithm into something that
+could work with all the possible frame.
+This will be achieved by means of ``translating'' a non reducible frame into
+a reducible one, in a way that minimizes the loss of accuracy, and then applying
+a simple reduction. 
+We decided to present two algorithms for this, the first one is called ``DAG Method'', and as the name imply
+it relies on transforming a frame into a Directed Acyclic Graph, and then applying a series of reductions.
+The second one is called ``Weighted DAG Method'' and is a refinement over the first one, that managed
+to achieve a level of accuracy that is sufficient for our application.
+Both of the method will be explained using the structure shown in figure \ref{fig:non_reducible_frame}
+as an example, but can of course be applied to an arbitrary complex frame.
+
+\subsubsection{DAG Mehtod}
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/dag_strategy.png}
+    \caption{}
+    \label{fig:dag_strategy_image}
+\end{figure}
+
+
+
+
+
+\subsubsection{Weighted DAG Mehtod}
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/weighted_dag_strategy.png}
+    \caption{}
+    \label{fig:weighted_dag_strategy}
+\end{figure}
+
+
 \section{Performance Evaluation}
 
 \subsection{Accuracy of the proposed solution}
 \subsection{Speed comparison}
-\label{sec:stiff_speed_comp}
+\label{sec:stiff_speed_cmp}
 
 \section{Conclusions and Acknowledgements}
 
