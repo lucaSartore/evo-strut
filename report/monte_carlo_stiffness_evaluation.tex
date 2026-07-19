@@ -1,4 +1,4 @@
-\chapter{Monte Carlo Stiffness Evaluation}
+\chapter{Stiffness Evaluation}
 \label{cha:stiffness_algo}
 
 The biggest hurdle that we face when trying to optimize support structure for FDM printing is the
@@ -15,20 +15,56 @@ and this is why we are proposing a new monte carlo approach for stiffness evalua
 in order to achieve unmatched speed.
 
 \section{Problem Statement}
-
-The problem itself is extremely simple: given a structure of a support, we want to know the stiffness of it 
-in all of it points. ``Stiffness'' can be broadly defined as the amount of force that is required to move or twist the structure by a certain
-amount, and can be represented by a 6x6 stiffness matrix (more details on section \ref{sec:beam}).
+\label{sec:stiff_problem_statement}
+The problem itself is extremely simple: given a structure of a support, we want to know the flexibility (the inverse of the stiffness)
+of the point that the nozzle is touching
+(i.e. how much the point move if a force is applied in a particular direction).
+This can be easily calculated using a ``Flexibility Matrix'' \ref{sec:flex_matrix}, and in the case of a
+single point in three dimension this matrix have a dimensionality of $6 \times  6$ (it can be bigger, if we are interested in the 
+displacement of multiple points, but in our application, we are only interested in known how much the nozzle move
+the support in the contact point, so our needs are fully met by a small matrix).
 Defining the problem for an arbitrary support structure can be complicated, fortunately (as we discussed in section \ref{sec:obj})
-we have limited the support structure's search space to the ``struct'' topology (or to be more precise, a ``rigid frame'').
-The problem has two more ``boundaries conditions'', namely the requirement that it need to be as fast as possible, and the fact 
+we have limited the support structure's search space to the ``struct'' topology (or to be more precise, a ``rigid frame''~\ref{sec:rigid_frame})
+this narrows down the problem's scope, as now it only need to work for a restricted class of support structure.
+Finally we have two more ``boundaries conditions'' for our algorithm, namely the requirement that it need to be as fast as possible, and the fact 
 that exact solutions are not needed, as long as solutions are accurate enough. 
 By synthesizing these requirements and constraints, we can define the problem as follows:
 \\
 \\
 \noindent\textit{Given a \textbf{rigid frame (\ref{sec:rigid_frame})} } find an algorithms, that is able to calculate 
-an approximation of the \textbf{Stiffness Matrix (\ref{sec:stiffness_matrix})} for every \textbf{node} in the frame
+an approximation of the \textbf{Flexibility Matrix (\ref{sec:flex_matrix})} for one specific \textbf{node} in the frame
 in a timely manner.
+
+\subsection{Stiffness of partially constructed frames}
+
+The stiffness of a node can different significantly in various moments in time. More specifically the stiffness that the node have
+in an arbitrary point in time during the construction is always lower of equal than the stiffness the node have in the fully constructed
+frame. A sufficiently convincing proof of this claim is trivial, as a material cannot have ``negative'' stiffness, so every time something
+is added, the stiffness of any node cannot be reduce (adding something to a frame, could in theory increase the load on the system, but this 
+type of constraint is not considered in the current model, as the mass of the support structure is usually not a constraint in the additive
+manufacturing field).
+A clear example of this difference between the final structure and the partially completed one can be seen in figure \ref{fig:under_construction_frame}.
+We can observe how the point circled in red probably have a low stiffness during the construction time, as it is only connected to a
+single (very long) beam. However as soon as the structure is constructed, that point is connected to two well constructed towers,
+and therefore the stiffness should be fairly low. This is of course something that we must account for in our evaluation process,
+however it is not a strict constraint on the algorithm, as obtaining the stiffness of an under-construction frame can be easily
+achieved by running the algorithm multiple times, with a structure that is partially constructed, provided that doing so is 
+acceptable from a performance standpoint.
+Doing this kind of partially-built-frame evaluation require of course knowing how the frame is built, Thankfully this is trivial
+in the context of additive manufacturing, as the building process simply involve constructing the object layer by layer.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/stifness_under_construction.png}
+    \caption{Example of of a structure where the stiffness of the red point can be significantly different in the final frame compared to when the frame was under construction}
+    \label{fig:under_construction_frame}
+\end{figure}
+
+
+
+
+
+
 
 
 \section{Definitions and Notations}
@@ -269,12 +305,254 @@ of an arbitrary cantilever beam.
 \end{equation}
 
 
+\subsection{Stiffness Series}
+\label{sec:stiffness_series}
 
 
-\section{Existing Solution for Stiffness Evaluation}
-\subsection{Direct Stiffness Method: An Overview}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\textwidth]{images/stiffness_series.png}
+    \caption{Two beams in series, with the third equivalent beam}
+    \label{fig:stiffness_series}
+\end{figure}
+
+
+
+If two cantilever beams are connected head to tail, they form what could be refer to as a ``series'',
+an important property of such structure is that is possible to calculate a stiffness
+of an equivalent beam.
+For example in figure \ref{fig:stiffness_series} we can see how the beam $\mathbf{BC}$ is connected
+at the end of the beam $\mathbf{text}$, this series results in a beam that stiffness matrix
+on the point $\mathbf{C}$ that can be represented by an equivalent beam ($\mathbf{AC}$ in the picture).
+$\mathbf{K}_1$, $\mathbf{K}_2$ and $\mathbf{K}_3$ are the $6 \times 6$ stiffness matrixes o the beams $\mathbf{AB}$,
+$\mathbf{BC}$ and $\mathbf{AC}$ respectively. The relationship between the three stiffness matrix is show
+in the equation \ref{for:stiffness_series}.
+
+\begin{equation}
+\mathbf{K}_3 = (\mathbf{K}_2^{-1} + \mathbf{J} \mathbf{K}_1^{-1} \mathbf{J}^T)^{-1}
+\label{for:stiffness_series}
+\end{equation}
+
+\noindent
+Where $\mathbf{J}$ is the jacobian of the function that transpose from frame of reference
+$\mathbf{B}$ to the frame of reference $\mathbf{C}$, derived w.r.t. the position and orientation
+of frame of reference $\mathbf{B}$. The construction of the jacobian matrix is seen
+in equation \ref{for:stiffness_jac} (In the matrix rows and columns are following standard
+ordering convention, meaning: $x$ $y$ $z$ $\varphi$ $\theta$ $\psi$).
+In the jacobian matrix's top left corner we can find a $3 \times 3$ identity matrix,
+this of course represent the fact that moving (without rotating) frame of reference
+$\mathbf{B}$ by $x^*$, $y^*$ and $z^*$ will result in frame $\mathbf{C}$ being
+moved by the same amount.
+Another $3 \times 3$ identity matrix can be found in the bottom right corner of $\mathbf{J}$.
+this serve to represent a similar constraint, namely that if we rotate frame $\mathbf{B}$
+by $\varphi^*$, $\theta^*$ and $\psi^*$, the exact same rotation will be propagated
+to the frame of reference $\mathbf{C}$.
+In the bottom left of the matrix we can find a $3 \times 3$ zero matrix, this is simply
+because moving the frame $\mathbf{B}$ does not result in any rotation on frame $\mathbf{C}$.
+The final, slightly more complicated part of the matrix is the $3 \times 3$ section that
+we find in the top right part of the jacobian. This section is describing how rotating
+frame $\mathbf{B}$ result in a movement of frame $\mathbf{C}$.
+For example $\mathbf{J}_{16}$ represent the first derivative of the $x$ position
+of frame $\mathbf{C}$ derived with respect to a change in the yaw ($\psi$ angle)
+of frame of reference $\mathbf{B}$. We can see, from equation \ref{for:stiffness_jac}
+that this is set to $-b_y$ (which is the y dimension of beam $\mathbf{BC}$ in the origin 
+frame of reference). This make sense, as a yaw rotation is a rotation around the $z$ axis,
+in figure \ref{fig:stiffness_series} the $z$ axis is coming ``out of the image'', and a positive
+rotation around the $z$ axis would result in the beam $\mathbf{BC}$ rotating counterclockwise.
+We can also note how a counterclockwise rotation would result in the $x$ coordinate of frame $\mathbf{C}$
+deciding by an amount that is proportional to the length of $\mathbf{BC}$ projected onto the $y$ axis.
+We can observe infact that the displacement in $x$ is maximum when the second beam is parallel to the $y$ axis,
+and is instead zero if the beam is parallel to the $x$ axis (or at least it's zero in the first order approximation).
+This type of reasoning can be repeated to understand all other parameters in the top right part of the
+jacobian matrix.
+
+\begin{equation}
+\mathbf{J} = \begin{bmatrix}
+1 & 0 & 0 & 0 & b_z & -b_y \\
+0 & 1 & 0 & -b_z & 0 & b_x \\
+0 & 0 & 1 & b_y & -b_x & 0 \\
+0 & 0 & 0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 0 & 1 & 0 \\
+0 & 0 & 0 & 0 & 0 & 1
+\end{bmatrix}
+\label{for:stiffness_jac}
+\end{equation}
+
+
+Equation \ref{for:stiffness_series} might seem a bit complicated at first, but understanding it is actually
+not that difficult. To explain why it works a bit more in depth, we can start by transforming it 
+from stiffness form, to flexibility form. This can be done with a simple matrix inversion, as explained
+in section \ref{sec:flex_matrix}. The resulting equation is shown in \ref{for:flexibility_series}
+
+\begin{equation}
+\mathbf{D}_3 = \mathbf{D}_2 + \mathbf{J} \mathbf{D}_1 \mathbf{J}^T
+\label{for:flexibility_series}
+\end{equation}
+
+\noindent
+Then we can multiply in the left and right part by a force vector $\mathbf{f}$. As a reminder, multiplying
+a flexibility matrix by a force vector is the equivalent of calculating the displacement that that force
+will cause on the point (A minor note here, is that nothing prevent the force vector from being a wrench 
+vector, that include torques. The method remains valid, however this explanation uses forces for simplicity)
+
+\begin{equation}
+\begin{split}
+\mathbf{D}_3 \mathbf{f} &= (\mathbf{D}_2 + \mathbf{J} \mathbf{D}_1 \mathbf{J}^T) \mathbf{f}\\
+\mathbf{D}_3 \mathbf{f} &= \mathbf{D}_2 \mathbf{f} + \mathbf{J} \mathbf{D}_1 \mathbf{J}^T \mathbf{f}
+\end{split}
+\label{for:flexibility_series_mul}
+\end{equation}
+
+\noindent
+Now a physical interpretation of each part of the equation is easier to provide; On the left side
+we can see $\mathbf{D}_3 \mathbf{f}$ this is the displacement caused on point $\mathbf{C}$ if a force $\mathbf{f}$
+is applied on the beam $\mathbf{AC}$ (the equivalent beam we are calculating).
+
+$$
+\colorbox{cyan!10}{$\mathbf{D}_3 \mathbf{f}$} = \mathbf{D}_2 \mathbf{f} + \mathbf{J} \mathbf{D}_1 \mathbf{J}^T \mathbf{f}
+$$
+
+\noindent
+On the right side of the equation we can find $\mathbf{D}_2 \mathbf{f}$. This is again, the displacement 
+on point $\mathbf{C}$ caused by the force applied on beam $\mathbf{BC}$ assuming that $\mathbf{B}$ is
+a fixed node.
+
+$$
+\mathbf{D}_3 \mathbf{f} = \colorbox{cyan!10}{$\mathbf{D}_2 \mathbf{f}$} + \mathbf{J} \mathbf{D}_1 \mathbf{J}^T \mathbf{f}
+$$
+
+\noindent
+The term $\mathbf{J}^T\mathbf{f}$ represent the force $\mathbf{f}$ applied on point $\mathbf{B}$; The reason why
+this is necessary is that the beam $\mathbf{BC}$ is acting as a lever, and potentially adding some torque components.
+
+
+
+$$
+\mathbf{D}_3 \mathbf{f} = \mathbf{D}_2 \mathbf{f} + \mathbf{J} \mathbf{D}_1 \colorbox{cyan!10}{$\mathbf{J}^T \mathbf{f}$}
+$$
+
+\noindent
+Then, multiplying the force (or potentially wrench at this point) by $\mathbf{D}_1$ mean finding the displacement that
+is caused on the point $\mathbf{B}$ due to beam $\mathbf{AB}$ flexing.
+
+$$
+\mathbf{D}_3 \mathbf{f} = \mathbf{D}_2 \mathbf{f} + \mathbf{J} \colorbox{cyan!10}{$\mathbf{D}_1 \mathbf{J}^T \mathbf{f}$}
+$$
+
+\noindent
+Finally, the displacement on $\mathbf{B}$ is projected back on point $\mathbf{C}$ using the jacobian matrix.
+This means that the full therm $\mathbf{J} \mathbf{D}_1 \mathbf{J}^T \mathbf{f}$ represent
+the displacement that is caused on $\mathbf{C}$ by the force $\mathbf{f}$ assuming that beam
+$\mathbf{BC}$ is infinity stiff.
+
+$$
+\mathbf{D}_3 \mathbf{f} = \mathbf{D}_2 \mathbf{f} + \colorbox{cyan!10}{$\mathbf{J} \mathbf{D}_1 \mathbf{J}^T \mathbf{f}$}
+$$
+
+\noindent
+Summing up the two terms on the right side of the equation give the total displacement of point $\mathbf{C}$
+with of course is the same quantity represented on the left side. This conclude the explanation of equation \ref{for:stiffness_series}.
+In this thesis we will use the ``$\stiffseries$'' (series) operator to represent a the series of two cantilever beams, as we defined
+in equation \ref{for:series_operator}.
+
+
+\begin{equation}
+\mathbf{K}_1 \stiffseries \mathbf{K}_2 := (\mathbf{K}_2^{-1} + \mathbf{J} \mathbf{K}_1^{-1} \mathbf{J}^T)^{-1}
+\label{for:series_operator}
+\end{equation}
+
+\subsection{Stiffness Parallel}
+\label{sec:stiffness_parallel}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/stiffness_parallel.png}
+    \caption{Two beams in parallel}
+    \label{fig:parallel}
+\end{figure}
+
+
+In the same way that beams can be connected in series, they can also be connected in parallel;
+A simple parallel beam setup is shown in figure \ref{fig:parallel}.
+Calculating the stiffness of the point $\mathbf{C}$ is trivial, as it can be achieve
+by simply summing the stiffness matrix of the two beams that supports it.
+With this notion we can define the ``$\stiffparallel$'' (parallel) operator as shown in equation \ref{for:parallel_operator}
+
+
+\begin{equation}
+\mathbf{K}_1 \stiffparallel \mathbf{K}_2 := \mathbf{K}_1 + \mathbf{K}_2
+\label{for:parallel_operator}
+\end{equation}
+
+
+\section{The existing solution: Direct Stiffness Method}
+
+The Direct Stiffness Method is a well known techniques in structural engendering
+that solve exactly the problem we described in section \ref{sec:stiff_problem_statement}.
+This section does not aim to give a complete explanation on how the method works, as
+such an explanation would both be outside the scope of this thesis, and be redundant
+considering that it could be found online for free, or on books such as 
+``Matrix methods for advanced structural analysis'' \cite{direct_stiffness_method}.
+It is important however to provide the basic structure of the algorithm in order
+to understand what are the tradeoff of using this method.
+
+\subsection{Algorithm Overview}
+
+The algorithm aim to calculate the full stiffness matrix of a frame.
+In order to do so, it began by creating the full stiffness matrix. This matrix
+has a dimensionality of $N_{df} \times N_p$ where $N_{df}$ is the number
+of degrees of freedom, and $N_p$ is the number of points in the rigid frame.
+For example a three dimensional rigid frame composed of $100$ points will have
+a stiffness matrix with a size of $600 \times 600$.
+Composing this matrix is not particularly expensive, as the process 
+mostly involve starting from a correctly sized matrix full of zero, and gradually
+adding to it some stiffness components that are derived from each node of the frame.
+finally when the stiffness matrix is completed, it can be inverted in order obtain the
+flexibility matrix.
+Algorithm \ref{alg:dsm} show a very compact pseudo code of the direct stiffness method.
+
+
+\begin{algorithm}
+\label{alg:dsm}
+\caption{Direct Stiffness Method}
+\begin{algorithmic}[1] % [1] adds line numbers, which are very helpful
+    \State $N \gets N_{df} \times \Call{size}{\text{frame}}$ \Comment{Calculate size of global matrix}
+    \State $\mathbf{K} \gets \mathbf{0}_{N \times N}$ \Comment{Initialize global stiffness matrix}
+    \For{$e \in \text{frame}$} \Comment{Iterate over all elements}
+        \State $\mathbf{K}_l \gets \Call{local\_stiffness}{e}$ \Comment{Compute local stiffness}
+        \State $\mathbf{K} \gets \Call{add\_stiffness}{\mathbf{K}, \mathbf{K}_l}$ \Comment{Assemble into global matrix}
+    \EndFor
+    \State $\mathbf{D} \gets \mathbf{K}^{-1}$ \Comment{Compute flexibility matrix}
+\end{algorithmic}
+\end{algorithm}
+
+
 \subsection{Time Complexity}
+
+The time complexity of Algorithm \ref{alg:dsm} relative to the number of elements in
+the frame is $o(n^3)$ time and $o(n^2)$ space.
+The space requirement is trivial to explain, as we are allocating the full $N \times N$
+stiffness matrix at line 2.
+The time complexity is instead given by the matrix inversion (line 7) which is a $o(n^3)$
+operation.
+The construction of the stiffness matrix itself (line 3 to 6) have actually a lower time complexity
+of $o(n^2)$. this is because line 4 is a simple constant time operation, meanwhile line 5
+does not need to edit the entire matrix, but only perform operations on the parts of the matrix
+that are relevant to element $e$, making it a $o(n)$ operation.
+
+
+
+\section{Proposed solution: Monte Carlo Stiffness Evaluation}
+
+\section{Performance Evaluation}
+
+\subsection{Accuracy of the proposed solution}
+\subsection{Speed comparison}
+\label{sec:stiff_speed_comp}
+
+\section{Conclusions and Acknowledgements}
 
 % note to self:
 % 10 iterations using exact stiffness method: 1272s
-% 10 iterations using 
+% 10 iterations using approximated: 6s
+% 100 iterations using approximated: 29s
