@@ -36,6 +36,7 @@ an approximation of the \textbf{Flexibility Matrix (\ref{sec:flex_matrix})} for 
 in a timely manner.
 
 \subsection{Stiffness of partially constructed frames}
+\label{sec:stiffness_part_frames}
 
 The stiffness of a node can different significantly in various moments in time. More specifically the stiffness that the node have
 in an arbitrary point in time during the construction is always lower of equal than the stiffness the node have in the fully constructed
@@ -79,7 +80,11 @@ All beams must be made of the same material, and have the same cross-section, ho
 they do not need to be the same length.
 Each \textbf{point} (that we can also call \textbf{node}) is \textbf{rigid}
 meaning that the beams that are attached to it are not allowed to rotate and must
-maintain the same position and orientation relatively to each others. figure \ref{fig:rigid_frame} show some example of what are considered valid rigid frames
+maintain the same position and orientation relatively to each others. 
+One final algorithmic note is that, in this thesis we will consider rigid frames to be ``sparse''
+graph (number of vertices is linear w.r.t. the number of nodes) in reality this assumption
+is not very limiting as most frames are so by design.
+Figure \ref{fig:rigid_frame} show some example of what are considered valid rigid frames
 
 \begin{figure}[h]
     \centering
@@ -453,11 +458,13 @@ $$
 Summing up the two terms on the right side of the equation give the total displacement of point $\mathbf{C}$
 with of course is the same quantity represented on the left side. This conclude the explanation of equation \ref{for:stiffness_series}.
 In this thesis we will use the ``$\stiffseries$'' (series) operator to represent a the series of two cantilever beams, as we defined
-in equation \ref{for:series_operator}.
+Ain equation \ref{for:series_operator}.
 
 
 \begin{equation}
-\mathbf{K}_1 \stiffseries \mathbf{K}_2 := (\mathbf{K}_2^{-1} + \mathbf{J} \mathbf{K}_1^{-1} \mathbf{J}^T)^{-1}
+\mathbf{K}_1 \stiffseries_{\mathbf{B}} \mathbf{K}_2 := 
+(\mathbf{K}_2^{-1} + \mathbf{J} \mathbf{K}_1^{-1} \mathbf{J}^T)^{-1} 
+\text{ where $\mathbf{J}$ is the jacobian of beam $\mathbf{B}$}
 \label{for:series_operator}
 \end{equation}
 
@@ -669,11 +676,11 @@ of frames that it can evaluate.
 
 \begin{equation}
 \begin{split}
-    \mathbf{K}_{13} &= \mathbf{K}_1 \stiffseries \mathbf{K}_3 \\
+    \mathbf{K}_{13} &= \mathbf{K}_1 \stiffseries_{\mathbf{B}_3} \mathbf{K}_3 \\
     \mathbf{K}_{123} &= \mathbf{K}_{13} \stiffparallel \mathbf{K}_2 \\
-    \mathbf{K}_{Peq} &= \mathbf{K}_{123} \stiffseries \mathbf{K}_4 \\
+    \mathbf{K}_{Peq} &= \mathbf{K}_{123} \stiffseries_{\mathbf{B}_4} \mathbf{K}_4 \\
     &\text{Or} \\
-    \mathbf{K}_{Peq} &= (\mathbf{K}_2 \stiffparallel (\mathbf{K}_1 \stiffseries \mathbf{K}_3)) \stiffseries \mathbf{K}_4 
+    \mathbf{K}_{Peq} &= (\mathbf{K}_2 \stiffparallel (\mathbf{K}_1 \stiffseries_{\mathbf{B}_3} \mathbf{K}_3)) \stiffseries_{\mathbf{B}_4} \mathbf{K}_4 
 \end{split}
 \label{for:reduction_simple}
 \end{equation}
@@ -737,10 +744,11 @@ This process is described more precisely in the Algorithm \ref{alg:dag}
         \If{$\nu \in \mathcal{M}$} \Comment{Check dynamic programming table}
             \State \Return $\mathcal{M}(\nu)$
         \EndIf
-        \State $S_{\nu} \gets \mathbf{0}_{6 \times 6}$
-        \For{$a \in G.outgoing(\nu)$}
-            \State $S_{a} \gets \Call{EvalStiffness}{G, a.target, \mathcal{M}} \stiffseries a.stiffness$ \Comment{Calculate stiffness provided by $a$}
-            \State $S_{\nu} \gets S_{\nu} \stiffparallel S_{a}$ \Comment{Merge stiffness together, using parallel operator}
+        \State $\mathbf{K}_{\nu} \gets \mathbf{0}_{6 \times 6}$
+        \For{$a \in \Call{Outgoing}{G, \nu}$} \Comment{Iterate over outgoing arches from $\nu$}
+            \State $\mathbf{K}_{a} \gets \Call{EvalStiffness}{G, a.target, \mathcal{M}}$ \Comment{Calculate stiffness of the node $a$ is pointing to}
+            \State $\mathbf{K}_{b} \gets \Call{BeamStiffness}{a.beam}$ \Comment{Stiffness of the beam connecting $a$ to $\nu$}
+            \State $\mathbf{K}_{\nu} \gets \mathbf{K}_{\nu} \stiffparallel (\mathbf{K}_{a} \stiffseries_{a.beam} \mathbf{K}_b )$ \Comment{Merge stiffnesses together}
         \EndFor
         \State $\mathcal{M}(\nu) \gets S_{\nu}$
         \State \Return $S_{\nu}$
@@ -785,10 +793,10 @@ $B_4$.
 \begin{equation}
 \begin{split}
     \mathbf{K}_{N1} &= \mathbf{K}_2 \\
-    \mathbf{K}_{N2} &= (\mathbf{K}_{N1} \stiffseries \mathbf{K}_3) \stiffparallel \mathbf{K}_1\\
-    \mathbf{K}_{Peq} &= (\mathbf{K}_{N2} \stiffseries \mathbf{K}_{5}) \stiffparallel (\mathbf{K}_{N1} \stiffseries \mathbf{K}_{4}) \\
+    \mathbf{K}_{N2} &= (\mathbf{K}_{N1} \stiffseries_{\mathbf{B}_3} \mathbf{K}_3) \stiffparallel \mathbf{K}_1\\
+    \mathbf{K}_{Peq} &= (\mathbf{K}_{N2} \stiffseries_{\mathbf{B}_5} \mathbf{K}_{5}) \stiffparallel (\mathbf{K}_{N1} \stiffseries_{\mathbf{B}_4} \mathbf{K}_{4}) \\
     &\text{Or} \\
-    \mathbf{K}_{Peq} &= ((\mathbf{K}_{1} \stiffparallel (\colorbox{cyan!10}{$\mathbf{K}_{2}$} \stiffseries \mathbf{K}_3) ) \stiffseries \mathbf{K}_{5}) \stiffparallel (\colorbox{cyan!10}{$\mathbf{K}_{2}$} \stiffseries \mathbf{K}_4)
+    \mathbf{K}_{Peq} &= ((\mathbf{K}_{1} \stiffparallel (\colorbox{cyan!10}{$\mathbf{K}_{2}$} \stiffseries_{\mathbf{B}_3} \mathbf{K}_3) ) \stiffseries_{\mathbf{B}_5} \mathbf{K}_{5}) \stiffparallel (\colorbox{cyan!10}{$\mathbf{K}_{2}$} \stiffseries_{\mathbf{B}_4} \mathbf{K}_4)
 \end{split}
 \label{for:dag_eq}
 \end{equation}
@@ -796,6 +804,22 @@ $B_4$.
 
 
 \subsubsection{Weighted DAG Mehtod}
+
+The ``Weighted DAG Method'' is an improvement over the ``DAG Method'' that aims to 
+fix the shortcomings of it's predecessor with a simple techniques: The idea is to apply
+a weight any time a node's stiffness is ``multiplied'' due to a specific formation of the graph.
+The weights are crafted in a way that ensure all the weights that refer to the same node sum up to one, and this ensure the prediction is not 
+too optimistic. The main challenge in the designing of this algorithm is therefore finding a way
+to calculate those weights.
+An effective heuristic for weight evaluation can be derived from the distance traveled in the graph,
+this method begins by once again exploring the frame's graph starting from the point we want to know the
+stiffness of ($P$) and traversing the graph using Dijkstra's algorithm until we reach the ground.
+This time however, instead of just marking the direction of travel of each node, we also mark the total
+(euclidean) distance traveled so far. In figure \ref{fig:weighted_dag_strategy} the traveled euclidean
+distances are marked as a small green number close to the beam arrow.
+The idea is to use those distances to ``split'' the stiffness of a node among the 
+incoming arches, in a way that prevent a gross overestimation of the stiffness value.
+The exact way stiffness if split up can be seen in algorithm \ref{alg:wdag}
 
 
 \begin{figure}[h]
@@ -805,6 +829,111 @@ $B_4$.
     \label{fig:weighted_dag_strategy}
 \end{figure}
 
+Applying algorithm \ref{alg:wdag} to the frame shown in figure \ref{fig:weighted_dag_strategy} would result 
+in $\mathbf{K}_{Peq}$ (the local stiffness in point $P$) having the exact formulation that is shown in equation \ref{for:wdag_eq}.
+As we can see from the part highlighted in red, the correction weight are applied to the stiffness in $N1$.
+In the first two equations we can see how the weights associated with the arches $B3$ and $B4$ sum up to one,
+this ensure that stiffness is not multiplied whenever a node has two incoming arches. All other arches
+have a weight one (that are omitted in the equation for readability).
+This evaluation is based on the heuristic that when multiple arches are connected into a single node,
+we can approximate the load distribution using the inverse of the distance traversed in the graph.
+This approximation makes sense, as we can expect stiffness to decrease the more the distance increase,
+and therefore if there are two path from the node where the force is being applied to a specific supporting
+node $B_x$, we can expect the shorter path to ``absorb'' more of the stiffness of the supporting node.
+There is one notable exception worth mentioning, the method mentioned here is assuming all beams
+have the same diameter and material (and therefore the same stiffness, assuming the length is the same).
+This is generally true for the type of structure we need to evaluate in the support generation for 3D printing,
+however it might not be true in general, infact if we extend the problem to allow different materials and/or
+different width this heuristic should be redefined to keep those added factors into consideration.
+
+
+
+
+
+\begin{equation}
+\begin{split}
+    w_{B4} &= \frac{d_{B4}^{-1}}{d_{B4}^{-1} + d_{B3}^{-1}} = \frac{1.4^{-1}}{1.4^{-1} + 2^{-1}} \approx 0.59  \\
+    w_{B3} &= \frac{d_{B3}^{-1}}{d_{B4}^{-1} + d_{B3}^{-1}} = \frac{2^{-1}}{1.4^{-1} + 2^{-1}} \approx 0.41  \\
+    \mathbf{K}_{N1} &= \mathbf{K}_2 \\
+    \mathbf{K}_{N1}' &= \textcolor{red}{w_{B3}} \mathbf{K}_{N1} \\
+    \mathbf{K}_{N1}'' &= \textcolor{red}{w_{B4}} \mathbf{K}_{N1} \\
+    \mathbf{K}_{N2} &= (\textcolor{red}{\mathbf{K}_{N1}'} \stiffseries_{\mathbf{B}_3} \mathbf{K}_3) \stiffparallel \mathbf{K}_1\\
+    \mathbf{K}_{Peq} &= (\mathbf{K}_{N2} \stiffseries_{\mathbf{B}_5} \mathbf{K}_{5}) \stiffparallel (\textcolor{red}{\mathbf{K}_{N1}''} \stiffseries_{\mathbf{B}_4} \mathbf{K}_{4}) \\
+    &\text{Or} \\
+    \mathbf{K}_{Peq} &= ((\mathbf{K}_{1} \stiffparallel (\colorbox{cyan!10}{($w_{B3}\mathbf{K}_{2})$} \stiffseries_{\mathbf{B}_3} \mathbf{K}_3) ) \stiffseries_{\mathbf{B}_5} \mathbf{K}_{5}) \stiffparallel (\colorbox{cyan!10}{$(w_{B4}\mathbf{K}_{2})$} \stiffseries_{\mathbf{B}_4} \mathbf{K}_4)
+\end{split}
+\label{for:wdag_eq}
+\end{equation}
+
+\begin{algorithm}[h]
+\label{alg:wdag}
+\caption{Weighted Dag Evaluator}
+\begin{algorithmic}[1]
+    \Require $G$ is a direct acyclic graph, $\nu_0$ a node in the graph.
+    \Ensure $S_{\nu_0}$ is the local stiffness matrix of $\nu_0$
+
+    \Procedure{WeightOf}{$G, s, d$} \Comment{Compute the weight of the arch $s$(ource) $\rightarrow$ $d$(estination)}
+        \State $d_s \gets \Call{DistanceAt}{G, s, d}$ \Comment{Travelled distance when traversing the arch $s \rightarrow d$}
+        \State $w_s, \gets d_s^{-1}$ \Comment{weight is inverse of distance (closer nodes are more weighted more)}
+        \State $w_{tot} \gets 0$
+        \For{$s' \in \Call{Incoming}{G, d}$} \Comment{Iterate over incoming arches to $d$}
+            \State $d_{s'} \gets \Call{DistanceAt}{G, s', d}$ \Comment{Travelled distance when traversing the arch $s' \rightarrow d$}
+            \State $w_{s'} \gets d_{s'}^{-1}$
+            \State $w_{tot} \gets w_{tot} + w_{s'}$
+        \EndFor
+        \State  \Return $w_s / w_{tot}$ \Comment{Return the weight of $s \rightarrow d$ relative to the other arches incoming in $d$}
+    \EndProcedure
+
+    \Statex
+
+    \Procedure{EvalStiffness}{$G, \nu, \mathcal{M}$}
+        \If{$\nu \in \mathcal{M}$} \Comment{Check dynamic programming table}
+            \State \Return $\mathcal{M}(\nu)$
+        \EndIf
+        \State $\mathbf{K}_{\nu} \gets \mathbf{0}_{6 \times 6}$ 
+        \For{$a \in \Call{Outgoing}{G, \nu}$} \Comment{Iterate over outgoing arches from $\nu$}
+            \State $\mathbf{K}_{a} \gets \Call{EvalStiffness}{G, a.target, \mathcal{M}}$ \Comment{Calculate stiffness of the node $a$ is pointing to}
+            \State $w \gets \Call{WeightOf}{G, \nu, a}$
+            \State $\mathbf{K}_{a}' \gets w\mathbf{K}_{a}$ \Comment{Add the correction factor to $\mathbf{K}_{a}$}
+            \State $\mathbf{K}_{b} \gets \Call{BeamStiffness}{a.beam}$ \Comment{Stiffness of the beam connecting $a$ to $\nu$}
+            \State $\mathbf{K}_{\nu} \gets \mathbf{K}_{\nu} \stiffparallel (\mathbf{K}_{a}' \stiffseries_{a.beam} \mathbf{K}_b )$ \Comment{Merge stiffnesses together}
+        \EndFor
+        \State $\mathcal{M}(\nu) \gets S_{\nu}$
+        \State \Return $S_{\nu}$
+    \EndProcedure
+    
+    \Statex
+    
+    \Procedure{WeightedDAGEvaluator}{$G, \nu_0$}
+        \State $\mathcal{M} \gets \emptyset$ \Comment{Initialize empty DP table}
+        \State \Return $\Call{EvalStiffness}{G, \nu_0, \mathcal{M}}$
+    \EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{Time Complexity}
+
+The time complexity for calculating the flexibility matrix of one node, is $o(n \log{n})$.
+this is divided into a $o(n \log{n})$ operation for the evaluation of the Dijkstra algorithm,
+an $o(n)$ operation for the calculation of the stiffness matrix (this is trivial to verify, as 
+Ahe function ``EvalStiffness'' is called at most $n_{nodes}$ times, thanks to the use of dynamic programming,
+and the lines inside the for loop are executed at most $n_{beams}$ for the same reason).
+finally matrix inversion is an $o(1)$ operation, as in this case the matrixes have constant size ($6 \times 6$ for 
+three dimensional frames).
+The time complexity for evaluating an entire frame increase by one polynomial and becomes $o(n^2 \log{n})$
+this is because the algorithm shown is local, and only calculate the stiffness of a single beam, therefore 
+it need to be applied multiple times to calculate the stiffness of an entire structure.
+One key advantage of using local method w.r.t. global methods is that, assuming we want to know the 
+stiffness while the structure is being built (for the reasons explained in section \ref{sec:stiffness_part_frames})
+the complexity those not increase, and it remains $n^2 \log{n}$; This is a simple consequence of the fact
+that we can construct the graph one node at a time (from the lowest $z$ to the highest) and gradually
+evaluate the stiffness of the last node added, evaluation of a single node stay $n \log {n}$, and therefore
+the final complexity is the aforementioned $o(n^2 \log{n})$. It is also important to node that, even tho the 
+final complexity is $o(n^2 \log{n})$, this is entirely due to the fact that we are suing Dijkstra, however
+the part of the algorithm that propagate the stiffness, and does a bunch of matrix multiplication and
+inversion is only $(o^2)$. This factor should be associated, as for smaller structures the heavy matrix multiplication
+are more likely to be the bottleneck compared to the more efficient Dijkstra algorithm.
 
 \section{Performance Evaluation}
 
