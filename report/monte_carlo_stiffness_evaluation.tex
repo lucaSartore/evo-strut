@@ -937,7 +937,78 @@ are more likely to be the bottleneck compared to the more efficient Dijkstra alg
 
 \section{Performance Evaluation}
 
+The proposed solution named ``Weighted Dag Evaluator'' is promising, however we have not't yet justified it's
+creation. This section aim to do exactly that by evaluating the performance relative to state of the art methods.
+Performances will be evaluated in two broad category: Accuracy and Speed. The algorithm must balance the two
+in order to be considered a valuable alternative to the state of the art methods, in particular it need to
+achieve a significant improvement in speed while not losing an too much accuracy.
+
+
 \subsection{Accuracy of the proposed solution}
+
+For evaluating accuracy we have created a small dataset of 6 rigid frames, we have then used OpenSysPy \cite{ZHU20186} 
+(an open source library used for complex structural analysis of rigid frame and other structures)
+to obtain the ``ground through'' stiffness and flexibility matrixes in every point.
+With this simple setup we were able to evaluate the accuracy of the proposed solution.
+Table \ref{tab:dag_performance} shows the test results of the two algorithms presented (DAG and Weighted DAG),
+the metric chosen for accuracy evaluation are three: Root Mean Square Relative Error (or RMSRE)
+is the main one and more ``critical'' one, but we have also included Person and Spearman correlation
+to caputre not only the absolute accuracy of the algorithm, but also how well they correlate.
+In all three cases a small ($1 \cdot 10^{-5}$) regularization factor has been applied in order to avoid
+floating point precision issues in proximity of zeros. This does not affect in any significant way our test results
+as the stiffness value obtained with the parameter used where int the 500-15000 range.
+The code necessary to replicate this experiments is published in the accompanying
+GitHub repository.
+
+
+
+\begin{table}[htbp]
+  \centering
+  \caption{Comparison of DAG and Weighted DAG accuracy}
+  \label{tab:dag_performance}
+
+  % --- Unweighted DAG Table ---
+  \textbf{DAG}\\[0.5em]
+  \begin{tabular}{lrrr}
+    \toprule
+    Structure & RMSRE & Pearson & Spearman \\
+    \midrule
+    struct\_A & 4.56 & 0.9403 & 1.0000 \\
+    struct\_B & 0.99 & 0.9847 & 1.0000 \\
+    struct\_C & 1.13 & 0.9982 & 1.0000 \\
+    struct\_D & 1.25 & 0.9984 & 1.0000 \\
+    struct\_E & 193.71 & 0.9388 & 1.0000 \\
+    struct\_F & 7038.54 & 0.8731 & 1.0000 \\
+    \midrule
+    \textbf{AVERAGE} & \textbf{1206.70} & \textbf{0.9556} & \textbf{1.0000} \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{1.5em}
+
+  % --- Weighted DAG Table ---
+  \textbf{Weighted DAG}\\[0.5em]
+  \begin{tabular}{lrrr}
+    \toprule
+    Structure & RMSRE & Pearson & Spearman \\
+    \midrule
+    struct\_A & 0.34 & 0.9984 & 1.0000 \\
+    struct\_B & 0.39 & 0.9976 & 1.0000 \\
+    struct\_C & 0.68 & 0.9982 & 1.0000 \\
+    struct\_D & 0.12 & 0.9984 & 1.0000 \\
+    struct\_E & 13.58 & 0.9962 & 1.0000 \\
+    struct\_F & 9.04 & 0.9948 & 1.0000 \\
+    \midrule
+    \textbf{AVERAGE} & \textbf{4.02} & \textbf{0.9973} & \textbf{1.0000} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+
+Table \ref{tab:dag_performance} show that the Weighted DAG algorithm perform surprisingly well, we can infact 
+see how the average error is at approximately 4\%, wit the highest error hovering at around 13.5\%.
+We can also note how the error increase the larger the structure becomes 
+
 \subsection{Speed comparison}
 \label{sec:stiff_speed_cmp}
 
