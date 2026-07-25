@@ -1035,13 +1035,109 @@ therefore most structures tend to have no more than four ``layers''.
 \end{figure}
 
 \subsection{Speed comparison}
-
-
 \label{sec:stiff_speed_cmp}
 
-\section{Conclusions and Acknowledgements}
+In terms of speed and time complexity our proposed solution (Weighted DAG) is unsurprisingly much more performant
+compared to the standard ``Direct Stiffness Method'' approach.
+Table \ref{tab:stiff_time_compl_cmp} show how, in the third scenario,
+where we want to calculate the flexibility matrix of all the nodes in the
+frame, while they are under construction (that is wat we need in our evaluation function)
+our proposed approximated algorithm provide a time complexity that 
+is lower compared to the state of the art of a factor of $n \log {n}$
+making it the clear winner in this scenario.
 
-% note to self:
-% 10 iterations using exact stiffness method: 1272s
-% 10 iterations using approximated: 6s
-% 100 iterations using approximated: 29s
+
+
+\begin{table}[htbp]
+  \centering
+  \caption{Time complexity of the proposed methods}
+  \label{tab:stiff_time_compl_cmp}
+  % --- Unweighted DAG Table ---
+  \begin{tabular}{lrr}
+    \toprule
+    Scenario & Direct Stiffness Method & Dag / Weighted DAG \\
+    \midrule
+    One node flex.                          & $o(n^3)$ & $o(n \log(n))$   \\
+    All nodes flex.                         & $o(n^3)$ & $o(n^2 \log(n))$ \\
+    All under construction nodes flex.      & $o(n^4)$ & $o(n^2 \log(n))$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+
+\begin{table}[htbp]
+  \centering
+  \caption{Real world runtime of the proposed methods}
+  \label{tab:stiff_real_world_runtimes_cmp}
+  \begin{tabular}{lrrr}
+    \toprule
+    Scenario & Direct Stiffness Method & Dag / Weighted DAG \\
+    \midrule
+    First 10 iterations                              & 21 min 12 s & 6 s   \\
+    First 100 iterations                             & N/A  & 29s \\
+    Avg. time for one iteration                      & 2 min 7 s  & 0.3 s \\
+    Est. time for a full run (1000 iterations)       & 35 h  & 5 min \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+
+
+
+In order to gage a better picture of how the two algorithms compare, we have 
+also decided to provide some real world data to show how the direct stiffness method
+approach would perform if placed inside the genetic algorithm evaluation loop for this project.
+For this test, we took the full support structure optimization process that we developed (that is explained
+in chapter \ref{cha:support_opt_alg}) and run evaluation with both our solution, and an
+approximation of the direct stiffness method's computational load (by approximation we mean that,
+instead of implementing the full direct stiffness method, we simply picked the matrix inversion, as
+the most computationally intensive part, and execute that with an arbitrary matrix of the correct size.
+this provide with an accurate lower bound of what the execution time would have been, if the direct stiffness
+method was used. Furthermore, instead of running the algorithm once for every node in the graph, in order
+to calculate the stiffness of the nodes while under construction, we have opted to gradually add nodes
+from the lowest z-value to the highest, and only run a full evaluation cycle every 50 nodes.
+This does not change the time complexity, but in the real world significantly reduce the load. This
+was done to give the state of the art solution a better chance at compting with our algorithm).
+In the test we limited the amount of iterations to 10, this is both for consistency across testcases,
+and to avoid having testcases that are too long. For the test case using our algorithm we also ran
+a testcase limited to 100 iterations, as the single iteration time where so small, that the overed
+associated with the initialization of the generation significantly influenced the results.
+Table \ref{tab:stiff_real_world_runtimes_cmp} show the test results, we can see there is a
+huge different of approximately 400x in the execution time of our proposed solution when compared to 
+the standard direct stiffness method approach.
+To conclude we must acknowledge that the tests we made in this section can have some inaccuracy due to the fact
+that we used an approximation of the direct stiffness method approach, and due to the fact that we measured
+the execution time of the full genetic algorithm, which include mutation, crossover, logging and many more
+small parts that are counted in the time listed even if they should't.
+However the performance difference between the two options is so big that, even with those inaccuracy
+we can state with absolute certainty that our stiffness evaluation algorithm is much faster then the state 
+of the art.
+
+
+\section{Acknowledgements}
+
+Before we conclude we must acknowledge that the literature surrounding stiffness evaluation is quite vast,
+in this work we considered the direct stiffness method as the state of the art, however there 
+are more options out there, including iterative methods that are usually considered faster (at least for large
+structures) that he direct stiffness method approach. Furthermore even considering only the direct
+stiffness method there some things we can do to make it faster, more notably the use of specialized
+sparse matrix inversion algorithm, or even some iterative and approximated method for matrix inversion.
+Ultimately we deemed unlikely that those method could have resulted in the kind of speed improvement
+we required for our algorithm to be viable, however the fact that we have not tested all the available
+options make it impossible for us to claim that our proposed solution is the only viable option
+for fast stiffness evaluation.
+
+\section{Conclusions}
+
+In conclusion we can say that our algorithm is superior compared to the state of the art in terms of speed.
+This speed is essential for the practical applicability of our support-structure generation algorithm,
+as having the computer run for more than a day, just to save a few grams of filament is something 
+that make no sense whatsoever, however if the wait was only a few minutes the prospect become a lot more enditing.
+In terms of accuracy however state the direct stiffness method is of course better (after all it is an exact
+method, while ours is an approximated one), however for ours specific need a small inaccuracy is a price
+we are willing to pay in order to achieve the required speed.
+We can therefore say that our proposed solution perform very favorably compared to the state of the art
+if we specifically look at it through the lense of an evaluation algorithm for support structure generation.
+In other scenarios where accuracy is more important than speed, and structures have more layers and are more
+complex the state of the art solution would of course be preferred to ours.
+
