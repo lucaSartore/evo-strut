@@ -272,26 +272,60 @@ as that topic will be extensively covered in one of the next sections (specifica
     \label{fig:floating_regions}
 \end{figure}
 
+Efficient detection of floating regions can be achieved using algorithm \cref{alg:float_det}
+the idea is that the nodes are sorted from the lowest to the highest, then they are sampled one by one,
+and, then visiting the all the nodes reachable form the point, where an arch that go from $A$ to $B$ is 
+considered valid only if the layer of $B$ is grater or equal to the layer of $A$.
+This ensures that we cannot go ``downward'' when exploring the graph, and therefore that
+we cannot explore a floating region unless we start from a point inside that floating region.
+While the graph is being explored, we mark nodes that have been visited to avoid visiting the same
+node twice, and increasing the time complexity. Once an exploration is completed we can decide if
+the explored area is a floating region or not. This can be simply done by checking if the height
+of the ``source'' node is equal to zero (or at least is below a certain threshold),
+if this is the case we can say that the source was attached to the ground, and therefore
+the region is not floating. If this is not the case however, the area we have explored must be a 
+floating region. We can also be sure that the nodes we have extracted is the lowest point in the region,
+thanks to the sorting we did at the beginning. The sorting also ensures that we start exploring from
+the nodes that are close to the ground, avoiding a situation where a floating region is expanded
+too much and reach zones that are actually not considered ``floating''.
+
 \begin{algorithm}[h]
 \caption{Floating Regions Detection}
 \begin{algorithmic}[1]
     \Require $G$ Graph that represent the mesh
-    \Ensure $C$ Dictionary that associate a cost for every node in the graph
+    \Ensure $\mathcal{F}$ Set of floating regions 
 
-    \Procedure{LayerOf}{$n$} \Comment{Calculate the layer of node $n$}
-        \State \Return $\left\lfloor{\frac{\Call{Height}{n}}{L_{height}}}\right\rfloor$
+    \Procedure{ExploreUpward}{$G, s, V$} \Comment{Collect the component reachable going up from $s$}
+        \State $R \gets \emptyset$
+        \State $Q \gets \{s\}$ \Comment{Initialize the queue with the node}
+        \While{$\lnot \Call{IsEmpty}{Q}$} \Comment{repeat untill queue is empty}
+            \State $n \gets \Call{Pop}{Q}$
+            \State $V(n) \gets true$
+            \State $R \gets \Call{Append}{R, n}$
+            \For{$a \in \Call{Adjacent}{G, n}$ with } \Comment{Explore adjacent neighbors}
+                \If{ $\Call{LayerOf}{a} \geq \Call{LayerOf}{n} \land \lnot V(a)$ } \Comment{Filter by non visited, and $\geq$ layer}
+                    \State \Call{Push}{Q, a}
+                \EndIf
+            \EndFor
+        \EndWhile
+        \State \Return $R$
     \EndProcedure
 
     \Statex
 
-    \Procedure{CriticalityDetection}{$G$}
-        \State $C \gets \emptyset$
 
-        \For{l in \Call{Layers}{$G$}}
-            \State \Call{PropagateInLayer}{$G, l, C$} \Comment{Propaget the cost one layer at a time}
+    \Procedure{FloatingRegionsDetection}{$G$}
+        \State $\mathcal{F} \gets \emptyset, \quad V \gets \emptyset$ \Comment{Detected regions and visited nodes}
+        \For{$n \in \Call{SortNodesByHeight}{G}$}
+            \If{$V(n)$}
+                \State \textbf{continue} \Comment{Already part of a component}
+            \EndIf
+            \State $R \gets \Call{ExploreUpward}{G, s, V}$ \Comment{Exploring grpah, while only moving ``uppward''}
+            \If{$\Call{HeightOf}{s} > 0$} \Comment{If the node is detached from the ground}
+                \State $F \gets \Call{AddFloatingRegion}{F, R}$ \Comment{Mark the explored node as a floating region}
+            \EndIf
         \EndFor
-
-        \State \Return $C$
+        \State \Return $\mathcal{F}$
     \EndProcedure
 \label{alg:float_det}
 \end{algorithmic}
