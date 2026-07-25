@@ -1007,9 +1007,36 @@ GitHub repository.
 
 Table \ref{tab:dag_performance} show that the Weighted DAG algorithm perform surprisingly well, we can infact 
 see how the average error is at approximately 4\%, wit the highest error hovering at around 13.5\%.
-We can also note how the error increase the larger the structure becomes 
+Figure \ref{fig:test_structures} show how those error are distributed, where the flexibility matrix
+is represented as an ellipsoid, where a longer distance from the center represent an higher flexibility.
+In the figure we can notice something interesting, the error seem to increase as the number of ``layers''
+a structure have increase. The effect is most notable in struct E and F.
+This error increasing is of course a downside of the algorithm, however
+in the specific context of stiffness evaluation of a 3D printing support structure this problem
+is not actually that relevant. Infact most 3D printer are quite restricted in size, and
+therefore most structures tend to have no more than four ``layers''.
+
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tabular}{cc}
+        \includegraphics[trim={2in} {0.5in} {1.5in} {0.5in}, clip, width=0.48\textwidth]{images/struct_a.png} &
+        \includegraphics[trim={2in} {0.5in} {1.5in} {0.5in}, clip, width=0.48\textwidth]{images/struct_b.png} \\
+        (a) struct\_A & (b) struct\_B \\[1em]
+        \includegraphics[trim={2in} {0.5in} {1.5in} {0.5in}, clip, width=0.48\textwidth]{images/struct_c.png} &
+        \includegraphics[trim={2in} {0.5in} {1.5in} {0.5in}, clip, width=0.48\textwidth]{images/struct_d.png} \\
+        (c) struct\_C & (d) struct\_D \\[1em]
+        \includegraphics[trim={2in} {0.5in} {1.5in} {0.5in}, clip, width=0.48\textwidth]{images/struct_e.png} &
+        \includegraphics[trim={2in} {0.5in} {1.5in} {0.5in}, clip, width=0.48\textwidth]{images/struct_f.png} \\
+        (e) struct\_E & (f) struct\_F \\
+    \end{tabular}
+    \caption{The six test structures used for accuracy evaluation}
+    \label{fig:test_structures}
+\end{figure}
 
 \subsection{Speed comparison}
+
+
 \label{sec:stiff_speed_cmp}
 
 \section{Conclusions and Acknowledgements}
