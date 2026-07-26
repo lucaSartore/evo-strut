@@ -528,11 +528,97 @@ circle.
 \subsection{Mutations}
 \label{sec:contact_points_opt_mut}
 
+Since the gene we used to represent the contact points is quite simple, the
+genes mutations applied can also be simple. We have designed four fundamental
+mutations, so that every time a gene need to be mutated we can simply
+select one or more fundamental mutations, and apply them sequentially to the gene.
+The four fundamental mutations are:
+\begin{itemize}
+    \item \textbf{Add Support:} This mutation picks a random node from the list of critical
+    one and place a new support with a randomly generated radius on it.
+    \item \textbf{Remove Support:} This mutation picks a random support from the gene
+    and removes it
+    \item \textbf{Move Support:} This mutation pks a random support, and move it to a different
+    node, when selecting the new node only nodes that are within a certain radius of the original
+    one are considered eligible.
+    \item \textbf{Change Support Radius:} This mutation increases or decreases the radius
+    of the support by some random value, while ensuring the radius stays within some
+    predetermined margins.
+\end{itemize}
+
 \subsection{Crossover}
 \label{sec:contact_points_opt_cross}
 
+The crossover strategy is simple to explain, given two genes, a random plane is generated
+in 3D space, then we can create a new gene by selecting all the points that are in one side
+of the plane from Parent A, and all the point that are from the other side of the plane from 
+parent B.
+Figure \ref{fig:crossover_cpo} show this process in action with a two dimensional representation
+of a set of points.
+The generation of the random plane is done by selecting three random points from one parent 
+($P_A$, $P_B$, and $P_{\perp}$) and then selecting the plane $\pi$ such as the first two points
+are included in the plane, and such as, the plane is perpendicular to the plane $\pi*$ that include
+all three points.
+Algorithm \cref{alg:plane_construction} show a simple procedure to construct such a plane.
+The reason tis plane is constructed in this specific manner (rather than simply construct
+a plane that include three random points) is that support structures tends to be mostly flat,
+therefore with a plane that include three points it is likely that most points would hand up
+close to the border, making the division not very equal.
+In the algorithm described there is one small edge case, infact it cannot work if there are
+less than three points in a plane, or if the three points selected are in a straight line, 
+making it impossible to build the plane. In all of this circumstances the algorithm simply
+ignores the crossover and return a gene identical to one random parent.
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/crossover_cpo.png}
+    \caption{Example of how the crossover is made (in 2 dimensions)}
+    \label{fig:crossover_cpo}
+\end{figure}
+
+
+\begin{algorithm}[h]
+\caption{Plane Construction}
+\begin{algorithmic}[1]
+    \Require $p_A, p_B$ Points defining the base line of the plane
+    \Require $p_{\perp}$ Point from which distance is maximized
+    \Ensure $\pi$ The desired plane
+
+    \Procedure{ConstructPlane}{$p_A, p_B, p_{\perp}$} \Comment{Find the plane that include the three points}
+        \State $\pi^* \gets \Call{PlaneFromPoints}{p_A, p_B, p_{\perp}}$
+        \State $\mathbf{v} \gets \Call{Normal}{\pi^*}$ \Comment{Normal of plane spanned by $p_A, p_B, p_{\perp}$}
+        \State $p_C \gets p_A + \mathbf{v}$ \Comment{Construct third point along the normal direction}
+        \State $\pi \gets \Call{PlaneFromPoints}{p_A, p_B, p_C}$ \Comment{Find the plane that include the three points}
+        \State \Return $\pi$
+    \EndProcedure
+\end{algorithmic}
+\label{alg:plane_construction}
+\end{algorithm}
+
+
+\subsection{Initialization}
+\label{sec:contact_points_opt_init}
+
+The initialization of the genes is done with a simple procedure: First we calculate the area
+of the critical surface we need to generate, then we calculate the number of supports that 
+need to be generated initially by multiplying the area by a ``support density'' parameter,
+finally we randomly generate the desired number of supports by repeatedly randomly
+sampling a node, randomly selecting a radius, and adding a support on the selected node
+with the selected radius.
+
+
 \subsection{Optimization Process and Parameters}
 \label{sec:contact_points_opt_par}
+
+The optimization process is fairly straightforward, it is composed of at most 2000 generations,
+each of them having 100 individuals. Patience is used as an early termination strategy to avoid waisting
+cpu cycles, and the maximum number of generations allowed without progress is set to 25.
+The selection process is elitist, with the 10 best individual always passing to the next generation,
+while the selection of the remaining 90 individuals is done using tournament selections with a 
+tournament size of 10.
+
+
 
 \section{Contact Points Grouping}
 \label{sec:contact_points_grouping}
@@ -548,6 +634,9 @@ circle.
 
 \subsection{Crossover}
 \label{sec:contact_points_grouping_cross}
+
+\subsection{Initialization}
+\label{sec:contact_points_grouping_init}
 
 \subsection{Optimization Process and Parameters}
 \label{sec:contact_points_grouping_par}
@@ -567,6 +656,9 @@ circle.
 
 \subsection{Crossover}
 \label{sec:sup_struct_opt_cross}
+
+\subsection{Initialization}
+\label{sec:sup_struct_opt_init}
 
 \subsection{Optimization Process and Parameters}
 \label{sec:sup_struct_opt_par}
