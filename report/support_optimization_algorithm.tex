@@ -801,6 +801,7 @@ The three strategies selected are:
 \end{itemize}
 
 \subsection{Initialization}
+\label{sec:contact_points_grouping_init}
 
 Initialization of the network is achieved using the famous ``He'' initialization technique
 first describe in the famous 2015 paper ``Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification''
@@ -810,14 +811,51 @@ performances compared to He.
 
 
 
-\label{sec:contact_points_grouping_init}
 
 \subsection{Optimization Process and Parameters}
 \label{sec:contact_points_grouping_par}
 
+The optimization process is composed of at most 2000 generations,
+each of them having 100 individuals. Patience is used as an early termination strategy to avoid waisting
+cpu cycles, and the maximum number of generations allowed without progress is set to 100.
+The selection process is elitist, with the 10 best individual always passing to the next generation,
+while the selection of the remaining 90 individuals is done using tournament selections with a 
+tournament size of 10.
+During our testing we found that this optimization problem war really sensitive to the initialization
+of the neural network. Therefore, to reduce variability the optimization process is repeated 5 times,
+and only the best output is selected. The decision of doing so was also made easier by the fact 
+that this step is by far the faster, takin no more than a few seconds.
 
 \section{Support Structure Optimization}
 \label{sec:sup_struct_opt}
+
+The support structure optimization is the final major step in the pipeline.
+This involve creating a structure that manage to reach all the decided contact points,
+while minimizing a cost function that ensure the minimization of the material consumed,
+and maximizes the printability by applying some cost function over stiffness and overhanging
+angles.
+As we explained more thoroughly in the motivation chapter (\ref{cha:motivations})
+this stage is arguably the most novel aspect of the our work. Primarily
+doe to the fact that none of the works we have mentioned in the previous literature
+contain the notion of ``Support Stiffness''.
+The optimization algorithm can be seen at work in this
+youtube video: \url{https://www.youtube.com/watch?v=muGUorMoAzM},
+or in figure \ref{fig:struct_opt} where an extrapolation of six 
+frames is displayed.
+For explaining this optimizer we will follow the same approach
+as the other two, meaning that we will explain the individual components
+of the genetic algorithm starting as always with the gene structure.
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/struct_opt.png}
+    \caption{Optimization of the support structure over time}
+    \label{fig:struct_opt}
+\end{figure}
+
+
+
 
 \subsection{Gene Structure}
 \label{sec:sup_struct_opt_gs}
