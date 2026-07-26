@@ -426,20 +426,150 @@ as a ``critical group'' (i.e. a set of critical nodes that are all connected to 
 \section{Contact Points Optimization}
 \label{sec:contact_points_opt}
 
+The objective of this stage is to decide the ``contact points'' (i.e. where the supports
+will make contact with the printed object in order to provide a support interface).
+This step is done independently from the true optimization of the support structure.
+Generally speaking it is not true that the two choices are independent from each others, infact
+we can easily imagine a scenario where placing a contact point in a specific position
+reduces the cost function for the contact points by a bit, but introduces more cost
+in the generation of the support structure. However, even tho they are not purely independent
+from each others, they are not excessively correlated, meaning that separating the two stages
+does not introduces excessive quality loss. For this reason separating the two stages
+can be considered a good idea, infact other related works such as Zhang et. al. 2020 \cite{ZHANG2020117}
+have done exactly the same. Our method is not drastically different from theirs,
+it of course have slightly different cost function and optimization process, but 
+realistically speaking, in terms of novelty our approach for contact points optimization
+does not have to offer much (the same cannot be sed for the next two optimization stage).
+The optimization of contact point is achieved with a genetic algorithm, therefore
+the explanation of inner working of the algorithm is explained in separate sections,
+once for every component of the genetic algorithm (cost function, gene, mutation crossover
+and optimization process)
+
+\subsection{Gene Structure}
+\label{sec:contact_points_opt_gs}
+
+The genetic representation of a contact points choice is incredibly straightforward,
+is essentially a set of the nodes in the graph that we decided to place a support on,
+with every node having a ``radius'' associated with it (allowing the algorithm
+a bit of flexibility, in deciding whether it is more advantageous to use one large
+support or many smaller supports)
+From this gene it is possible to derive the set of supported nodes,
+this is done by drawing a circle around the node, and selecting the support
+that are in the perimeter (the use of the perimeter rather than all the circle's area
+is due to the way supports are generated. Since they are ``empty'' cones, they
+do not provide any support in the center of cone's base, but only on the perimeter,
+nevertheless this part will be explained more thoroughly in the exporting section \ref{sec:exporting})
+
 \subsection{Cost Function}
 \label{sec:contact_points_opt_cf}
 
+The cost function is derived from the criticality detection algorithm \cref{alg:crit_det}.
+As we explained in section \ref{sec:crit_detection} the output of the algorithm is
+a dictionary that map every node in the surface graph to it's criticality vale. and
+starting from this dictionary is possible to find the total cost by summing
+all the individual costs and weighting them by the node's area.
+Nonetheless we are still required to make a few changes to the algorithm
+in order to use it as the cost function.
+The necessary changes can be seen in algorithm \ref{alg:contact_points_opt_cf},
+the first one (at line 2) is straightforward, as it is simply 
+introduce in the evaluation procedure the effect of supports. Infact the previous version
+of the algorithm did not consider supports at all, now however
+we must keep track of where the supports are, and in that case that node $n$
+is one of the nodes supported we automatically assign it's criticality to zero.
+The second change to the algorithm is a bit less trivial to explain.
+We can see that at line 6 we added to the final cost a portion of the ``base cost''.
+The base cost of $n$ is defined as the cost that node $n$ would have, if no supports were applied.
+$\alpha$ is a small scalar (in our final tests we used 0.03) that represent how much of the
+base cost is ``passed'' back when evaluating the structure with supports enabled.
+The reason of this modeling choice, has to do with floating regions.
+As we can remember form section \ref{sec:crit_detection} the propagation factor
+was added to avoid detecting only a tiny critical region in some particular
+scenarios such as for example the wing of the dragon 
+(see figure \ref{fig:critical_detect} and \ref{fig:critical_detect_no_prop}).
+Without this cost term, a single well-placed support in the ``tip'' of the dragon's wing
+would singlehandedly remove the entire critical region, however in real life such a
+support would create many problems, both because of the z-wobble effect (\ref{sec:wobble-test})
+and because when printing the connection between supports and the model is constructed
+to be fragile on purpose, in order to simplify the removal process, making it extremely
+likely that the wing would detach from the support before it manage to connect to the body
+of the dragon.
+The addition of the base cost make it so that, when propagating,
+the criticality value has a tendency to drift towards th value it would have
+had in the case where no supports where added. This is a simple trick that allow
+floating regions to be handled correctly and avoid the issues we desired.
+
+
+\begin{algorithm}[h]
+\caption{Updates to criticality }
+\begin{algorithmic}[1]
+    \Procedure{CriticalityOf}{$G, n, \mathcal{M}$}
+        \If {$\Call{Height}{n} = 0 \lor \textcolor{red}{\Call{IsSupported}{n}}$}
+            \State \Return 0
+        \EndIf
+        \State ...
+        \State \Return $\Call{Max}{c, 0} + \textcolor{red}{\alpha \cdot \Call{BaseCost}{n}}$
+    \EndProcedure
+\end{algorithmic}
+\label{alg:contact_points_opt_cf}
+\end{algorithm}
+
+The cost associated with the criticality is only half of the equation of course,
+Infact if that was the only cost we applied to the optimizer the optimal solution
+would be as simple as placing a support on every critical node in the graph.
+This is of course ideal from a quality of support standpoint, but is less than ideal
+if we consider the cost of the material used for the supports.
+For this reason the second part of the cost is a simply derived from a unit cost
+for every support placed, plus a linear cost proportional to the area of the support
+circle.
+
+%note to self: might add equation here if necessary
+
+
+\subsection{Mutations}
+\label{sec:contact_points_opt_mut}
+
+\subsection{Crossover}
+\label{sec:contact_points_opt_cross}
+
+\subsection{Optimization Process and Parameters}
+\label{sec:contact_points_opt_par}
 
 \section{Contact Points Grouping}
 \label{sec:contact_points_grouping}
+
+\subsection{Gene Structure}
+\label{sec:contact_points_grouping_gs}
+
+\subsection{Cost Function}
+\label{sec:contact_points_grouping_cf}
+
+\subsection{Mutations}
+\label{sec:contact_points_grouping_mut}
+
+\subsection{Crossover}
+\label{sec:contact_points_grouping_cross}
+
+\subsection{Optimization Process and Parameters}
+\label{sec:contact_points_grouping_par}
 
 
 \section{Support Structure Optimization}
 \label{sec:sup_struct_opt}
 
+\subsection{Gene Structure}
+\label{sec:sup_struct_opt_gs}
+
 \subsection{Cost Function}
 \label{sec:sup_struct_opt_cf}
 
+\subsection{Mutations}
+\label{sec:sup_struct_opt_mut}
+
+\subsection{Crossover}
+\label{sec:sup_struct_opt_cross}
+
+\subsection{Optimization Process and Parameters}
+\label{sec:sup_struct_opt_par}
 
 
 \section{Exporting}
