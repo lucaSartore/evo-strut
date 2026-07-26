@@ -443,7 +443,23 @@ does not have to offer much (the same cannot be sed for the next two optimizatio
 The optimization of contact point is achieved with a genetic algorithm, therefore
 the explanation of inner working of the algorithm is explained in separate sections,
 once for every component of the genetic algorithm (cost function, gene, mutation crossover
-and optimization process)
+and optimization process).
+Figure \ref{fig:contact_points_opt} show the result of the optimization process, where the contact
+points are represented with a small purple dot on top of the critical area (the radius however is
+not visualized). We can see how the result is not particularly interesting, as it basically looks
+a sample of equally spaced points inside the critical area. This makes sense as generally speaking
+a good support structure satisfy exactly that condition, however this shows us how complex
+genetic-algorithm optimization is not always necessary for every task. Infact this optimization
+stage is probability the less useful of the three, and could easily be replaced by a simpler and faster
+``greedy'' algorithm that would perform very similarly.
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/conatct_points_optimization.png}
+    \caption{Where contact points are placed inside a critical region (taken from the model ``Dragon'')}
+    \label{fig:contact_points_opt}
+\end{figure}
 
 \subsection{Gene Structure}
 \label{sec:contact_points_opt_gs}
@@ -623,19 +639,177 @@ tournament size of 10.
 \section{Contact Points Grouping}
 \label{sec:contact_points_grouping}
 
+This stage in the pipeline aim to group contact points based on proximity, in order to optimize
+each section individually. As the previous ``grouping'' step, this is not strictly necessary
+theoretically, however it essentially required for good performance in practice.
+The reason why splitting is acceptable in this scenario is that the support structure
+of areas that are far apart, are generally independent from each others. For example,
+in our ``Dragon'' testcase we can imagine how the structure generated to support the left
+wing is ruffly independent from the structure generated for the right wing.
+For this reason optimizing them together gives minimal benefit to the objective function,
+however optimizing them separately has big performance benefits. This is because the algorithm
+for stiffness evaluation we explained in chapter \ref{cha:stiffness_algo} has a complexity
+of $o(n^2 \log (n))$ meaning that with a divide and conquer approach can be highly effective
+in reducing the computational complexity of the algorithm.
+Initially some simpler ``greedy'' algorithms for the grouping of contact points were tested,
+however none of them provided satisfactory results. This tests included strategies such as using the
+``critical areas'' as a starting point, and merging them based on proximity, and other similar
+heuristics. However we found that with those type of approach it was extremely difficult to regulate
+the right amount of ``grouping'' required for different shapes, as they tended to either
+group too aggressively, or not grouping enough. For this reason an optimization-based
+solution was adopted using a Compositional Pattern Producing Network for generating the groups,
+with a genetic algorithm based optimization.
+The final result of a grouping step executed on the ``Dragon'' testcase can be seen in figure
+\ref{fig:cp_grouping}. To explain the optimization process that led to the result seen in the
+picture we will explain each component of the genetic algorithm
+individually as we did in the previous section.
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/contact_points_grouping.png}
+    \caption{An example of how contact points are grouped}
+    \label{fig:cp_grouping}
+\end{figure}
+
+
+
 \subsection{Gene Structure}
 \label{sec:contact_points_grouping_gs}
+
+In the contact point grouping stage the ``gene'' is represented as a Compositional Pattern
+Producing Network (CPPN) that take as input the position of a contact points (the $x$, $y$ and $z$ coordinate)
+and give as output the group that the node is part of.
+To categorize a point into a group we just take the last layer of the network, and pick the group
+corresponding to the neuron with the highest output. This means that the maximum number of group
+the network can produce is upper bounded by the size of the network. Generally speaking this is not an
+issue as the number of groups generated is not particularly high, meaning that even with a small
+25 neurons output layer we are not placing significant constraint on the model.
+The final topology of the network ended up as a fully connected NN, with the input layer
+of size 3, one hidden layer with size of 32, and a Sigmoid activation function, and one 
+output layer with a size of 25.
+This neural network is tiny by modern standard, and this is done for two reasons: First of all
+the task itself is not very complicated, and can be easily performed with such a small network, so
+there is no real reason for going bigger. Secondly the training process is not really efficient as
+it rely on genetic evolution rather than back-propagation, making shallower network ideal since they
+are easier to train.
 
 \subsection{Cost Function}
 \label{sec:contact_points_grouping_cf}
 
+The cost function associated with grouping is parametrized by three values
+($K_{\text{height}}$, $K_{\text{area}}$ and $K_{\text{volume}}$)
+Their use is illustrated in algorithm \ref{alg:cpg_cf}.
+The general idea is that once a group is created we compute it's (three dimensional) convex hull
+(using the efficient Quick Hull algorithm \cite{quickhull}),
+and then apply three main costs:
+The first two are proportional to te area and the volume of the convex hull, and are
+essentially there to incentivize the algorithm to create groups that contains points
+that are close together, in order to minimize the cost. Meanwhile the third one is
+a cost that is proportional to the height of the group. This is a regularization therm
+that ensure there is a cost in creating a group, otherwise the optimizer would always and up
+with a solution that uses the highest amount of group possible.
+Generally speaking it is less desirable to create too many groups, because we give less
+opportunities to the optimizer to ``merge'' support structure together, and therefore
+save on material; This ``undesirability'' is higher for groups with a taller height (defined
+as the maximum $z$ of the points in the group), because the taller a point is, the more expensive
+it become to generate a support structure that reaches it; This is why the regularization factor
+depends on the height, and is not just a constant.
+
+\begin{algorithm}[h]
+\caption{Contact Points Grouping Cost Function}
+\begin{algorithmic}[1]
+    \Require $G$ Set of grouped contact points
+    \Ensure $c$ The total cost
+
+    \Procedure{ConstructPlane}{$G$} \Comment{Compute the cost of a set of groups}
+        \State $c \gets 0$
+        \For {$g \in G$}
+            \State $h \gets \Call{ConvexHull}{g}$
+            \State $c \gets c + 
+                K_{\text{height}} \cdot \Call{Height}{h} +
+                K_{\text{area}} \cdot \Call{Area}{h} +
+                K_{\text{volume}} \cdot \Call{Volume}{h}$
+        \EndFor
+        \State \Return $c$
+    \EndProcedure
+\end{algorithmic}
+\label{alg:cpg_cf}
+\end{algorithm}
+
 \subsection{Mutations}
 \label{sec:contact_points_grouping_mut}
+
+Defining mutations on a neural network (especially if the network is small and shallow like ours)
+is particularly easy, as the network can be seen as a set of weights we need to tune. For this reason
+the mutation is parametrized by 4 parameters. A mutation rate ($p_m$) a reset rate ($p_r$)
+and two random distribution for mutation and reset ($\mathcal{D}_m$ and $\mathcal{D}_r$).
+With this four parameters the mutation can be easily described with algorithm \ref{alg:network_mut}.
+In the final implementation we ended up defining four different set of the four parameters,
+and randomly picking one for every mutation operation.
+This was done in order to increase the stochasticity of the mutation, that is generally
+speaking a good idea for genetic algorithms.
+
+\begin{algorithm}[h]
+\caption{Mutation of neural network}
+\begin{algorithmic}[1]
+    \Require $N$: The network to mutate
+    \Require $p_m \in [0, 1]$: Neuron mutation probability
+    \Require $p_r \in [0, 1 - p_m]$: Neuron reset probability
+    \Require $\mathcal{D}_m$: Arbitrary probability distribution for mutation 
+    \Require $\mathcal{D}_r$: Arbitrary probability distribution for reset
+    \Ensure $N^*$: The mutated network
+
+    \Procedure{MutateNetwork}{$G$} \Comment{Compute the cost of a set of groups}
+        \State $N^* \gets \emptyset$ \Comment{Initialize empty network}
+        \For {$n \in G$} \Comment{Iterate over the parameters of $G$}
+            \State Sample $x \sim \mathcal{U}(0,1)$
+            \If{$x < p_m$} \Comment{Weight mutation}
+                \State Sample $m \sim \mathcal{D}_m$
+                \State $n^* \gets n + m$
+            \ElsIf{$x < p_m + p_r$} \Comment{Weight reset}
+                \State Sample $r \sim \mathcal{D}_r$
+                \State $n^* \gets r$
+            \Else
+                \State $n^* \gets n$
+            \EndIf
+            \State $N^* \gets \Call{AddParameter}{G^*, n^*}$ \Comment {Adding the mutated weight to the new network}
+        \EndFor
+        \State \Return $N^*$ \Comment {Returning the fully mutated network}
+    \EndProcedure
+\end{algorithmic}
+\label{alg:network_mut}
+\end{algorithm}
 
 \subsection{Crossover}
 \label{sec:contact_points_grouping_cross}
 
+Crossover is once again simple in the case of neural network (Especially
+considering that the size and shape of the network is known ``a priori'' and is
+not part of the crossover/mutation), in this case we have defined three different crossover
+strategies, and every time a crossover is executed we randomly pick one of them.
+The three strategies selected are:
+\begin{itemize}
+    \item \textbf{Uniform:} This is the traditional uniform mutation where every node in the offspring's network
+    is either inherited from Parent A or form parent B with 50-50 probability.
+    \item \textbf{Single Point:} In this case a random number is generated between zero and the number of parameters,
+    and then all of the weights that have an index lower than the generated number are inherited from one
+    parent, while the remaining one are inherited from the other.
+    \item \textbf{Arithmetic:} In this case we decide a parameter $\alpha$ (usually 0.5) and then the weights of the
+    offspring ($\mathbf{\theta}_{o}$) can be expressed as a weighted summation of the weights of the two parents
+    ($\mathbf{\theta}_{A}$ and $\mathbf{\theta}_{A}$) using the simple equation: $\mathbf{\theta}_{o} = \alpha \mathbf{\theta}_{A} + (1 - \alpha)\mathbf{\theta}_{B}$
+\end{itemize}
+
 \subsection{Initialization}
+
+Initialization of the network is achieved using the famous ``He'' initialization technique
+first describe in the famous 2015 paper ``Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification''
+\cite{he2015}.
+``Xavier'' initialization \cite{xavier2010} were also tested, but were found to have slightly worst
+performances compared to He.
+
+
+
 \label{sec:contact_points_grouping_init}
 
 \subsection{Optimization Process and Parameters}
