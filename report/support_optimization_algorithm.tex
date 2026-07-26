@@ -272,6 +272,8 @@ as that topic will be extensively covered in one of the next sections (specifica
     \label{fig:floating_regions}
 \end{figure}
 
+\subsection{Algorithm Overview}
+
 Efficient detection of floating regions can be achieved using algorithm \cref{alg:float_det}
 the idea is that the nodes are sorted from the lowest to the highest, then they are sampled one by one,
 and, then visiting the all the nodes reachable form the point, where an arch that go from $A$ to $B$ is 
@@ -316,13 +318,13 @@ too much and reach zones that are actually not considered ``floating''.
 
     \Procedure{FloatingRegionsDetection}{$G$}
         \State $\mathcal{F} \gets \emptyset, \quad V \gets \emptyset$ \Comment{Detected regions and visited nodes}
-        \For{$n \in \Call{SortNodesByHeight}{G}$}
-            \If{$V(n)$}
+        \For{$s \in \Call{SortNodesByHeight}{G}$}
+            \If{$V(s)$}
                 \State \textbf{continue} \Comment{Already part of a component}
             \EndIf
             \State $R \gets \Call{ExploreUpward}{G, s, V}$ \Comment{Exploring grpah, while only moving ``uppward''}
             \If{$\Call{HeightOf}{s} > 0$} \Comment{If the node is detached from the ground}
-                \State $F \gets \Call{AddFloatingRegion}{F, R}$ \Comment{Mark the explored node as a floating region}
+                \State $\mathcal{F} \gets \Call{AddFloatingRegion}{F, R}$ \Comment{Mark the explored node as a floating region}
             \EndIf
         \EndFor
         \State \Return $\mathcal{F}$
@@ -336,9 +338,96 @@ too much and reach zones that are actually not considered ``floating''.
 \section{Criticality Grouping}
 \label{sec:criticality_grouping}
 
+In this stage in the pipeline we have a set of nodes inside the mesh graph that is deemed
+``critical'' however we have no grouping or topology of the critical area themes.
+This is not strictly speaking an issue, as we could in theory execute the next stage (contact
+points optimization) only once, for the entire set of critical regions, however this would 
+be less then ideal from a performance standpoint. Infact, generally speaking in this kind of 
+optimization problems is generally more efficient to optimize many small problems rather than
+one big one. Furthermore due to the way we are defining our cost function (that we will
+explain more in section \ref{sec:contact_points_opt_cf}) the cost of one set
+of connected critical nodes is independent from the cost of another set of critical
+nodes. With those two facts in mind, it is easy to see why grouping the contact points
+based on proximity, and optimize each of them as a separate problem would be convenient
+from a performance standpoint, while not impacting the output of the optimizer.
+For this reason we made the choice of inserting the ``Criticality Grouping'' stage
+in the pipeline, so that we could create a sensible grouping of the critical regions,
+with the objective of optimizing them separately.
+Algorithm \cref{alg:crit_grouping} show the procedure of how grouping is executed.
+
+\subsection{Algorithm Overview}
+
+\begin{algorithm}[h]
+\caption{Criticality Grouping}
+\begin{algorithmic}[1]
+    \Require $G$ Graph that represent the mesh
+    \Require $C$ Set of critical nodes detected
+    \Ensure $R$ Grouped set of critical nodes
+
+    \Procedure{Explore}{$G, C, s, V$} \Comment{Collect the critical nodes reashable from $s$}
+        \State $R \gets \emptyset$
+        \State $Q \gets \{s\}$ \Comment{Initialize the queue with the node}
+        \While{$\lnot \Call{IsEmpty}{Q}$} \Comment{repeat untill queue is empty}
+            \State $n \gets \Call{Pop}{Q}$
+            \State $V(n) \gets true$
+            \State $R \gets \Call{Append}{R, n}$
+            \For{$a \in \Call{Adjacent}{G, n}$ with } \Comment{Explore adjacent neighbors}
+                \If{ $n \in C \land \lnot V(a)$ } \Comment{Filter by non visited, and critical nodes}
+                    \State \Call{Push}{Q, a}
+                \EndIf
+            \EndFor
+        \EndWhile
+        \State \Return $R$
+    \EndProcedure
+
+    \Statex
+
+
+    \Procedure{CriticalityGrouping}{$G, C$}
+        \State ${R} \gets \emptyset, \quad V \gets \emptyset$ \Comment{Grouped regions and visited nodes}
+        \State ${N} \gets \Call{Dijkstra}{G, start=C, max\_distance=D_{max}}$
+        \State $C \gets C \cup N$ \Comment{Consider critical all nodes that are closer than $D_{max}$ to a critical node}
+        \For{$s \in C$}
+            \If{$V(s)$}
+                \State \textbf{continue} \Comment{Already part of a component}
+            \EndIf
+            \State $C \gets \Call{Explore}{G, C, s, V}$ \Comment{Exploring grpah, while only moving ``uppward''}
+            \State $R \gets \Call{AddGroup}{R, C}$
+        \EndFor
+        \State \Return $R$
+    \EndProcedure
+\label{alg:crit_grouping}
+\end{algorithmic}
+\end{algorithm}
+
+In the algorithm \cref{alg:crit_grouping} we can see that the ``grouping'' operation mainly
+involve two steps, the first one is to apply a ``dilation'' to the critical nodes. This dilation
+is characterized by a specific parameter ($D_{max}$) that represent the distance of a dilation.
+During the dilation operation, every node that have at least one critical node closer than $D_{max}$
+is considered as well critical. This dilation is applied in order to ``merge'' critical regions
+that are really close together in order to reduce the total number of regions the algorithm 
+will produce. The reasoning behind this erosion is that, although it is true that generally speaking
+small optimization problem are easier to solve than a single bigger one, this reasoning has a limiting.
+and we found that, if a mesh has a large area that is very close to the overhanging angle, the
+criticality detection algorithm would generate a very large subset of tiny critical areas.
+This was an undesirable behaver, therefore this dilation was added so that by tuning $D_{max}$
+we are able to control how ``aggressively'' critical regions are divided into groups.
+of $D_{max}$ is set to zero we get the highest number of groups, while if we increase the value
+we gradually reduce the amount of groups that are generated.
+The second stage in the grouping algorithm is the exploration of the graph itself,
+in this stage we start from every critical point, and we explore the graph by navigating
+to all the nodes that are marked as ``critical'', in this stage we keep track of then nodes that are 
+visited so to avoid visiting the same node twice, and increasing the time complexity;
+And finally, once all the nodes that are reachable form a source, we can mark those nodes
+as a ``critical group'' (i.e. a set of critical nodes that are all connected to each others).
+
+
 
 \section{Contact Points Optimization}
 \label{sec:contact_points_opt}
+
+\subsection{Cost Function}
+\label{sec:contact_points_opt_cf}
 
 
 \section{Contact Points Grouping}
