@@ -461,7 +461,7 @@ stage is probability the less useful of the three, and could easily be replaced 
     \label{fig:contact_points_opt}
 \end{figure}
 
-\subsection{Gene Structure}
+\subsection{Genome Structure}
 \label{sec:contact_points_opt_gs}
 
 The genetic representation of a contact points choice is incredibly straightforward,
@@ -674,7 +674,7 @@ individually as we did in the previous section.
 
 
 
-\subsection{Gene Structure}
+\subsection{Genome Structure}
 \label{sec:contact_points_grouping_gs}
 
 In the contact point grouping stage the ``gene'' is represented as a Compositional Pattern
@@ -857,8 +857,76 @@ of the genetic algorithm starting as always with the gene structure.
 
 
 
-\subsection{Gene Structure}
+\subsection{Genome Structure}
 \label{sec:sup_struct_opt_gs}
+
+The genome for the support structure optimization can be described as a set of $m$ individual
+genes:
+$$\mathbf{G} = \{ g_1, g_2, ..., g_m\}$$
+Each gene $g_i$ is represented by two parameters: A position in 3D space ($p_i$) and a number
+$N$ that define the number of neighbors that the gene connect to. In mathematical therms:
+$$g_i = (p_i, n_i) \qquad \forall i \in [1, m]$$
+in 3D space, each of which has a parameter $N$ (the number of neighbor) that can
+vary from 1 to 3.
+This representation is quite simple indeed, however the slightly more complicated part
+is transforming this simple encoding into a rigid frame. This is done with algorithm
+\ref{alg:gene_to_frame}.
+As we can see in the algorithm, every gene $g_i$ is converted into a node in the rigid
+frame $F$. Then every node is connected to at most $n_i$ neighbors below that provide
+support. Neighbors are eligible if the connection angle is not too steep in order to
+ensure that the frames produced are easy to print, without excessive overhanging angle.
+Then two final post processing step are applied. In the first one all nodes that don't 
+have any support are automatically connected to the ground, this is of course necessary
+if we want the structure to be fully printable.
+In the second one we add the connections to the contact points (i.e. the points of contact
+between the support frame and the printed object.). This point are threated as if they were
+genes $g_j$ with $n_j = 1$ and with a fixed position. Both the number of neighbors and position
+are input values that are not subject to optimization in this stage, as their value is been chosen
+in the contact point optimization stage (\ref{sec:contact_points_opt}).
+
+
+\begin{algorithm}[h]
+\caption{Construction of a rigid frame starting from a gene}
+\begin{algorithmic}[1]
+    \Require $G$: The support structure genome
+    \Require $C$: The contact points with the structure
+    \Require $p_r \in [0, 1 - p_m]$: Neuron reset probability
+    \Require $\mathcal{D}_m$: Arbitrary probability distribution for mutation 
+    \Require $\mathcal{D}_r$: Arbitrary probability distribution for reset
+    \Ensure $N^*$: The mutated network
+
+    \Procedure{MutateNetwork}{$G$} \Comment{Compute the cost of a set of groups}
+        \State $N^* \gets \emptyset$ \Comment{Initialize empty network}
+        \For {$n \in G$} \Comment{Iterate over the parameters of $G$}
+            \State Sample $x \sim \mathcal{U}(0,1)$
+            \If{$x < p_m$} \Comment{Weight mutation}
+                \State Sample $m \sim \mathcal{D}_m$
+                \State $n^* \gets n + m$
+            \ElsIf{$x < p_m + p_r$} \Comment{Weight reset}
+                \State Sample $r \sim \mathcal{D}_r$
+                \State $n^* \gets r$
+            \Else
+                \State $n^* \gets n$
+            \EndIf
+            \State $N^* \gets \Call{AddParameter}{G^*, n^*}$ \Comment {Adding the mutated weight to the new network}
+        \EndFor
+        \State \Return $N^*$ \Comment {Returning the fully mutated network}
+    \EndProcedure
+\end{algorithmic}
+\label{alg:gene_to_frame}
+\end{algorithm}
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/sup_struct_opt_gene_struct.png}
+    \caption{Genome structure for the support structure optimization step}
+    \label{fig:sup_struct_opt_gene_struct}
+\end{figure}
+
+
+
+
 
 \subsection{Cost Function}
 \label{sec:sup_struct_opt_cf}
