@@ -962,6 +962,42 @@ size of the networks we can train in a reasonable amount of time.
 \subsection{Cost Function}
 \label{sec:sup_struct_opt_cf}
 
+The cost function is composed of four different components.
+The four components are the ``Stiffness Cost'' ($C_\text{stiff}$) 
+the ``Steepness Cost'' ($C_\text{steep}$), the ``Material Cost'' ($C_\text{mat}$)
+and the ``Collision Cost'' ($C_\text{coll}$).
+Each of them has a specific objective ranging from the reduction 
+of material used to the printability of the structures. The final cost ($C_\text{tot}$)
+is obtained with a simple summation of the four components
+$$
+C_\text{tot} = C_\text{stiff} + C_\text{steep} + C_\text{mat} + C_\text{coll}
+$$
+This imply that we made the choice of merging the different objectives into one,
+and thus optimizing a simple single-objective optimization problem.
+This is generally a faster and easier problem to optimize compared to 
+multi objective optimization problems.
+Furthermore there are not many tangible benefits in trying to find a pareto
+front of solutions when at the end only one support structure will be used for the actual print.
+
+\subsubsection{Stiffness Cost}
+
+We already discuss extensively on the reason why it is essential to ensure that the support
+remain stiff while is being printed. To summarize it in one sentence we can say that ensuring
+the support has a sufficient level of stiffness throughout the print process is crucial for
+a successful print, failing to provide the required stiffness would result in an inadequate
+deposition of the filament due to the movement caused 
+by the z-wobble effect \ref{sec:wobble-test}.
+Furthermore we have discussed extensively on how we can define a stiffness/flexibility matrix,
+and how we can calculate them in chapter \ref{cha:stiffness_algo}.
+This section aim to put everything together and provide the final formulation of the stiffness
+function.
+
+
+
+\subsubsection{Stepepness Cost}
+\subsubsection{Material Cost}
+\subsubsection{Collision Cost}
+
 \subsection{Mutations}
 \label{sec:sup_struct_opt_mut}
 
