@@ -864,53 +864,61 @@ The genome for the support structure optimization can be described as a set of $
 genes:
 $$\mathbf{G} = \{ g_1, g_2, ..., g_m\}$$
 Each gene $g_i$ is represented by two parameters: A position in 3D space ($p_i$) and a number
-$N$ that define the number of neighbors that the gene connect to. In mathematical therms:
+$n$ (that vary from 1 to 3) that define the number of neighbors that the point connect to. In mathematical therms:
 $$g_i = (p_i, n_i) \qquad \forall i \in [1, m]$$
-in 3D space, each of which has a parameter $N$ (the number of neighbor) that can
-vary from 1 to 3.
 This representation is quite simple indeed, however the slightly more complicated part
 is transforming this simple encoding into a rigid frame. This is done with algorithm
 \ref{alg:gene_to_frame}.
 As we can see in the algorithm, every gene $g_i$ is converted into a node in the rigid
 frame $F$. Then every node is connected to at most $n_i$ neighbors below that provide
 support. Neighbors are eligible if the connection angle is not too steep in order to
-ensure that the frames produced are easy to print, without excessive overhanging angle.
-Then two final post processing step are applied. In the first one all nodes that don't 
-have any support are automatically connected to the ground, this is of course necessary
-if we want the structure to be fully printable.
-In the second one we add the connections to the contact points (i.e. the points of contact
-between the support frame and the printed object.). This point are threated as if they were
-genes $g_j$ with $n_j = 1$ and with a fixed position. Both the number of neighbors and position
-are input values that are not subject to optimization in this stage, as their value is been chosen
-in the contact point optimization stage (\ref{sec:contact_points_opt}).
+ensure that the frames produced are printable by guaranteeing at construction time
+that the frame will not have excessive overhanging angle.
+Finally there are two minor details that are worth mentioning:
+The first one is that all nodes that don't have any support are automatically 
+connected to the ground, this is of course necessary if we want the structure to not float in the void.
+The second one is that the connections to the contact points (i.e. the points of contact
+between the support frame and the printed object.) are threated almost in the same way as
+regular nodes with the only two differences being that the number of neighbors ($n$)
+is automatically set as one, and that those points are not eligible for being ``supporters''
+(this is to ensure that a contact point is not connected to another contact point with a beam
+in the final structure, which of course would be less than desirable).
+Figure \ref{fig:sup_struct_opt_gene_struct} show the the process of converting a gene
+(show in the picture on the left) into a full rigid frame (shown in the picture 
+to the right).
+
 
 
 \begin{algorithm}[h]
 \caption{Construction of a rigid frame starting from a gene}
 \begin{algorithmic}[1]
-    \Require $G$: The support structure genome
+    \Require $G$: The support structure genome (genes $g_i = (p_i, n_i)$)
     \Require $C$: The contact points with the structure
-    \Require $p_r \in [0, 1 - p_m]$: Neuron reset probability
-    \Require $\mathcal{D}_m$: Arbitrary probability distribution for mutation 
-    \Require $\mathcal{D}_r$: Arbitrary probability distribution for reset
-    \Ensure $N^*$: The mutated network
+    \Ensure $F$: The rigid frame
 
-    \Procedure{MutateNetwork}{$G$} \Comment{Compute the cost of a set of groups}
-        \State $N^* \gets \emptyset$ \Comment{Initialize empty network}
-        \For {$n \in G$} \Comment{Iterate over the parameters of $G$}
-            \State Sample $x \sim \mathcal{U}(0,1)$
-            \If{$x < p_m$} \Comment{Weight mutation}
-                \State Sample $m \sim \mathcal{D}_m$
-                \State $n^* \gets n + m$
-            \ElsIf{$x < p_m + p_r$} \Comment{Weight reset}
-                \State Sample $r \sim \mathcal{D}_r$
-                \State $n^* \gets r$
-            \Else
-                \State $n^* \gets n$
+    \Procedure{FindSupporters}{$S, p, n$} \Comment{Up to $n$ nodes below $p$ that can hold it}
+        \State $E \gets \{ q \in S : \Call{OverhangingAngle}{q, p} > \varPhi_{max} \}$ \Comment{Eligible if the beam is not too steep}
+        \If{$E \neq \emptyset$}
+            \State \Return $\Call{Nearest}{E, p, n}$ \Comment{The $n$ closest eligible nodes}
+        \EndIf
+        \State \Return $\{ (p_x, p_y, 0) \}$ \Comment{None found: drop a beam straight to the ground}
+    \EndProcedure
+
+    \Statex
+
+    \Procedure{GeneToFrame}{$G, C$}
+        \State $F \gets \emptyset, \quad S \gets \emptyset$ \Comment{Frame nodes and candidate supporters}
+        \State $Q \gets G \cup \{ (p, 1) : p \in C \}$ \Comment{Contacts are fixed genes with a single neighbor}
+        \For{$(p, n) \in \Call{SortByHeightAscending}{Q}$} \Comment{Process from the lowest node to the highest}
+            \State $\Call{AddNode}{F, p}$
+            \For{$s \in \Call{FindSupporters}{S, p, n}$}
+                \State $\Call{AddLink}{F, p, s}$ \Comment{Connect $p$ to its supporting neighbor below}
+            \EndFor
+            \If{$(p, n) \in G$}
+                \State $S \gets S \cup \{ p \}$ \Comment{Only genes (not contacts) can support other nodes}
             \EndIf
-            \State $N^* \gets \Call{AddParameter}{G^*, n^*}$ \Comment {Adding the mutated weight to the new network}
         \EndFor
-        \State \Return $N^*$ \Comment {Returning the fully mutated network}
+        \State \Return $F$
     \EndProcedure
 \end{algorithmic}
 \label{alg:gene_to_frame}
@@ -924,8 +932,31 @@ in the contact point optimization stage (\ref{sec:contact_points_opt}).
     \label{fig:sup_struct_opt_gene_struct}
 \end{figure}
 
-
-
+Generally speaking the primary challenge when designing the genetic representation
+of any genetic-based solver is striking a balance between a complex formulation 
+that is able to be very expressive, and a simpler formulation that is easy to optimize
+using crossover and mutation.
+The genetic representation we presented is a good middleground, between the two 
+constraints. The fact that we only allow each node to connect to the $n$ closest eligible
+neighbors is of course a reduction in the expressiveness of the system, however
+this downside comes with the benefit of a much simpler representation that is easier to optimize.
+During the design process more options were considered and tested.
+Some of the options that were tested include:
+A representation that organized the support structure into layer, where each layer was 
+able to be mutated separately, and then the crossover was achieved by merging different layer.
+This representation was easy to optimize, however the topology of the output frame was found 
+to be too restricted, and the results were not satisfactory.
+Another representation that was tested involved using a Convocational Pattern Producing Network
+that essentially had as output a multi dimensional vector field, that was then used to generate
+the rigid frame. This version however although quite interesting in theory failed to deliver
+acceptable results in practice; The primary issue stemmed from the relation
+between the size of the network and the ability to train one efficiently.
+Small networks were able to be trained effectively using this method, however the resulting 
+frames were not good as the network was too small to learn any meaningful pattern.
+Increasing the size of the network would have resolved this issue, however the fact that we are
+optimizing the network using a genetic algorithm (rather than a gradient-based method)
+makes the optimization process much slower and more inefficient effectively limiting the
+size of the networks we can train in a reasonable amount of time.
 
 
 \subsection{Cost Function}
