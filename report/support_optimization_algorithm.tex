@@ -1292,6 +1292,65 @@ tournament size of 10.
 
 \section{Exporting}
 \label{sec:exporting}
-exp
+
+The last stage in the pipeline aim to export all the support structure we generated (that 
+until now is simply a graph of connected points in 3D space) into a format that could
+be used to print something in the real world.
+The easiest wat to do so is to export the support as a 3D volume (in our case using the 
+STL format), so that, printing an object using the generated support was as simple as
+importing the two models together in the slicer, and generating the g-code.
+This was not the only option, as a different one could have been to directly integrate with 
+a slicing software, which would provide some quality and usability benefits as we will discuss
+in the future work section (\ref{sec:future_work}).
+For this thesis we chosen the first option, of exporting directly a 3D model,
+both for it's simpler implementation, and also for the fact that it makes the solution
+more portable (as it could work with any slicing software, rather than being locked down 
+to a single one).
+The creation of the final volume is obtained by means of merging a set of primitive
+shapes into the final structure. The shapes in question are: A cylinder that is used to
+represent every beam, a cone that is used for the connection to the contact points (given that
+contact points may have a radius different from the one of the beams), a sphere placed
+at every intersection between multiple beams, and a ``GroundFeet'' shape (basically a short
+and wide cylinder) that is added to the nodes that are attached to the ground in order 
+to help them stick to the plate.
+Algorithm \ref{alg:support_structure_exporting} show the exact way that those primitive shapes
+are combined into the final structure, and figure \ref{fig:export_output} show the final
+output of the exporting stage.
+
+\begin{algorithm}[h]
+\caption{Creation of the final support volume}
+\begin{algorithmic}[1]
+    \Require $F$ The rigid frame
+    \Require $V$ The printed object volume
+    \Ensure $S$ The volume of supports
+
+    \Procedure{ExportSupport}{$F, V$}
+        \State $S \gets \emptyset$ \Comment{Initialize empty support volume}
+        \For{$(a, b) \in \Call{Beams}{F}$} \Comment{Iterate over beams (a is always the closer to the ground)}
+            \If {$\Call{IsContact}{b}$}
+                \State $S \gets \Call{AddCone}{S, a, b}$
+            \Else
+                \State $S \gets \Call{AddCylinder}{S, a, b}$
+            \EndIf
+            \If {$\Call{IsGroundNode}{a}$}
+                \State $S \gets \Call{AddGroundFeet}{S, a}$
+            \Else
+                \State $S \gets \Call{AddSphere}{S, a}$
+            \EndIf
+        \EndFor
+        \State $V \gets \Call{Expand}{V, d_{\text{exp}}}$ \Comment{Expand volume by a threshold}
+        \State $S \gets \Call{Subtract}{S, V}$ \Comment{Subtract main volume}
+        \State \Return $S$
+    \EndProcedure
+\end{algorithmic}
+\label{alg:support_structure_exporting}
+\end{algorithm}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/dragon_final.png}
+    \caption{Output of the export stage (printed object in red, support structure in green)}
+    \label{fig:export_output}
+\end{figure}
 
 
