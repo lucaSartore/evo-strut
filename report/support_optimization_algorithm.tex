@@ -987,16 +987,192 @@ the support has a sufficient level of stiffness throughout the print process is 
 a successful print, failing to provide the required stiffness would result in an inadequate
 deposition of the filament due to the movement caused 
 by the z-wobble effect \ref{sec:wobble-test}.
-Furthermore we have discussed extensively on how we can define a stiffness/flexibility matrix,
+Furthermore we have discussed in depth on how we can define a stiffness/flexibility matrix,
 and how we can calculate them in chapter \ref{cha:stiffness_algo}.
 This section aim to put everything together and provide the final formulation of the stiffness
-function.
+cost function. Algorithm \ref{alg:stiffness_cost} show the full procedure necessary
+for cost calculation. We can see in the function ``StiffnessCost'' that the frame is gradually
+constructed one node at a time, this ensure we can calculate the stiffness of every point
+while it's begin built, and not just with the final structure, that as we discussed in
+section \ref{sec:stiffness_part_frames} is quite important for a few mechanical reasons.
+While the frame is being constructed two different source of costs are evaluated. The first one
+is simply a function of the stiffness of each beam, this value is calculated
+inside the function ``BeamCost'' and is essentially a linear with threshold function of the compliance,
+sampled in a set of equally spaced points inside the beam.
+The compliance is calculated inside the function ``Compliance'' function, and we can see that it a simple
+L2 norm of the $xx$ and $yy$ components of the flexibility matrix $\mathbf{D}$.
+The $xx$($yy$) component of $\mathbf{D}$ is essentially expressing what is the displacement
+caused along the $x$($y$) axis, assuming that a force is applied parallel to the $x$($y$) axis.
+The second cost that considered is the ``floating regions'' cost. The definition and detection
+of floating regions is covered in section \ref{sec:floating_regions_detection}, however we haven't
+explained yet why floating regions are important. In a traditional ``critical area'' (i.e. an area
+where the overhanging angle is above a specific threshold) the support is placed to sustain the melted
+filament while it cools down, but once the cooling process has concluded the support is no longer necessary.
+In the case of floating regions however the printed object is (at first) not directly connected to the plate
+if not for the supports themselves, so the usefulness of the support is not limited to the first few seconds 
+after the filament is being extruded, but it remain crucial until the floating regions are connected
+to the plate by means other than the support structure. This means that, in the period of time when the floating region is not connected
+to the build plate, the support must provide an adequate level of stiffness to the floating region,
+to avoid having to deal with the z-wobble effect (\ref{sec:wobble-test}).
+For this reason the function ``FloatingRegionCost'' calculate the equivalent stiffness (that is approximated by calculating the stiffness of a point
+in the center of the floating regions connected to all contact points) of every floating region.
+This equivalent stiffness is then simply converted to compliance and transformed into cost with a simple
+linear with threshold model.
+The threshold value and weight are a parameter of the floating region itself (with larger floating regions
+requiring more stiffness).
+Disregarding the application of this cost, would result in a support structure such as the one shown in figure
+\ref{fig:no_floating_regions_cost}, where we can see that the the entire floating region is being supported by a
+single beam. This would be fine if we only needed support while the filament is cooling, however
+since while the print is ongoing the floating region is connected to the plate only 
+by the single support beam the z-wobble effect would cause serious quality issues.
 
 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/no_floating_regions_cost.png}
+    \caption{Optimization result if no floating region cost is applied}
+    \label{fig:no_floating_regions_cost}
+\end{figure}
 
-\subsubsection{Stepepness Cost}
+
+% \begin{breakablealgorithm}
+\begin{algorithm}[H]
+\caption{Support Structure Stiffness Cost}
+\begin{algorithmic}[1]
+% \algnobreaks   
+    \Require $F$ The rigid frame, with nodes sorted by height
+    \Require $\mathcal{R}$ The set of floating regions
+    \Ensure $c$ The total stiffness cost
+
+    \Procedure{Compliance}{$\mathbf{K}$} \Comment{Calculate the compliance value of a stiffness matrix}
+        \State $\mathbf{D} \gets \mathbf{K}^{-1}$ \Comment{Calculate the flexibility matrix}
+        \State \Return $\sqrt{\mathbf{D}_{xx}{}^2 + \mathbf{D}_{yy}{}^2}$ \Comment{L2 norm of the flexibility along $x$ and $y$}
+    \EndProcedure
+
+    \Statex
+    % \algmaybreak
+
+    \Procedure{BeamCost}{$F, s, n$} \Comment{Penalize excessive compliance along the beam $s \to n$}
+        \State $\mathbf{K}_s \gets \Call{StiffnessOf}{F, s}$
+        \State $c \gets 0$
+        \For{$p \in \Call{Sample}{s, n, \delta}$} \Comment{Sample points moving from $s$ towards $n$ with a spacing of $\delta$}
+            \State $\mathbf{K}_p \gets \Call{Series}{\mathbf{K}, s, p}$ \Comment{Stiffness at the sampled point $p$}
+            \State $\gamma \gets \Call{Compliance}{\mathbf{K}_p}$
+            \State $c \gets c + \lambda \cdot \Call{Max}{\gamma - \gamma_{th}, 0}$ \Comment{Cost only for compliance above the threshold}
+        \EndFor
+        \State \Return $c$
+    \EndProcedure
+
+    \Statex
+    % \algmaybreak
+
+    \Procedure{FloatingRegionCost}{$F, r$} \Comment{Penalize floating regions that are not stiff enough}
+        \State $p \gets \Call{CenterOf}{r}$
+        \State $F \gets \Call{AddNode}{F, p}$ \Comment{Add a node $p$ at the center of the reagon $r$}
+        \For{$p' \in r$}
+            \State $F \gets \Call{AddBeam}{F, p, p'}$ \Comment{Connect $p$ to all contact points in the floating region}
+        \EndFor
+        \State $\mathbf{K}_p \gets \Call{StiffnessOf}{F, p}$ \Comment{Evaluate stiffness in $p$}
+        \State $\gamma \gets \Call{Compliance}{\mathbf{K}_p}$
+        \State \Return $r_{\text{weight}} \cdot \Call{Max}{ \gamma - r_{\gamma\text{th}}, 0}$ \Comment{Apply cost based on the compliance in $p$}
+    \EndProcedure
+
+    \Statex
+    % \algmaybreak
+
+    \Procedure{StiffnessCost}{$F, \mathcal{R}$}
+        \State $c \gets 0$
+        \State $F' \gets \emptyset$ \Comment{Initialize an empty frame}
+        \For{$n \in F$} \Comment{Iterate over the elements of the frame (sorted by height)}
+            \State $F' \gets \Call{AddNodeAndBeams}{F', n}$ \Comment{Gradually construct $F'$ one node at a time}
+            \For{$s \in \Call{Supporters}{F', n}$} \Comment{Apply a cost for every beam supporting $n$}
+                \State $c \gets c + \Call{BeamCost}{F', s, n}$ 
+                \For {$r \in \mathcal{R}\quad \text{t.c.}\quad r \subset F'$} \Comment{Iterate over floating regions fully included in $F'$}
+                    \State $c \gets c + \Call{FloatingRegionCost}{F', r}$ \Comment{Apply the relative cost}
+                    \State $\mathcal{R} \gets \mathcal{R} \setminus \{r\}$ \Comment{Remove $r$ from $\mathcal{R}$ to avoid applying cost twice}
+                \EndFor
+            \EndFor
+        \EndFor
+        \State \Return $c$
+    \EndProcedure
+\end{algorithmic}
+\label{alg:stiffness_cost}
+% \end{breakablealgorithm}
+\end{algorithm}
+\FloatBarrier
+
+
+\subsubsection{Steepness Cost}
+
+\begin{algorithm}[h]
+\caption{Support Structure Steepness Cost}
+\begin{algorithmic}[1]
+    \Require $F$ The rigid frame
+    \Ensure $c$ The total steepness cost
+
+    \Procedure{SteepnessCost}{$F$}
+        \State $c \gets 0$
+        \State $\varPhi_{th} \gets 90^\circ - \varPhi_{max}$ \Comment{Minimum acceptable angle from the horizon}
+        \For{$(a, b) \in \Call{Edges}{F}$} \Comment{Iterate over every beam once}
+            \State $\varphi \gets |\Call{HorizonAngle}{a, b}|$ \Comment{Inclination of the beam w.r.t. the horizon}
+            \State $d \gets \Call{Distance}{a, b}$
+            \State $c \gets c + \Call{Max}{\varPhi_{th} - \varphi, 0} \cdot d$ \Comment{Penalize beams shallower than the threshold}
+        \EndFor
+        \State \Return $K_{steep} \cdot c$
+    \EndProcedure
+\end{algorithmic}
+\label{alg:steepness_cost}
+\end{algorithm}
+
 \subsubsection{Material Cost}
+
+\begin{algorithm}[h]
+\caption{Support Structure Material Cost}
+\begin{algorithmic}[1]
+    \Require $F$ The rigid frame
+    \Ensure $c$ The total material cost
+
+    \Procedure{MaterialCost}{$F$}
+        \State $A \gets 0$
+        \For{$(a, b) \in \Call{Edges}{F}$} \Comment{Iterate over every beam once}
+            \State $\ell \gets \Call{Distance}{a, b}$ \Comment{Length of the beam}
+            \State $r \gets (r_a + r_b) / 2$ \Comment{Average radius of the two endpoints}
+            \State $A \gets A + 2\pi r \ell + 4\pi r_a^2$ \Comment{Lateral cone surface plus the endpoint sphere}
+        \EndFor
+        \State \Return $K_{area} \cdot A$
+    \EndProcedure
+\end{algorithmic}
+\label{alg:material_cost}
+\end{algorithm}
+
 \subsubsection{Collision Cost}
+
+\begin{algorithm}[h]
+\caption{Support Structure Collision Cost}
+\begin{algorithmic}[1]
+    \Require $F$ The rigid frame
+    \Require $V$ The volume occupied by the printed object
+    \Ensure $c$ The total collision cost
+
+    \Procedure{CollisionCost}{$F, V$}
+        \State $c \gets 0$
+        \For{$(a, b) \in \Call{Edges}{F}$} \Comment{Iterate over every beam once}
+            \State $P \gets \Call{Sample}{a, b, \delta}$ \Comment{Sample the beam every $\delta$ units}
+            \If{$|P| < 2$}
+                \State \textbf{continue} \Comment{Beam too short to be sampled}
+            \EndIf
+            \State $d \gets \Call{Distance}{P_0, P_1}$ \Comment{Spacing between two consecutive samples}
+            \For{$p \in P$}
+                \If{$\Call{IsInside}{V, p}$} \Comment{The sample lies inside the printed object}
+                    \State $c \gets c + K_{coll} \cdot d$
+                \EndIf
+            \EndFor
+        \EndFor
+        \State \Return $c$
+    \EndProcedure
+\end{algorithmic}
+\label{alg:collision_cost}
+\end{algorithm}
 
 \subsection{Mutations}
 \label{sec:sup_struct_opt_mut}
