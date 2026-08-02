@@ -6,5 +6,6 @@ output.json
 settings.json
 /test_results/*
 !/test_results/visualize.py
+!/test_results/visualize_advanced.py
 !/test_results/tests.xlsx
 
