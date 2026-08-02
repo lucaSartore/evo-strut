@@ -1104,6 +1104,28 @@ by the single support beam the z-wobble effect would cause serious quality issue
 
 \subsubsection{Steepness Cost}
 
+Another undesirable feature of the generated supports is them having
+an overhanging angle (or steepness) that is too low. If this was the case
+the supports structure would itself not being printable without
+some kind of support resulting in a problem with infinite recursion.
+For this reason a simple cost based on the the steepness of the
+beams is applied in order to encourage the optimizer to produce structures
+that are fully printable.
+It should be sad that due to the way we convert the genome into a rigid
+frame, we could ensure that all overhanging angles are above a certain threshold
+by setting $\varPhi_{{max}}$ (line 2 of algorithm \ref{alg:gene_to_frame})
+to an appropriate value, however the ability to apply a separate cost function
+to the steepness of support is still a desirable trait, as it allows
+to express more complex requirements such as for example: ``You must keep all overhanging
+angles above $30^\circ$, and preferably above $45^\circ$ with a certain penalty
+every applied for every beam with an overhanging angle in the $35^\circ$ to
+$45^\circ$'' range.
+Calculating the steepness cost is incredibly straightforward,
+and the full procedure is shown in algorithm \ref{alg:steepness_cost}.
+The algorithm iterate over all teh beams of the frame $F$ and apply 
+based on the overhanging angle, and on the length of the beam (with
+longer beams being weighted more in the cost function).
+
 \begin{algorithm}[h]
 \caption{Support Structure Steepness Cost}
 \begin{algorithmic}[1]
@@ -1112,11 +1134,10 @@ by the single support beam the z-wobble effect would cause serious quality issue
 
     \Procedure{SteepnessCost}{$F$}
         \State $c \gets 0$
-        \State $\varPhi_{th} \gets 90^\circ - \varPhi_{max}$ \Comment{Minimum acceptable angle from the horizon}
-        \For{$(a, b) \in \Call{Edges}{F}$} \Comment{Iterate over every beam once}
-            \State $\varphi \gets |\Call{HorizonAngle}{a, b}|$ \Comment{Inclination of the beam w.r.t. the horizon}
+        \For{$(a, b) \in \Call{Beams}{F}$} \Comment{Iterate over every beam once}
+            \State $\varphi \gets \Call{HorizonAngle}{a, b}$ \Comment{Inclination of the beam w.r.t. the horizon}
             \State $d \gets \Call{Distance}{a, b}$
-            \State $c \gets c + \Call{Max}{\varPhi_{th} - \varphi, 0} \cdot d$ \Comment{Penalize beams shallower than the threshold}
+            \State $c \gets c + \Call{Max}{\varPhi_{th} - \varphi, 0} \cdot d$ \Comment{Penalize beams less steap than the threshold}
         \EndFor
         \State \Return $K_{steep} \cdot c$
     \EndProcedure
@@ -1126,6 +1147,20 @@ by the single support beam the z-wobble effect would cause serious quality issue
 
 \subsubsection{Material Cost}
 
+If we want to minimize the use of material we of course must apply a cost that tell the optimizer
+to do so. In the previous literature we have looked at in chapter \ref{cha:prev_literature}
+this cost was a function of the volume of the supports, however this mostly stemmed from the fact
+that their focus was primary SLS 3D printing, where printing empty objects in not possible (as the
+powder will remain trapped inside). Hour work however is more focused on FDM 3D printing, where
+printing hollow objects is not only possible but very common. For this reason the material cost function
+is not a function of volume, but rather a function of the surface area of the supports.
+Algorithm \ref{alg:material_cost} show exactly how the cost is calculate. In here we are approximating
+every beam as a cylinder, and calculating the lateral area of the cylinder.
+This is a ruff approximation, as there might me some overestimation areas where beams join together,
+and not all beams are cylinder (specifically the one that connect a contact point to the support are
+more similar to a truncated cone) but this approximation is a good enough, as we only need to use it
+as a a cost function.
+
 \begin{algorithm}[h]
 \caption{Support Structure Material Cost}
 \begin{algorithmic}[1]
@@ -1134,10 +1169,10 @@ by the single support beam the z-wobble effect would cause serious quality issue
 
     \Procedure{MaterialCost}{$F$}
         \State $A \gets 0$
-        \For{$(a, b) \in \Call{Edges}{F}$} \Comment{Iterate over every beam once}
+        \For{$(a, b) \in \Call{Beams}{F}$} \Comment{Iterate over every beam once}
             \State $\ell \gets \Call{Distance}{a, b}$ \Comment{Length of the beam}
             \State $r \gets (r_a + r_b) / 2$ \Comment{Average radius of the two endpoints}
-            \State $A \gets A + 2\pi r \ell + 4\pi r_a^2$ \Comment{Lateral cone surface plus the endpoint sphere}
+            \State $A \gets A + 2\pi r \ell$ \Comment{Lateral cylinder surface}
         \EndFor
         \State \Return $K_{area} \cdot A$
     \EndProcedure
@@ -1147,6 +1182,26 @@ by the single support beam the z-wobble effect would cause serious quality issue
 
 \subsubsection{Collision Cost}
 
+The last undesirable feature of a support structure are collisions with the printed object.
+This is undesirable primarily because it results in a longer cleanup phases when removing
+the supports. Furthermore supports that originate from the printed object rather than the plate
+are either fragile and risk to detach while the print is ongoing, or if they are 
+strong enough they often are hard to remove potentially causing damage to the printed object
+while being detached.
+For this reason we apply a cost function that penalize supports that intersect with the volume
+of the printed object. Algorithm \ref{alg:collision_cost} show the formulation of the cost function,
+we can see that is based on a simple iteration over the beams of the frame.
+Each beam is converted into a set of equally spaced points, and a penalty is applied
+for every point that is inside the volume of the printed object (plus a small safety
+margin $d_{\text{exp}})$.
+The function ``IsInside'' is implemented using a ``VDB'' data structure 
+from the famous 2013 paper ``VDB: High-Resolution Sparse Volumes with Dynamic Topology''
+\cite{openvdb}. This data structure ensure collision detection could be performed in a computationally
+efficient manner ensuring the genetic algorithm could run in a reasonable time.
+The implementation of the data structure is based on the rust library ``baby-shark'' \cite{babyshark}
+with a few minor modifications to expose the correct API.
+
+
 \begin{algorithm}[h]
 \caption{Support Structure Collision Cost}
 \begin{algorithmic}[1]
@@ -1155,16 +1210,13 @@ by the single support beam the z-wobble effect would cause serious quality issue
     \Ensure $c$ The total collision cost
 
     \Procedure{CollisionCost}{$F, V$}
+        \State $V \gets \Call{Expand}{V, d_{\text{exp}}}$ \Comment{Expand the volume by $d_{\text{exp}}$ as a safety margin}
         \State $c \gets 0$
-        \For{$(a, b) \in \Call{Edges}{F}$} \Comment{Iterate over every beam once}
+        \For{$(a, b) \in \Call{Beams}{F}$} \Comment{Iterate over every beam once}
             \State $P \gets \Call{Sample}{a, b, \delta}$ \Comment{Sample the beam every $\delta$ units}
-            \If{$|P| < 2$}
-                \State \textbf{continue} \Comment{Beam too short to be sampled}
-            \EndIf
-            \State $d \gets \Call{Distance}{P_0, P_1}$ \Comment{Spacing between two consecutive samples}
             \For{$p \in P$}
                 \If{$\Call{IsInside}{V, p}$} \Comment{The sample lies inside the printed object}
-                    \State $c \gets c + K_{coll} \cdot d$
+                    \State $c \gets c + K_{coll} \cdot \delta$
                 \EndIf
             \EndFor
         \EndFor
