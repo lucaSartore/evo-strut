@@ -130,9 +130,8 @@ fn evaluate_length_cost(descriptor: &GraphDescriptor, settings: &Settings) -> Co
                     let neighbour_descriptor = &descriptor.details[neighbour];
                     let len = (node_descriptor.position - neighbour_descriptor.position).abs();
                     let radius = (node_descriptor.radius + neighbour_descriptor.radius) / 2.;
-                    // approximated surface o the cone plus the sphere area
+                    // approximated lateral surface o the cone
                     len * radius * 2.0 * std::f32::consts::PI
-                        + node_descriptor.radius.powi(2) * 4. * std::f32::consts::PI
                 })
                 .sum();
             len
