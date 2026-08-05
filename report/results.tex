@@ -375,5 +375,120 @@ weak-points of our algorithm, however the difference are relatively small
 compared to the much larger differences in material saved, making the tradeoff
 possibly worth-it.
 
+\section{Final outputs}
+
+The final output are simple STL files that can be imported in a any 3D printing
+slicing software. The files are publicly available in the official github repository
+of the project. Figure \ref{fig:dragon_final}, \ref{fig:armadillo_final} and \ref{fig:candlestick_final}
+show the final (digital) output of the optimization process, with the printed model
+shown in red, and the support structure in green.
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[height=0.2\textheight]{images/dragon_final.png}
+    \caption{Final output of test ES1D}
+    \label{fig:dragon_final}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[height=0.2\textheight]{images/armadillo_final.png}
+        \caption{Final output of test ES1A}
+        \label{fig:armadillo_final}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[height=0.2\textheight]{images/candlestick_final.png}
+        \caption{Final output of test ES1C}
+        \label{fig:candlestick_final}
+    \end{minipage}
+\end{figure}
+
 \section{Print Tests}
+
+The last and arguably most important step in the validation procedure is the 
+print test. The aim here is to ensure that our stiffness cost function is well 
+aligned with reality, and that the produced support structure are indeed
+printable in the real world.
+For this reason we have selected as subset of the testcases (in particular
+ES1D, ES2D, ES3D, TSD, CTSD, ES1A and ES1C) and printed them to see the 
+if the print is successful, and the quality of the overall print.
+
+\subsection{Print Success Rate}
+
+
+% \begin{figure}[h]
+%     \centering
+%     \begin{minipage}[t]{0.48\textwidth}
+%         \centering
+%         \includegraphics[height=0.19\textheight]{images/dragon_print_sup.jpg}
+%         \caption{Final output of test ES1A}
+%         \label{fig:dragon_print_sup}
+%     \end{minipage}
+%     \hfill
+%     \begin{minipage}[t]{0.48\textwidth}
+%         \centering
+%         \includegraphics[height=0.19\textheight]{images/dragon_print_no_sup.jpg}
+%         \caption{Final output of test ES1C}
+%         \label{fig:dragon_print_no_sup}
+%     \end{minipage}
+% \end{figure}
+
+\begin{figure}[h]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[height=0.19\textheight]{images/dragon_print_sup.jpg}
+        \caption{ES1D with supports}
+        \label{fig:dragon_print_no_sup}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[height=0.19\textheight]{images/dragon_print_no_sup.jpg}
+        \caption{ES1D without supports}
+        \label{fig:dragon_print_sup}
+    \end{minipage}
+\end{figure}
+
+
+\begin{figure}[h]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[height=0.22\textheight]{images/armadillo_print_sup.jpg}
+        \caption{ES1A with supports}
+        \label{fig:armadillo_print_sup}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[height=0.22\textheight]{images/armadillo_print_no_sup.jpg}
+        \caption{ES1A without supports}
+        \label{fig:armadillo_print_no_sup}
+    \end{minipage}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[height=0.22\textheight]{images/candlestick_print_sup.jpg}
+        \caption{ES1C with supports}
+        \label{fig:candlestick_print_sup}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[height=0.22\textheight]{images/candlestick_print_no_sup.jpg}
+        \caption{ES1C without supports}
+        \label{fig:candlestick_print_no_sup}
+    \end{minipage}
+\end{figure}
+
+\subsection{Print Quality}
 
