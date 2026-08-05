@@ -74,34 +74,36 @@ with the algorithm and model associated with every test run.
   \caption{Testcase list with algorithm and model used}
   \label{tab:algorithm_maming}
   \hspace{4pt}
-  \begin{tabular}{lll}
+  \begin{tabular}{llll}
     \toprule
-    Test ID & Algorithm & Model \\
+    Test ID & Algorithm & Model & Test Number \\
     \midrule
-    ES1D & Evo Strut (ours) & Dragon \\
-    ES2D & Evo Strut (ours) & Dragon \\
-    ES3D & Evo Strut (ours) & Dragon \\
-    ES4D & Evo Strut (ours) & Dragon \\
-    ES5D & Evo Strut (ours) & Dragon \\
-    ES1A & Evo Strut (ours) & Armadillo \\
-    ES2A & Evo Strut (ours) & Armadillo \\
-    ES3A & Evo Strut (ours) & Armadillo \\
-    ES4A & Evo Strut (ours) & Armadillo \\
-    ES5A & Evo Strut (ours) & Armadillo \\
-    ES1C & Evo Strut (ours) & Candlestick \\
-    ES2C & Evo Strut (ours) & Candlestick \\
-    ES3C & Evo Strut (ours) & Candlestick \\
-    ES4C & Evo Strut (ours) & Candlestick \\
-    ES5C & Evo Strut (ours) & Candlestick \\
+    ES1D & Evo Strut (ours) & Dragon & 1\\
+    ES2D & Evo Strut (ours) & Dragon & 2\\
+    ES3D & Evo Strut (ours) & Dragon & 3\\
+    ES4D & Evo Strut (ours) & Dragon & 4\\
+    ES5D & Evo Strut (ours) & Dragon & 5\\
+    \addlinespace
+    ES1A & Evo Strut (ours) & Armadillo & 1\\
+    ES2A & Evo Strut (ours) & Armadillo & 2\\
+    ES3A & Evo Strut (ours) & Armadillo & 3\\
+    ES4A & Evo Strut (ours) & Armadillo & 4\\
+    ES5A & Evo Strut (ours) & Armadillo & 5\\
+    \addlinespace
+    ES1C & Evo Strut (ours) & Candlestick & 1\\
+    ES2C & Evo Strut (ours) & Candlestick & 2\\
+    ES3C & Evo Strut (ours) & Candlestick & 3\\
+    ES4C & Evo Strut (ours) & Candlestick & 4\\
+    ES5C & Evo Strut (ours) & Candlestick & 5\\
     \midrule
-    TSD & Tree Supports & Dragon \\
-    CTSD & Custom Tree Supports & Dragon \\
-    TSA & Tree Supports & Armadillo \\
-    TSC & Tree Supports & Candlestick \\
+    TSD & Tree Supports & Dragon & 1\\
+    CTSD & Custom Tree Supports & Dragon & 1\\
+    TSA & Tree Supports & Armadillo & 1\\
+    TSC & Tree Supports & Candlestick & 1\\
     \midrule
-    NSD & Normal Supports & Dragon \\
-    NSA & Normal Supports & Armadillo \\
-    NSC & Normal Supports & Candlestick \\
+    NSD & Normal Supports & Dragon & 1\\
+    NSA & Normal Supports & Armadillo & 1\\
+    NSC & Normal Supports & Candlestick & 1\\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -235,11 +237,143 @@ improvement by the end of the run.
     \label{fig:es_candlestick_sso}
 \end{figure}
 
+
 \section{Reduction In material usage}
 
-\section{Execution Time}
+\begin{table}[ht]
+    \centering
+    \caption{Reduction in material usage}
+    \label{tab:mat_usage_reduction}
+    \begin{tabular}{lllllll}
+    \toprule
+        Test ID & Total Fil.[g] & Model Fil. [g] & Support Fil. [g] & Reduction [g] & Reduction [\%] & \\ \midrule
+        ES1D & 111.23 & 57.23 & 54.00 & 26.94 & 33\% \\
+        ES2D & 108.63 & 57.23 & 51.40 & 29.54 & 36\% \\
+        ES3D & 106.29 & 57.23 & 49.06 & 31.88 & 39\% \\
+        ES4D & 105.10 & 57.23 & 47.87 & 33.07 & 41\% \\
+        ES5D & 109.86 & 57.23 & 52.63 & 28.31 & 35\% \\ \addlinespace
+        ES1A & 54.81 & 38.52 & 16.29 & 18.51 & 53\% \\
+        ES2A & 56.50 & 38.52 & 17.98 & 16.82 & 48\% \\
+        ES3A & 56.26 & 38.52 & 17.74 & 17.06 & 49\% \\
+        ES4A & 54.10 & 38.52 & 15.58 & 19.22 & 55\% \\
+        ES5A & 56.81 & 38.52 & 18.29 & 16.51 & 47\% \\ \addlinespace
+        ES1C & 54.56 & 31.28 & 23.28 & 18.02 & 44\% \\
+        ES2C & 55.38 & 31.28 & 24.10 & 17.20 & 42\% \\
+        ES3C & 56.56 & 31.28 & 25.28 & 16.02 & 39\% \\
+        ES4C & 52.38 & 31.28 & 21.10 & 20.20 & 49\% \\
+        ES5C & 56.49 & 31.28 & 25.21 & 16.09 & 39\% \\ \midrule
+        TSD & 125.13 & 57.23 & 67.90 & 13.04 & 16\% \\
+        CTSD & 138.17 & 57.23 & 80.94 & 0.00 & 0\% \\
+        TSA & 73.32 & 38.52 & 34.80 & 0.00 & 0\% \\
+        TSC & 72.58 & 31.28 & 41.30 & 0.00 & 0\% \\ \midrule
+        NSD & 243.77 & 57.23 & 186.54 & -105.60 & -130\% \\
+        NSA & 130.46 & 38.52 & 91.94 & -57.14 & -164\% \\
+        NSC & 119.69 & 31.28 & 88.41 & -47.11 & -114\% \\ \midrule
+        ES*D Avg. & 108.22 & 57.23 & 50.992 & 29.94 & 37.00\% \\ 
+        ES*A Avg. & 55.69 & 38.52 & 17.176 & 17.62 & 50.64\% \\ 
+        ES*C Avg. & 55.07 & 31.28 & 23.794 & 17.50 & 42.39\% \\ 
+        ES** Avg. & 73.00 & 42.34 & 30.65 & 21.69 & 43.34\% \\ 
+    \bottomrule
+    \end{tabular}
+\end{table}
 
-\section{Print Time}
+
+
+In this section we will evaluate how much material was saved by the supports generated with 
+our algorithm with respect to the state of the art. In this case, we will consider OrcaSlicer's
+``Tree Supports'' (\ref{sec:tree_support}) as the state of the art method, as it generally yields
+a better result compared to the ``Normal Supports'' algorithm, and even with other slcier's
+tree-like supports. In the case of the ``Armadillo'' and ``Candlestick'' all the parameters
+were set to the default value, and no manual intervention was necessary.
+In the case of the ``Dragon'' model however, some manual support placement was necessary
+to make the model printable, for this reason we will consider the test ``CTSD'' as our baseline
+for the ``Dragon'' model, as the non-custom one (TSD) repeatedly failed to print.
+
+The final results can be seen in table \ref{tab:mat_usage_reduction}.
+generally speaking we can say that the results are excellent, as our method was able to
+reduce the material consumption by an average of 43\% across all testcases.
+The algorithm also seem to be adequately able to generalize to different shapes,
+as it has provided with some important saving on all three of the tested models.
+We can note how the performances are not exactly identical on the three models,
+as they range form a 50\% reduction in the ``Armadillo'' to a more modest 37\% 
+cut in the case of the ``Dragon''. This minor difference probably stem
+from the height difference of the two models; The dragon is a wide but short 
+object, while the armadillo, and the candlestick are taller and thinner.
+Generally speaking the taller a support is the more expensive it become
+meaning that there is a larger margin of improvement.
+
+
+
+\section{Optimization and Print Times}
+
+
+\begin{table}[htbp]
+    \centering
+    \caption{Optimization and Print Times}
+    \label{tab:opt_and_print_time}
+    \begin{tabular}{llllllllll}
+    \toprule
+        Test ID & Optimization Time [s] & Print time \\ \midrule
+        ES1D & 411 & 12h35m \\
+        ES2D & 583 & 12h15m \\
+        ES3D & 402 & 11h59m \\
+        ES4D & 373 & 11h46m \\
+        ES5D & 331 & 12h26m \\ \addlinespace
+        ES1A & 335 & 5h38m \\
+        ES2A & 337 & 5h59m \\
+        ES3A & 314 & 5h57m \\
+        ES4A & 327 & 5h34m \\
+        ES5A & 305 & 5h59m \\ \addlinespace
+        ES1C & 736 & 5h3m \\
+        ES2C & 454 & 5h16m \\
+        ES3C & 685 & 5h27m \\
+        ES4C & 561 & 4h50m \\
+        ES5C & 628 & 5h34m \\ \midrule
+        TSD & $\le10$ & 10h34m \\
+        CTSD & $\le10$ & 11h43m \\
+        TSA & $\le10$ & 5h47m \\
+        TSC & $\le10$ & 4h41m \\ \midrule
+        NSD & $\le10$ & 12h33m \\
+        NSA & $\le10$ & 7h50m \\
+        NSC & $\le10$ & 4h50m \\ \midrule
+        ES*D Avg. & 420 & 12h12m \\ 
+        ES*A Avg. & 323 & 5h49m \\ 
+        ES*C Avg. & 612 & 5h14m \\ 
+        ES** Avg. & 452 & 7h45m\\ 
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+The time necessary to execute the optimization,
+as well as the time necessary to print the final object including supports are two other
+important parameter worth considering when comparing different support structure optimization
+algorithm.
+In the case of the optimization time the comparison is particularly one sided, as we can see
+in table \ref{tab:opt_and_print_time} our algorithms generally need between 300 and 700 seconds
+for a full optimization; Meanwhile all the existing solution are extremely quick, all finishing
+below 10 seconds. This results is to be expected, as both the ``Tree Support'' and the ``Normal Support''
+algorithms are simple greedy procedure, and don't perform any kind of optimization,
+meanwhile our proposed solution is an optimization-based approach, that require a few
+thousand iteration to arrive at a good result. In this optic we can say that the higher
+computational cost is the price to pay for the saving in materials.
+Reducing those times could be done, but is not easy, the algorithm is already written in Rust,
+and compiled to assembly code, and is already well optimized for leveraging multiple corse,
+therefore any substantial gain in the computational times would probably have to come from 
+better mutations or from a more efficient stiffness evaluation algorithm.
+Shifting our attention to the printing times, we can note that our algorithm is the generally slightly
+works compared to the existing solution. The difference is not huge, as we are talking of 
+approximately 40 minutes in the worst case scenario, however it is still a downside of our approach,
+and is worth trying to understand why.
+The most obvious cause of this increase time is the increase distance the nozzle has to cover
+in order to deposit the material in every individual beam.
+We have already seen this effect in section \ref{sec:sup_type}, where the ``Struct''
+support was outperforming the ``Cylinder'' in terms of material used, but not in terms of printing
+time; From this we can deduce that higher print time are inherent to the topology we have selected
+for our support, and trying to reduce them is therefore impossible or at the very least quite challenging.
+To close this section we can say that optimization time and print time are both
+weak-points of our algorithm, however the difference are relatively small
+compared to the much larger differences in material saved, making the tradeoff
+possibly worth-it.
 
 \section{Print Tests}
 
