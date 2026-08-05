@@ -109,8 +109,56 @@ with the algorithm and model associated with every test run.
 
 \section{Loss Function Trends}
 
-In this section we will print the loss function, in order to verify that the optimizer
-is working properly. 
+In this section we will print the loss functions, in order to verify that the optimizer
+is working properly, however unlike some more traditional optimization problems that have
+a single loss function in our case we have many. Infant, as we detailed in chapter \ref{cha:support_opt_alg}
+we have separated the optimization problem into three different stages, each of them with it's own
+loss function, Furthermore, even within a single stage, we often use the divide and conquer approaches
+where instead of solving an single optimization problem we have optimized many smaller one for a more efficient
+computation. For example, in the case of the support structure optimization stage for testcase ES1D, the
+support problem has been divided into seven different subproblems, and the resulting loss function of each
+of the seven run, as well as the total can be seen in figure \ref{fig:individual_problems_loss}.
+It should be noted that in the chart the $x$ axis representing the number of iterations has been normalized
+in the range 0-1, since every run used a different number of iterations to converge.
+We have a total of 45 of this type of graph (5 testcases $\times$ 3 models $\times$ 3 pipeline stages), and
+those can be seen in the official github repository, however for in this thesis we decided to only put 
+9 aggregates (\ref{fig:es_dragon_cpg} to \ref{fig:es_candlestick_sso}). In this set of aggregates graphs we have grouped
+the optimizer run by model and pipeline stage. In every graph we can see the total loss function
+of every one of the five runs, plus a single average loss function that gives the idea on how well
+the algorithm is optimizing. This means, for example, that the ``Total'' line of graph \ref{fig:individual_problems_loss}
+is the transparent blue line in graph \ref{fig:es_dragon_sso}.
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/ES1D_support_structure_optimization.png}
+    \caption{Loss function of the support structure optimization stage for testcase ES1D}
+    \label{fig:individual_problems_loss}
+\end{figure}
+
+
+Looking at all the loss functions we can note how the algorithm is performing quite well (at least
+from the point of view of the loss function). 
+The first thing that we can note when observing the threads, is that the loss
+never degreases, this is of course to be expected given that all three of our optimizers use elitism
+in their evolution process. Some of the graph (especially the one about the contact point optimization
+stage) are particularly smooth, this both a symptom of the fact that there are a few averages/summations
+smoothing out the process, and also of the fact that the first optimization stage is by far the easiest
+and more linear of the three.
+In some of the graph, we can see that all testcases from one to five at the end converge to a similar value
+of the loss function, but on some others (most notably \ref{fig:es_dragon_sso} and \ref{fig:es_candlestick_cpg})
+we can see that the different runs converge to different final values
+for the loss function. This is almost certainty caused by the optimizer getting stuck in a local minimum
+and not being able to further improve the loss, which is a pretty common scenario in most genetic algorithm and gradient
+descent like optimizers. If anything our choice to use a three stages optimization problem is increasing
+the likelihood of this type of scenario occurring, as every new stage can diverge from the ``optimal'' path
+creating a cascade effect that can substantially vary the final output.
+However we should not overstate the impact that this effect has on the quality of the solutions, 
+even acknowledging that some of the testcases did not perform as well as others the overall thread
+is still quite good, with the rate of improve decreasing over time, but still managing a substantial
+improvement by the end of the run.
+
+
 
 \begin{figure}[H]
     \centering
