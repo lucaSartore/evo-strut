@@ -70,9 +70,9 @@ def interp_to_grid(x, y):
     return np.interp(GRID, x, y)
 
 
-def compute_average(files):
+def compute_sum(files):
     curves = [interp_to_grid(x, y) for f in files for x, y in [load_xy(f)] if x is not None]
-    return np.mean(curves, axis=0) if curves else None
+    return np.sum(curves, axis=0) if curves else None
 
 
 def run_colors(n):
@@ -123,9 +123,9 @@ for n in TEST_NUMBERS:
                 curves.append(interp_to_grid(x, y))
 
             if curves:
-                avg = np.mean(curves, axis=0)
-                ax.plot(GRID, avg, color=AVG_COLOR, linewidth=AVG_LW,
-                        label="Average", zorder=AVG_ZORDER)
+                sum = np.sum(curves, axis=0)
+                ax.plot(GRID, sum, color=AVG_COLOR, linewidth=AVG_LW,
+                        label="Total", zorder=AVG_ZORDER)
 
             apply_common_style(ax, f"{test_name}  ·  {subphase_label(sp)}")
             fname = f"{test_name}_{sp}.png"
@@ -148,12 +148,12 @@ for t in TEST_TYPES:
 
         number_avgs = []
         for i, n in enumerate(TEST_NUMBERS):
-            avg = compute_average(get_files(f"ES{n}{t}", sp))
-            if avg is None:
+            sum = compute_sum(get_files(f"ES{n}{t}", sp))
+            if sum is None:
                 continue
-            ax.plot(GRID, avg, color=NUMBER_COLORS(i / 10), linewidth=1.8,
+            ax.plot(GRID, sum, color=NUMBER_COLORS(i / 10), linewidth=1.8,
                     alpha=0.45, label=f"Test {n}")
-            number_avgs.append(avg)
+            number_avgs.append(sum)
 
         if number_avgs:
             grand = np.mean(number_avgs, axis=0)
