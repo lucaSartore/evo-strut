@@ -420,23 +420,29 @@ if the print is successful, and the quality of the overall print.
 
 \subsection{Print Success Rate}
 
+Of the 7 prints we made, five of them had support generated using our
+custom support strategy, and we can report that all five of them were printed
+successfully, The other two, where instead printed using the ``tree-support'' (\ref{sec:tree_support})
+algorithm, and in this scenario we did experience a failure.
+In particularly TSD (the dragon printed using the tree supports without any 
+user modification) has failed three times in a raw before we deemed it
+not printable. The cause of failures were the ``floating regions'' created in particular
+by the dragon's wing, infant our algorithm has a specific stage (\ref{sec:floating_regions_detection})
+dedicated to detect those feature, and ensure that they are provided the necessary
+support while printed; OrcaSlicer's tree support however don't seem to have any similar
+feature, and the supports generated automatically were undersupplying
+those regions specifically, leading to them detaching during the print.
+Fortunately the issue was not hart do overcome, indeed orca slicer provide a simple
+``support painting'' tool, that allow to force support generation in some particular regions.
+Overall we can considered this test passed, as all five of our testcases successfully printed,
+however we must acknowledge two major issues that our test setup fail to address tue to a resource
+constraint. The first issue is that we only had access to one 3D printer (a first generation Elegoo Century Carbon)
+and in an ideal world we would have rather repeat the test on multiple different 3D printer to 
+provide a more representative number. The other issue is that we only made seven print tests,
+however if we wanted to have an accurate picture of the success rate we should have done at least 
+ten times more.
 
-% \begin{figure}[h]
-%     \centering
-%     \begin{minipage}[t]{0.48\textwidth}
-%         \centering
-%         \includegraphics[height=0.19\textheight]{images/dragon_print_sup.jpg}
-%         \caption{Final output of test ES1A}
-%         \label{fig:dragon_print_sup}
-%     \end{minipage}
-%     \hfill
-%     \begin{minipage}[t]{0.48\textwidth}
-%         \centering
-%         \includegraphics[height=0.19\textheight]{images/dragon_print_no_sup.jpg}
-%         \caption{Final output of test ES1C}
-%         \label{fig:dragon_print_no_sup}
-%     \end{minipage}
-% \end{figure}
+
 
 \begin{figure}[h]
     \centering
@@ -492,3 +498,62 @@ if the print is successful, and the quality of the overall print.
 
 \subsection{Print Quality}
 
+In figure \ref{fig:quality_es1d} and \ref{fig:quality_ctsd} we can se a close up comparison
+of the print quality for the testcase ``dragon'' using both our algorithm and the tree support one.
+We can say that the one provided by the tree support is ever so slightly better, especially if we take 
+a look at the dragon's leg to the left.
+There are generally two main reasons for this. The first one is that our algorithm is not properly
+integrated with a slicer, instead it simply output a 3D model that can be printed together with
+a specific object and provide support. This lack of integration makes it harder to use special 
+printing techniques such as interface layers (which essentially are a few layer printed with 
+a lower filament density to help the support detaching).
+Another reason is that the generation of the contact points that we designed, is perhaps not on par with
+the tree supports. In this thesis we primarily focused on the support structure and paid reality little attention
+to the actual contact pints. It is possible that as part of future improvements both the limitations
+that we mentioned will be addressed, with a new support structure that is similar
+to the one we presented, but with a slightly tweaked contact zone.
+
+\begin{figure}[h]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[height=0.23\textheight]{images/quality_es1d.jpg}
+        \caption{Print quality of ES1D}
+        \label{fig:quality_es1d}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[height=0.23\textheight]{images/quality_ctsd.jpg}
+        \caption{Print quality of CTSD}
+        \label{fig:quality_ctsd}
+    \end{minipage}
+\end{figure}
+
+
+
+\subsection{Print Challenges using our strategy}
+
+It is fair to say that our support are indeed a bit more challenging to print compared to tree support
+and especially to normal supports. Those challenges are not impossible to overcome, and indeed we have shown
+that we were able to print five models successfully, however we deemed appropriate to present what those challenges,
+and provide a few insight on how they can be solved, so that anyone trying to reproduce our work could start 
+with some knowledge.
+There are two main challenges that our topology suffer from, the first one is the z-wobble effect \ref{sec:wobble-test},
+however this is addressed by our optimization algorithm, that automatically apply cost to part that are not stiff enough.
+The algorithm can be of course tweaked in order to generate supports that are more or less stiff according to user preferences,
+there are three main way of doing so, the first two imply modifying the cost function by either reducing the cost 
+of material or increasing the cost of compliance, and the second is to edit the property of the material (properties
+that we presented in section \ref{sec:cantilever_matrixes}) in order have the material in the simulation better
+match the behavior of the material in real life.
+The second challenge that we are presented with when trying to print our support structure is bed adhesion,
+generally speaking tall and skinny structures tend to detach from the bed making the print fail.
+This is addressed in multiple way, the two most important one are to ensure that the printer is well leveled,
+and to give to the support structure some kind of ``foot'' (often referred to as Brim or Raft in 3D printing terminology)
+that helps it sticking to the plate; If this was not enough glues made specifically for 3D printing exist that can 
+help increase the plate adhesion (although we should say that we were able to conduct all of our printing tests
+without using any glue).
+The final thing that can help with both the z-wobble effect, and with plate adhesion is to reduce the 
+amount of force that the nozzle apply to the support beam. This can be achieved by reducing
+the printing speed and by introducing z-hop (which is a setting that tell the printer's nozzle to 
+detach from the printed object before any movement).
