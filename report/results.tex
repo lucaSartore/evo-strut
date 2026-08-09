@@ -7,65 +7,65 @@ is working as intended, and see how it compares against some industry standard s
 In order to do so we will first explain our methodologies, then we will take a look at the loss
 functions of the optimizer in order to verify that the optimization loop is working as intended.
 Afterward we will move to the proper evaluation section where we will compare our solution
-with a few industry standard using three key metrics (namely material used, optimization time, and printing
-time). Finally we will move show a few real world printing tests to see how well the generated
-support actually behaved when printed.
+with a few industry standards using three key metrics (namely material used, optimization time, and printing
+time). Finally we will show a few real world printing tests to see how well the generated
+supports actually behaved when printed.
 
 \section{Methodologies}
 
 Before we start with our results we must state the methodologies. Those include the 3D models we used 
 to evaluate our solution (the dataset), the ``Baseline Methods'' (i.e. the current industry standard
-solution that we will compare our result with), and the Hardware and Software used to run the tests.
+solutions that we will compare our results with), and the hardware and software used to run the tests.
 
 \subsection{3D Models}
 
-Evaluating a support generation algorithm require of course the need to have some 3D models to evaluate 
+Evaluating a support generation algorithm requires of course the need to have some 3D models to evaluate 
 the solution on. Since the research field of optimizing support structure generation for additive manufacturing
 is quite niche, there is not a standard dataset that we can simply pick and use. Therefore we have manually
 selected three models. We should note that those three models are not representative of the average object
 printed by a regular user, this is because most 3D printing models are explicitly designed to be printed without
-the need for supports, and would therefore be terrible testcases four our need. For this reasons we have 
-explicitly ``charry piked'' models that require an heavy use of supports, so that we could better
+the need for supports, and would therefore be terrible testcases for our needs. For this reason we have 
+explicitly ``cherry picked'' models that require a heavy use of supports, so that we could better
 appreciate the difference between the various approaches.
-The three models we selected are a ``Dragon'' and a ``Candlestick'' taken from the ``printables'' online repository
+The three models we selected are a ``Dragon'' and a ``Candlestick'' taken from the ``Printables'' online repository
 and ``Armadillo'' taken from Stanford's 3D Scanning Repository.
 
 \subsection{Baseline Methods}
 
-Selecting our baselines methods was a bit challenging as there is no clear ``state of the art''
+Selecting our baseline methods was a bit challenging as there is no clear ``state of the art''
 for what we are trying to do. The two papers that we have looked at in the \ref{cha:prev_literature}
-chapter are not concerted with FDM 3D printing, and don't consider the necessary requirements of 
+chapter are not concerned with FDM 3D printing, and don't consider the necessary requirements of 
 stiffness, making them not really suitable for our application. Furthermore their code is not publicly
-available, We have even asked the authors access to the code for comparison use only
-but they were unable to fulfill our request due to contractual obligation with industrial partners.
-This left only with the options provided by the industry ``Normal'' and ``Tree'' supports (that we have
+available. We have even asked the authors for access to the code for comparison use only,
+but they were unable to fulfill our request due to contractual obligations with industrial partners.
+This left us only with the options provided by the industry: ``Normal'' and ``Tree'' supports (that we have
 looked at in the \ref{cha:prev_literature} chapter).
 
 \subsection{Hardware}
 
-All runs have been conducted on an i7 14700HX laptop cpu with 64GB of ram.
-The test have been executed while the laptop was fully charged, and connected to the power
+All runs have been conducted on an i7 14700HX laptop CPU with 64GB of RAM.
+The tests have been executed while the laptop was fully charged, and connected to the power
 plug, without any kind of power saving enabled.
-The 3D printer used is an first generation Elegoo Century Carbon 3D printer using
+The 3D printer used is a first generation Elegoo Century Carbon 3D printer using
 Elegoo PLA as the material of choice.
 
 \subsection{Software}
 
-The test were run on Linux (NixOS 25.11 to be specific) and the code was 
-written in Rust, and compiled in release mode without any specific compiler flag.
+The tests were run on Linux (NixOS 25.11 to be specific) and the code was 
+written in Rust, and compiled in release mode without any specific compiler flags.
 The rustc version was 1.93.1, and the toolchain used was the stable one.
 The code was written to take advantage of multithreading, with the optimization
 process regularly saturating all the CPU cores.
 
-\subsection{Tests Number and Naming}
+\subsection{Test Number and Naming}
 
-To reduce variability whe have have run our algorithm 5 times for each 
+To reduce variability we have run our algorithm 5 times for each 
 3D model for a total of 15 tests. In the case of the industry standard solutions we
-instead only run once, as the variability of those is quite small if not zero.
+instead only ran once, as the variability of those is quite small if not zero.
 In the case of the testcase ``Dragon'' we had to manually add some supports after
-the one generated by the ``Tree'' algorithm failed to print four times in a row.
+the ones generated by the ``Tree'' algorithm failed to print four times in a row.
 For this reason there are two different testcases for the dragon plus tree support combo.
-Table \ref{tab:algorithm_maming} show the full list of the tests that have been performed,
+Table \ref{tab:algorithm_maming} shows the full list of the tests that have been performed,
 with the algorithm and model associated with every test run.
 
 
@@ -113,20 +113,20 @@ with the algorithm and model associated with every test run.
 
 In this section we will print the loss functions, in order to verify that the optimizer
 is working properly, however unlike some more traditional optimization problems that have
-a single loss function in our case we have many. Infant, as we detailed in chapter \ref{cha:support_opt_alg}
-we have separated the optimization problem into three different stages, each of them with it's own
-loss function, Furthermore, even within a single stage, we often use the divide and conquer approaches
-where instead of solving an single optimization problem we have optimized many smaller one for a more efficient
+a single loss function in our case we have many. In fact, as we detailed in chapter \ref{cha:support_opt_alg}
+we have separated the optimization problem into three different stages, each of them with its own
+loss function. Furthermore, even within a single stage, we often use the divide and conquer approach
+where instead of solving a single optimization problem we have optimized many smaller ones for a more efficient
 computation. For example, in the case of the support structure optimization stage for testcase ES1D, the
 support problem has been divided into seven different subproblems, and the resulting loss function of each
-of the seven run, as well as the total can be seen in figure \ref{fig:individual_problems_loss}.
+of the seven runs, as well as the total, can be seen in figure \ref{fig:individual_problems_loss}.
 It should be noted that in the chart the $x$ axis representing the number of iterations has been normalized
 in the range 0-1, since every run used a different number of iterations to converge.
 We have a total of 45 of this type of graph (5 testcases $\times$ 3 models $\times$ 3 pipeline stages), and
-those can be seen in the official github repository, however for in this thesis we decided to only put 
-9 aggregates (\ref{fig:es_dragon_cpg} to \ref{fig:es_candlestick_sso}). In this set of aggregates graphs we have grouped
-the optimizer run by model and pipeline stage. In every graph we can see the total loss function
-of every one of the five runs, plus a single average loss function that gives the idea on how well
+those can be seen in the official GitHub repository, however in this thesis we decided to only put 
+9 aggregates (\ref{fig:es_dragon_cpg} to \ref{fig:es_candlestick_sso}). In this set of aggregate graphs we have grouped
+the optimizer runs by model and pipeline stage. In every graph we can see the total loss function
+of every one of the five runs, plus a single average loss function that gives an idea of how well
 the algorithm is optimizing. This means, for example, that the ``Total'' line of graph \ref{fig:individual_problems_loss}
 is the transparent blue line in graph \ref{fig:es_dragon_sso}.
 
@@ -141,23 +141,23 @@ is the transparent blue line in graph \ref{fig:es_dragon_sso}.
 
 Looking at all the loss functions we can note how the algorithm is performing quite well (at least
 from the point of view of the loss function). 
-The first thing that we can note when observing the threads, is that the loss
-never degreases, this is of course to be expected given that all three of our optimizers use elitism
-in their evolution process. Some of the graph (especially the one about the contact point optimization
-stage) are particularly smooth, this both a symptom of the fact that there are a few averages/summations
+The first thing that we can note when observing the trends is that the loss
+never decreases, this is of course to be expected given that all three of our optimizers use elitism
+in their evolution process. Some of the graphs (especially the ones about the contact point optimization
+stage) are particularly smooth; this is both a symptom of the fact that there are a few averages/summations
 smoothing out the process, and also of the fact that the first optimization stage is by far the easiest
-and more linear of the three.
-In some of the graph, we can see that all testcases from one to five at the end converge to a similar value
+and most linear of the three.
+In some of the graphs we can see that all testcases from one to five at the end converge to a similar value
 of the loss function, but on some others (most notably \ref{fig:es_dragon_sso} and \ref{fig:es_candlestick_cpg})
 we can see that the different runs converge to different final values
-for the loss function. This is almost certainty caused by the optimizer getting stuck in a local minimum
-and not being able to further improve the loss, which is a pretty common scenario in most genetic algorithm and gradient
-descent like optimizers. If anything our choice to use a three stages optimization problem is increasing
+for the loss function. This is almost certainly caused by the optimizer getting stuck in a local minimum
+and not being able to further improve the loss, which is a pretty common scenario in most genetic algorithms and gradient
+descent like optimizers. If anything our choice to use a three stage optimization problem is increasing
 the likelihood of this type of scenario occurring, as every new stage can diverge from the ``optimal'' path
 creating a cascade effect that can substantially vary the final output.
 However we should not overstate the impact that this effect has on the quality of the solutions, 
-even acknowledging that some of the testcases did not perform as well as others the overall thread
-is still quite good, with the rate of improve decreasing over time, but still managing a substantial
+even acknowledging that some of the testcases did not perform as well as others the overall trend
+is still quite good, with the rate of improvement decreasing over time, but still managing a substantial
 improvement by the end of the run.
 
 
@@ -238,7 +238,7 @@ improvement by the end of the run.
 \end{figure}
 
 
-\section{Reduction In material usage}
+\section{Reduction in material usage}
 
 \begin{table}[ht]
     \centering
@@ -282,7 +282,7 @@ improvement by the end of the run.
 In this section we will evaluate how much material was saved by the supports generated with 
 our algorithm with respect to the state of the art. In this case, we will consider OrcaSlicer's
 ``Tree Supports'' (\ref{sec:tree_support}) as the state of the art method, as it generally yields
-a better result compared to the ``Normal Supports'' algorithm, and even with other slcier's
+a better result compared to the ``Normal Supports'' algorithm, and even with other slicers'
 tree-like supports. In the case of the ``Armadillo'' and ``Candlestick'' all the parameters
 were set to the default value, and no manual intervention was necessary.
 In the case of the ``Dragon'' model however, some manual support placement was necessary
@@ -290,16 +290,16 @@ to make the model printable, for this reason we will consider the test ``CTSD'' 
 for the ``Dragon'' model, as the non-custom one (TSD) repeatedly failed to print.
 
 The final results can be seen in table \ref{tab:mat_usage_reduction}.
-generally speaking we can say that the results are excellent, as our method was able to
+Generally speaking we can say that the results are excellent, as our method was able to
 reduce the material consumption by an average of 43\% across all testcases.
-The algorithm also seem to be adequately able to generalize to different shapes,
-as it has provided with some important saving on all three of the tested models.
-We can note how the performances are not exactly identical on the three models,
-as they range form a 50\% reduction in the ``Armadillo'' to a more modest 37\% 
-cut in the case of the ``Dragon''. This minor difference probably stem
-from the height difference of the two models; The dragon is a wide but short 
+The algorithm also seems to be adequately able to generalize to different shapes,
+as it has provided some important savings on all three of the tested models.
+We can note how the performance is not exactly identical on the three models,
+as it ranges from a 50\% reduction in the ``Armadillo'' to a more modest 37\% 
+cut in the case of the ``Dragon''. This minor difference probably stems
+from the height difference of the two models; the dragon is a wide but short 
 object, while the armadillo, and the candlestick are taller and thinner.
-Generally speaking the taller a support is the more expensive it become
+Generally speaking the taller a support is the more expensive it becomes,
 meaning that there is a larger margin of improvement.
 
 
@@ -346,40 +346,40 @@ meaning that there is a larger margin of improvement.
 
 The time necessary to execute the optimization,
 as well as the time necessary to print the final object including supports are two other
-important parameter worth considering when comparing different support structure optimization
-algorithm.
+important parameters worth considering when comparing different support structure optimization
+algorithms.
 In the case of the optimization time the comparison is particularly one sided, as we can see
-in table \ref{tab:opt_and_print_time} our algorithms generally need between 300 and 700 seconds
-for a full optimization; Meanwhile all the existing solution are extremely quick, all finishing
-below 10 seconds. This results is to be expected, as both the ``Tree Support'' and the ``Normal Support''
-algorithms are simple greedy procedure, and don't perform any kind of optimization,
-meanwhile our proposed solution is an optimization-based approach, that require a few
-thousand iteration to arrive at a good result. In this optic we can say that the higher
-computational cost is the price to pay for the saving in materials.
-Reducing those times could be done, but is not easy, the algorithm is already written in Rust,
-and compiled to assembly code, and is already well optimized for leveraging multiple corse,
+in table \ref{tab:opt_and_print_time} our algorithm generally needs between 300 and 700 seconds
+for a full optimization; meanwhile all the existing solutions are extremely quick, all finishing
+below 10 seconds. This result is to be expected, as both the ``Tree Support'' and the ``Normal Support''
+algorithms are simple greedy procedures, and don't perform any kind of optimization,
+meanwhile our proposed solution is an optimization-based approach, that requires a few
+thousand iterations to arrive at a good result. In this respect we can say that the higher
+computational cost is the price to pay for the savings in materials.
+Reducing those times could be done, but is not easy; the algorithm is already written in Rust,
+and compiled to assembly code, and is already well optimized for leveraging multiple cores,
 therefore any substantial gain in the computational times would probably have to come from 
 better mutations or from a more efficient stiffness evaluation algorithm.
-Shifting our attention to the printing times, we can note that our algorithm is the generally slightly
-works compared to the existing solution. The difference is not huge, as we are talking of 
+Shifting our attention to the printing times, we can note that our algorithm is generally slightly
+worse compared to the existing solutions. The difference is not huge, as we are talking about 
 approximately 40 minutes in the worst case scenario, however it is still a downside of our approach,
 and is worth trying to understand why.
-The most obvious cause of this increase time is the increase distance the nozzle has to cover
+The most obvious cause of this increased time is the increased distance the nozzle has to cover
 in order to deposit the material in every individual beam.
 We have already seen this effect in section \ref{sec:sup_type}, where the ``Struct''
 support was outperforming the ``Cylinder'' in terms of material used, but not in terms of printing
-time; From this we can deduce that higher print time are inherent to the topology we have selected
+time; from this we can deduce that higher print times are inherent to the topology we have selected
 for our support, and trying to reduce them is therefore impossible or at the very least quite challenging.
 To close this section we can say that optimization time and print time are both
-weak-points of our algorithm, however the difference are relatively small
+weak-points of our algorithm, however the differences are relatively small
 compared to the much larger differences in material saved, making the tradeoff
-possibly worth-it.
+possibly worth it.
 
 \section{Final outputs}
 
-The final output are simple STL files that can be imported in a any 3D printing
-slicing software. The files are publicly available in the official github repository
-of the project. Figure \ref{fig:dragon_final}, \ref{fig:armadillo_final} and \ref{fig:candlestick_final}
+The final outputs are simple STL files that can be imported in any 3D printing
+slicing software. The files are publicly available in the official GitHub repository
+of the project. Figures \ref{fig:dragon_final}, \ref{fig:armadillo_final} and \ref{fig:candlestick_final}
 show the final (digital) output of the optimization process, with the printed model
 shown in red, and the support structure in green.
 
@@ -412,32 +412,32 @@ shown in red, and the support structure in green.
 
 The last and arguably most important step in the validation procedure is the 
 print test. The aim here is to ensure that our stiffness cost function is well 
-aligned with reality, and that the produced support structure are indeed
+aligned with reality, and that the produced support structures are indeed
 printable in the real world.
-For this reason we have selected as subset of the testcases (in particular
-ES1D, ES2D, ES3D, TSD, CTSD, ES1A and ES1C) and printed them to see the 
+For this reason we have selected a subset of the testcases (in particular
+ES1D, ES2D, ES3D, TSD, CTSD, ES1A and ES1C) and printed them to see 
 if the print is successful, and the quality of the overall print.
 
 \subsection{Print Success Rate}
 
-Of the 7 prints we made, five of them had support generated using our
+Of the 7 prints we made, five of them had supports generated using our
 custom support strategy, and we can report that all five of them were printed
-successfully, The other two, where instead printed using the ``tree-support'' (\ref{sec:tree_support})
+successfully. The other two were instead printed using the ``tree-support'' (\ref{sec:tree_support})
 algorithm, and in this scenario we did experience a failure.
-In particularly TSD (the dragon printed using the tree supports without any 
-user modification) has failed three times in a raw before we deemed it
-not printable. The cause of failures were the ``floating regions'' created in particular
-by the dragon's wing, infant our algorithm has a specific stage (\ref{sec:floating_regions_detection})
-dedicated to detect those feature, and ensure that they are provided the necessary
-support while printed; OrcaSlicer's tree support however don't seem to have any similar
-feature, and the supports generated automatically were undersupplying
+In particular TSD (the dragon printed using the tree supports without any 
+user modification) has failed three times in a row before we deemed it
+not printable. The cause of the failures were the ``floating regions'' created in particular
+by the dragon's wing; in fact our algorithm has a specific stage (\ref{sec:floating_regions_detection})
+dedicated to detecting those features, and ensuring that they are provided the necessary
+support while printed; OrcaSlicer's tree supports however don't seem to have any similar
+feature, and the supports generated automatically were under-supporting
 those regions specifically, leading to them detaching during the print.
-Fortunately the issue was not hart do overcome, indeed orca slicer provide a simple
-``support painting'' tool, that allow to force support generation in some particular regions.
-Overall we can considered this test passed, as all five of our testcases successfully printed,
-however we must acknowledge two major issues that our test setup fail to address tue to a resource
-constraint. The first issue is that we only had access to one 3D printer (a first generation Elegoo Century Carbon)
-and in an ideal world we would have rather repeat the test on multiple different 3D printer to 
+Fortunately the issue was not hard to overcome, indeed OrcaSlicer provides a simple
+``support painting'' tool, that allows forcing support generation in some particular regions.
+Overall we can consider this test passed, as all five of our testcases successfully printed,
+however we must acknowledge two major issues that our test setup failed to address due to resource
+constraints. The first issue is that we only had access to one 3D printer (a first generation Elegoo Century Carbon)
+and in an ideal world we would have rather repeated the test on multiple different 3D printers to 
 provide a more representative number. The other issue is that we only made seven print tests,
 however if we wanted to have an accurate picture of the success rate we should have done at least 
 ten times more.
@@ -499,18 +499,18 @@ ten times more.
 \subsection{Print Quality}
 \label{sec:print_quality}
 
-In figure \ref{fig:quality_es1d} and \ref{fig:quality_ctsd} we can se a close up comparison
-of the print quality for the testcase ``dragon'' using both our algorithm and the tree support one.
+In figures \ref{fig:quality_es1d} and \ref{fig:quality_ctsd} we can see a close up comparison
+of the print quality for the testcase ``Dragon'' using both our algorithm and the tree support one.
 We can say that the one provided by the tree support is ever so slightly better, especially if we take 
 a look at the dragon's leg to the left.
 There are generally two main reasons for this. The first one is that our algorithm is not properly
-integrated with a slicer, instead it simply output a 3D model that can be printed together with
-a specific object and provide support. This lack of integration makes it harder to use special 
-printing techniques such as interface layers (which essentially are a few layer printed with 
-a lower filament density to help the support detaching).
-Another reason is that the generation of the contact points that we designed, is perhaps not on par with
-the tree supports. In this thesis we primarily focused on the support structure and paid reality little attention
-to the actual contact pints. It is possible that as part of future improvements both the limitations
+integrated with a slicer, instead it simply outputs a 3D model that can be printed together with
+a specific object and provides support. This lack of integration makes it harder to use special 
+printing techniques such as interface layers (which essentially are a few layers printed with 
+a lower filament density to help the support detach).
+Another reason is that the generation of the contact points that we designed is perhaps not on par with
+the tree supports. In this thesis we primarily focused on the support structure and paid relatively little attention
+to the actual contact points. It is possible that as part of future improvements both the limitations
 that we mentioned will be addressed, with a new support structure that is similar
 to the one we presented, but with a slightly tweaked contact zone.
 
@@ -535,26 +535,26 @@ to the one we presented, but with a slightly tweaked contact zone.
 
 \subsection{Print Challenges using our strategy}
 
-It is fair to say that our support are indeed a bit more challenging to print compared to tree support
+It is fair to say that our supports are indeed a bit more challenging to print compared to tree supports
 and especially to normal supports. Those challenges are not impossible to overcome, and indeed we have shown
-that we were able to print five models successfully, however we deemed appropriate to present what those challenges,
-and provide a few insight on how they can be solved, so that anyone trying to reproduce our work could start 
+that we were able to print five models successfully, however we deemed it appropriate to present what those challenges are,
+and provide a few insights on how they can be solved, so that anyone trying to reproduce our work could start 
 with some knowledge.
-There are two main challenges that our topology suffer from, the first one is the z-wobble effect \ref{sec:wobble-test},
-however this is addressed by our optimization algorithm, that automatically apply cost to part that are not stiff enough.
+There are two main challenges that our topology suffers from, the first one is the z-wobble effect \ref{sec:wobble-test},
+however this is addressed by our optimization algorithm, that automatically applies cost to parts that are not stiff enough.
 The algorithm can be of course tweaked in order to generate supports that are more or less stiff according to user preferences,
-there are three main way of doing so, the first two imply modifying the cost function by either reducing the cost 
-of material or increasing the cost of compliance, and the second is to edit the property of the material (properties
-that we presented in section \ref{sec:cantilever_matrixes}) in order have the material in the simulation better
+there are three main ways of doing so: the first two imply modifying the cost function by either reducing the cost 
+of material or increasing the cost of compliance, and the third is to edit the properties of the material (properties
+that we presented in section \ref{sec:cantilever_matrixes}) in order to have the material in the simulation better
 match the behavior of the material in real life.
-The second challenge that we are presented with when trying to print our support structure is bed adhesion,
+The second challenge that we are presented with when trying to print our support structure is bed adhesion;
 generally speaking tall and skinny structures tend to detach from the bed making the print fail.
-This is addressed in multiple way, the two most important one are to ensure that the printer is well leveled,
-and to give to the support structure some kind of ``foot'' (often referred to as Brim or Raft in 3D printing terminology)
-that helps it sticking to the plate; If this was not enough glues made specifically for 3D printing exist that can 
+This is addressed in multiple ways; the two most important ones are to ensure that the printer is well leveled,
+and to give the support structure some kind of ``foot'' (often referred to as Brim or Raft in 3D printing terminology)
+that helps it stick to the plate; if this was not enough, glues made specifically for 3D printing exist that can 
 help increase the plate adhesion (although we should say that we were able to conduct all of our printing tests
 without using any glue).
 The final thing that can help with both the z-wobble effect, and with plate adhesion is to reduce the 
-amount of force that the nozzle apply to the support beam. This can be achieved by reducing
-the printing speed and by introducing z-hop (which is a setting that tell the printer's nozzle to 
+amount of force that the nozzle applies to the support beams. This can be achieved by reducing
+the printing speed and by introducing z-hop (which is a setting that tells the printer's nozzle to 
 detach from the printed object before any movement).

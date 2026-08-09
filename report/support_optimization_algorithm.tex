@@ -5,60 +5,60 @@
 \section{Pipeline Overview}
 \label{sec:pipeline_overview}
 
-The support structure optimization algorithm we are proposing is organized ino a pipeline
-composed of 8 steps, of those the first and last are simple I/O steps (namely Importing and Exporting).
+The support structure optimization algorithm we are proposing is organized into a pipeline
+composed of 8 steps; of those, the first and last are simple I/O steps (namely Importing and Exporting).
 Then the steps two to four (Criticality Detection, Floating Regions Detection and Criticality Grouping)
 are simple pre-processing steps that perform some operations in order to prepare data for the following
 steps.
 Finally steps five to seven (Contact Points Optimization, Contact Points Grouping and Support
 Structure Optimization) are the real ``Optimization'' steps, that perform the optimization
 of the actual support. This operation is performed in three stages, rather than a single optimization 
-process for a more efficient computation, infact we can assume that the decision about where to place
+process, for a more efficient computation; in fact we can assume that the decision about where to place
 contact points in the areas to support is (roughly) independent from the decision on how to build a
-structure that reach those points, this allow to take the decision separately, and have two simpler
-problems instead of one complex one. This approach is quite common in literature, infact it has
-been used by Zhang et. al. \cite{ZHANG2020117} (the second paper we cited in the previous literature chapter).
-The following lists show the steps of the pipeline in order, with a small description of what they do:
+structure that reaches those points, and this allows us to take the decisions separately, and have two simpler
+problems instead of one complex one. This approach is quite common in the literature; in fact it has
+been used by Zhang et al. \cite{ZHANG2020117} (the second paper we cited in the previous literature chapter).
+The following list shows the steps of the pipeline in order, with a small description of what they do:
 
 \begin{itemize}
-    \item \textbf{Importing:} This step load the model and perform some simple re-meshing operations in order
-    to reduce the amount of triangles in the mesh in order to obtain better performances.
-    \item \textbf{Criticality Detection:} This step detect the critical regions (the points where the
-    surface is too steep, and a support is required)
-    \item \textbf{Floating Regions Detection:} This step detect the ``Floating regions'' (areas
+    \item \textbf{Importing:} This step loads the model and performs some simple re-meshing operations in order
+    to reduce the number of triangles in the mesh in order to obtain better performance.
+    \item \textbf{Criticality Detection:} This step detects the critical regions (the points where the
+    surface is too steep, and a support is required).
+    \item \textbf{Floating Regions Detection:} This step detects the ``Floating regions'' (areas
     of the model that, while being printed are completely detached from the plate for a period of time,
-    as the connection is provided by layers above)
+    as the connection is provided by layers above).
     \item \textbf{Criticality Grouping:} This step groups the critical areas detected in the step 2 into
-    some areas that can be optimized separately (for more efficient computation)
-    \item \textbf{Contact Points Optimization:} This step identify an optimal set of points where
+    some areas that can be optimized separately (for more efficient computation).
+    \item \textbf{Contact Points Optimization:} This step identifies an optimal set of points where
     supports will be placed using a genetic algorithm and a cost function.
-    \item \textbf{Contact Points Grouping:} This step group the contact points into areas based on proximity,
+    \item \textbf{Contact Points Grouping:} This step groups the contact points into areas based on proximity;
     this step is once again performed in order to optimize the different areas separately.
     The optimization is done using a Compositional Pattern Producing Network Based Genetic Algorithm.
-    \item \textbf{Support Structure Optimization:} This step optimize the support structure using a genetic
-    algorithm, this step is where the stiffness evaluation algorithm we developed previously is used.
+    \item \textbf{Support Structure Optimization:} This step optimizes the support structure using a genetic
+    algorithm; this step is where the stiffness evaluation algorithm we developed previously is used.
     \item \textbf{Exporting:} In the final step we generate a support structure in a mesh based 
-    on the optimized parameters, the structure is then exported in STL format.
+    on the optimized parameters; the structure is then exported in STL format.
 \end{itemize}
 
 
 \section{Importing}
 \label{sec:importing}
 
-The importing stage is conceptually very simple, A mesh of the object we want to generate support for
+The importing stage is conceptually very simple: a mesh of the object we want to generate supports for
 is loaded, and then re-meshed.
-Re-meshing is a simple procedure that involve starting from a mesh that represent 
-a specific object, and then apply a transformation with the aim of obtaining a different
-mesh, that represent the same object, using a different set of triangles that satisfy 
+Re-meshing is a simple procedure that involves starting from a mesh that represents 
+a specific object, and then applying a transformation with the aim of obtaining a different
+mesh, that represents the same object, using a different set of triangles that satisfy 
 some specific properties.
-figure \ref{fig:remeshing} show three different meshes that represent the same object,
+Figure \ref{fig:remeshing} shows three different meshes that represent the same object;
 the first one is minimizing the number of triangles necessary to describe the object,
-but is resulting in a set of triangles that is very irregular. The second image show
+but is resulting in a set of triangles that is very irregular. The second image shows
 a re-meshing of the first one, where triangles are divided into smaller and smaller pieces
 in order to obtain more regular triangles. The third one is also a re-meshing, but 
 it is a more aggressive one, and results in smaller triangles.
-For this project we have used an incremental remaster (an algorithm that perform 
-recessing by means of progressively splitting and merging triangles in order to obtain
+For this project we have used an incremental remesher (an algorithm that performs 
+re-meshing by means of progressively splitting and merging triangles in order to obtain
 some desired properties). The specific implementation was taken from the popular
 rust library ``baby-shark'' \cite{babyshark}.
 
@@ -70,69 +70,69 @@ rust library ``baby-shark'' \cite{babyshark}.
 \end{figure}
 
 There are two reasons why re-meshing is applied as part of the loading stage.
-The first one is purely a performance reason, infact in order to generate support structure
-we don't need an high definition mesh, instead a good approximation is enough. For this reason
-the re-meshing process target an edge length in the range of 0.3 - 1.0 mm. this provide a sufficient
+The first one is purely a performance reason; in fact in order to generate support structures
+we don't need a high definition mesh, instead a good approximation is enough. For this reason
+the re-meshing process targets an edge length in the range of 0.3 - 1.0 mm. This provides a sufficient
 level of accuracy while also resulting in a manageable number of triangles, even for large meshes,
 which helps the algorithm's performance.
 The second reason why re-meshing is important has to do with the representation of the mesh
-in the algorithm, infact the last step of the loading procedure is converting 
-the mesh into a set graph, where every triangle is a node, and each node is connected
-to three other neighbors (one for each side of the triangle.)
-Generally speaking we would want all triangle to be as close to an equilateral as possible,
-in such a way every connection inside the graph would have ruffly the same length; This
+in the algorithm; in fact the last step of the loading procedure is converting 
+the mesh into a graph, where every triangle is a node, and each node is connected
+to three other neighbors (one for each side of the triangle).
+Generally speaking we would want all triangles to be as close to equilateral as possible,
+in such a way every connection inside the graph would have roughly the same length; this
 fact is a precondition necessary for the correct functioning of the next stages in the pipeline.
-The re-meshing algorithm is therefore also used to ensure triangles have ruffly the same size,
-and are ruffly equilateral.
+The re-meshing algorithm is therefore also used to ensure triangles have roughly the same size,
+and are roughly equilateral.
 
 \section{Criticality Detection}
 \label{sec:crit_detection}
 
-The first step in the generation of automatic support is of course knowing what zones must be supported.
+The first step in the generation of automatic supports is of course knowing what zones must be supported.
 Generally speaking the presence of a support or not is usually achieved with a simple check of the 
-overhanging angle (as we already in the introduction \ref{sec:role_of_sup}).
-One of the most basic technique for criticality detection is to simply take angle formed by the 
+overhanging angle (as we already saw in the introduction \ref{sec:role_of_sup}).
+One of the most basic techniques for criticality detection is to simply take the angle formed by the 
 surface normal of a triangle, and a vector facing downward, and compare that to the threshold of what
-is consider acceptable, in order to detect the critical areas.
-Most 3D printing software use methods derived the one we just described with a few refinement
+is considered acceptable, in order to detect the critical areas.
+Most 3D printing software uses methods derived from the one we just described with a few
 key refinements such as for example bridge detection, detection of areas that are ``floating''
-etcetera. Our method also inspired by that basic idea, but is slightly different from the 
+etcetera. Our method is also inspired by that basic idea, but is slightly different from the 
 methods currently used in most commercial 3D printing software, as it's built with a different 
-paradigm. Instead of simply detecting a simple boolean value that tell if a surface is critical
-or not, our method aim to provide a cost function that, if minimized, reduces the amount of critical
-areas there are in a specific model. The reason why this approach was chosen is straightforward, as 
-is a simple consequence of the fact that we will need a cost function in order to apply a genetic-algorithms
+paradigm. Instead of simply detecting a simple boolean value that tells if a surface is critical
+or not, our method aims to provide a cost function that, if minimized, reduces the amount of critical
+areas there are in a specific model. The reason why this approach was chosen is straightforward, as it 
+is a simple consequence of the fact that we will need a cost function in order to apply a genetic-algorithm
 based optimizer in the following steps.
 
 Now that we explained the reasoning behind the creation of a custom solution for criticality detection
-we can begin explaining our implementation. Algorithm \cref{alg:crit_det} show the pseudo-code of 
+we can begin explaining our implementation. Algorithm \cref{alg:crit_det} shows the pseudo-code of 
 our implementation of a criticality detection procedure.
 The key idea behind our solution is to assign to every node in the mesh graph a ``criticality''.
-then the critical node are the one that have a criticality different than zero. This model has the benefit
-that it can be easily transformed into a cost function by summing all the criticality score and 
+Then the critical nodes are the ones that have a criticality different than zero. This model has the benefit
+that it can be easily transformed into a cost function by summing all the criticality scores and 
 weighting them by the area of the triangle they are associated to.
-The second key idea that our solution brings to the table is the concept of ``criticality propagation''
-This concept represent the fact that criticality is not an arbitrary value assigned to every single
+The second key idea that our solution brings to the table is the concept of ``criticality propagation''.
+This concept represents the fact that criticality is not an arbitrary value assigned to every single
 triangle, regardless of the neighbors, instead the criticality is ``propagated'' from the bottom to the
-top. This means that criticality increases every time the object have an overhanging angle that is too hig,
+top. This means that criticality increases every time the object has an overhanging angle that is too high,
 and decreases every time the criticality angle is too low. This is important because otherwise, a single
 triangle inside the mesh with a sufficiently low overhanging angle would make an entire zone
 less critical, or in the same way a single support could singlehandedly make a large critical area
-no longer critical. Figure \ref{fig:critical_detect} show a mesh of a dragon, with the green areas
-being the meshes with a criticality score of zero, while the red areas are the critical one.
+no longer critical. Figure \ref{fig:critical_detect} shows a mesh of a dragon, with the green areas
+being the meshes with a criticality score of zero, while the red areas are the critical ones.
 In here we can see the effect that criticality propagation has on the structures.
-in the bottom part of the dragon's wing we can see that the critical area is quite large,
-even tho, the overhanging angle is quite small. We can get a sense on why propagation is important
+In the bottom part of the dragon's wing we can see that the critical area is quite large,
+even though the overhanging angle is quite small. We can get a sense of why propagation is important
 by looking at figure \ref{fig:critical_detect_no_prop} and \ref{fig:critical_detect}.
-In the former we see what are the critical regions if no propagation is applied, mean while in the second one
-we see the same output, but propagation are applied. Te most notable difference is in the bottom part
+In the former we see what the critical regions are if no propagation is applied, meanwhile in the second one
+we see the same output, but propagation is applied. The most notable difference is in the bottom part
 of the dragon's wing, as we can see, in the version with no propagation there is a tiny critical area
-in the tip of the wing, but as soon as the overhanging angle is small enough, the critical are disappear.
-In contrast in the version that has propagation the criticality start at an high value in the top bottom
-part of the wing, and require a bit of time for the score to reach zero, resulting in a much larger critical
-region. This behavior is desirable, as is unreasonable to think that a single support in the tip of the wing
-is enough to support the entire area, meaning that criticality propagation play a key role in detecting
-more realistic critical regions when some part of the model are ``floating''.
+in the tip of the wing, but as soon as the overhanging angle is small enough, the critical area disappears.
+In contrast in the version that has propagation the criticality starts at a high value in the bottom
+part of the wing, and requires a bit of time for the score to reach zero, resulting in a much larger critical
+region. This behavior is desirable, as it is unreasonable to think that a single support in the tip of the wing
+is enough to support the entire area, meaning that criticality propagation plays a key role in detecting
+more realistic critical regions when some parts of the model are ``floating''.
 
 
 \begin{figure}[h]
@@ -154,8 +154,8 @@ more realistic critical regions when some part of the model are ``floating''.
 \begin{algorithm}[H]
 \caption{Criticality Detection}
 \begin{algorithmic}[1]
-    \Require $G$ Graph that represent the mesh
-    \Ensure $C$ Dictionary that associate a cost for every node in the graph
+    \Require $G$ Graph that represents the mesh
+    \Ensure $C$ Dictionary that associates a cost with every node in the graph
 
     \Procedure{LayerOf}{$n$} \Comment{Calculate the layer of node $n$}
         \State \Return $\left\lfloor{\frac{\Call{Height}{n}}{L_{height}}}\right\rfloor$
@@ -163,18 +163,18 @@ more realistic critical regions when some part of the model are ``floating''.
 
     \Statex
 
-    \Procedure{PropagationCost}{$G, f, t$} \Comment{Calculate propacation factor of the link $f$(rom) $t$(o)}
+    \Procedure{PropagationCost}{$G, f, t$} \Comment{Calculate propagation factor of the link $f$(rom) $t$(o)}
         \State $\varphi \gets \Call{AngleBetween}{f, t}$ \Comment{We start from the angle between the two nodes}
-        \State $\varphi' \gets \varphi - \varPhi_t$ \Comment{We compared to the threshold, as small gradients are OK}
-        \State $\varphi'' \gets \Call{Clamp}{\varphi', \varPhi_{lb}, \varPhi_{ub}}$ \Comment{We clamp it, to avoid too high propagation factor}
-        \State $d \gets \Call{Distance}{f, t}$ \Comment{Distance factor (long distance are more critical than short one)}
+        \State $\varphi' \gets \varphi - \varPhi_t$ \Comment{We compare it to the threshold, as small gradients are OK}
+        \State $\varphi'' \gets \Call{Clamp}{\varphi', \varPhi_{lb}, \varPhi_{ub}}$ \Comment{We clamp it, to avoid too high a propagation factor}
+        \State $d \gets \Call{Distance}{f, t}$ \Comment{Distance factor (long distances are more critical than short ones)}
         \State \Return $K_{prop} \cdot d \cdot \varphi''$
     \EndProcedure
 
     \Statex
 
     \Procedure{CriticalityOf}{$G, n, \mathcal{M}$}
-        \If {$\Call{Height}{n} = 0$} \Comment{Nodes to the ground are never critical}
+        \If {$\Call{Height}{n} = 0$} \Comment{Nodes on the ground are never critical}
             \State \Return 0
         \EndIf
         \State $c \gets $ CRITICALITY\_MAX \Comment{Initialize criticality at max value}
@@ -184,14 +184,14 @@ more realistic critical regions when some part of the model are ``floating''.
                 \State $c \gets \Call{Min}{c, c_a}$
             \EndIf
         \EndFor
-        \State \Return $\Call{Max}{c, 0}$ \Comment{Criticality is always greater of equal than zero}
+        \State \Return $\Call{Max}{c, 0}$ \Comment{Criticality is always greater than or equal to zero}
     \EndProcedure
 
     \Statex
 
     \Procedure{PropagateInLayer}{$G, l, \mathcal{M}$}
         \State $ PriorityQueue \gets \emptyset$
-        \For{$n$ in $l$} \Comment{Initialize the priority queue with the cost propageted by the laeyer below}
+        \For{$n$ in $l$} \Comment{Initialize the priority queue with the cost propagated by the layer below}
             \State $c \gets \Call{CriticalityOf}{G, n, \mathcal{M}}$
             \State $\Call{Push}{PriorityQueue, n, c}$
         \EndFor
@@ -212,7 +212,7 @@ more realistic critical regions when some part of the model are ``floating''.
         \State $C \gets \emptyset$
 
         \For{l in \Call{Layers}{$G$}}
-            \State \Call{PropagateInLayer}{$G, l, C$} \Comment{Propaget the cost one layer at a time}
+            \State \Call{PropagateInLayer}{$G, l, C$} \Comment{Propagate the cost one layer at a time}
         \EndFor
 
         \State \Return $C$
@@ -224,43 +224,43 @@ more realistic critical regions when some part of the model are ``floating''.
 
 \subsection{Algorithm Overview}
 To explain \cref{alg:crit_det} we must start from the concept of layer.
-Eery node in a graph is assigned to a layer (represented by an integer value),
-the ``LayerOf'' function simply associate a node with is layer, and is simply using
-the node's height as the discrimination factor;
+Every node in a graph is assigned to a layer (represented by an integer value);
+the ``LayerOf'' function simply associates a node with its layer, and is simply using
+the node's height as the discrimination factor.
 The reason why layers are important is that the criticality can be propagated only from
-elements of the same layer, or layer below, it can't go below a layer.
-The function ``PropagationCost'' take as input two nodes, and calculate the cost that 
+elements of the same layer, or a layer below; it can't go below a layer.
+The function ``PropagationCost'' takes as input two nodes, and calculates the cost that 
 is propagated from one to the other in a specific direction, this means that if
 node $A$ has criticality $c_a$ and the propagation cost from node $A$ to node $B$ is
-$c_{ab}$ than the cost at node $B$ will be upper bounded by he value $c_a + c_{ab}$.
+$c_{ab}$ then the cost at node $B$ will be upper bounded by the value $c_a + c_{ab}$.
 This is an upper bound because it can always be lower if node $B$ has another neighbor
 from which it can propagate a lower cost.
 It should be noted that this function can return a negative value, this is the case when 
 the angle between the two nodes is below the threshold of the maximum overhanging angle, 
 and therefore the criticality should decrease.
 The function ``CriticalityOf'' is used to calculate the criticality of a node, starting
-from nodes that are close to it; In the function we can see how if the node is close to the
+from nodes that are close to it; in the function we can see how if the node is close to the
 ground the criticality is zero (this is obvious, as if a node is attached to the plate it does
 not need any support), otherwise the criticality is initialized to the maximum possible value,
 and then is reduced if a path is found to propagate a lower criticality value from a neighbor.
-The neighbor in order to be eligible must be part of a layer that is the same or lower as the node
+The neighbor in order to be eligible must be part of a layer that is the same or lower than the node
 currently being evaluated.
 Now that we have explained the few ``utility'' functions we can tackle the core part of the algorithm,
 this is composed of the two functions ``PropagateInLayer'' and ``CriticalityDetection''.
-the idea is that the criticality is propagated from bottom to top, then odes in the graph are organized
-in layers, and layers are evaluated from the lowest to the hightest.
-The process of evaluating a layer is essential a one pass of a Dijkstra algorithm, where nodes
-are explored form the one with the lowest criticality value to the one with the highest.
-This process ensure low time complexity while ensuring that every node has the correct criticality value.
+The idea is that the criticality is propagated from bottom to top, then nodes in the graph are organized
+in layers, and layers are evaluated from the lowest to the highest.
+The process of evaluating a layer is essentially one pass of a Dijkstra algorithm, where nodes
+are explored from the one with the lowest criticality value to the one with the highest.
+This process ensures low time complexity while ensuring that every node has the correct criticality value.
 
 \section{Floating Regions Detection}
 \label{sec:floating_regions_detection}
 
-Another important pre-processing step is the detection of ``Floating Regions''
-As we mentioned in the introduction, a floating region is defined a part of the structure that that while being printed,
+Another important pre-processing step is the detection of ``Floating Regions''.
+As we mentioned in the introduction, a floating region is defined as a part of the structure that, while being printed,
 is not fully connected to the build plate if not for supports. For example
-figure \ref{fig:floating_regions} show the floating regions of the mesh ``Dragon''
-highlighted in different colors, while the plain mesh white.
+figure \ref{fig:floating_regions} shows the floating regions of the mesh ``Dragon''
+highlighted in different colors, while the plain mesh is white.
 In this section we will not explain why detecting floating regions is necessary,
 as that topic will be extensively covered in one of the next sections (specifically \ref{sec:sup_struct_opt_cf}).
 
@@ -274,10 +274,10 @@ as that topic will be extensively covered in one of the next sections (specifica
 
 \subsection{Algorithm Overview}
 
-Efficient detection of floating regions can be achieved using algorithm \cref{alg:float_det}
+Efficient detection of floating regions can be achieved using algorithm \cref{alg:float_det}:
 the idea is that the nodes are sorted from the lowest to the highest, then they are sampled one by one,
-and, then visiting the all the nodes reachable form the point, where an arch that go from $A$ to $B$ is 
-considered valid only if the layer of $B$ is grater or equal to the layer of $A$.
+and then visiting all the nodes reachable from the point, where an arch that goes from $A$ to $B$ is 
+considered valid only if the layer of $B$ is greater than or equal to the layer of $A$.
 This ensures that we cannot go ``downward'' when exploring the graph, and therefore that
 we cannot explore a floating region unless we start from a point inside that floating region.
 While the graph is being explored, we mark nodes that have been visited to avoid visiting the same
@@ -286,25 +286,25 @@ the explored area is a floating region or not. This can be simply done by checki
 of the ``source'' node is equal to zero (or at least is below a certain threshold),
 if this is the case we can say that the source was attached to the ground, and therefore
 the region is not floating. If this is not the case however, the area we have explored must be a 
-floating region. We can also be sure that the nodes we have extracted is the lowest point in the region,
+floating region. We can also be sure that the node we have extracted is the lowest point in the region,
 thanks to the sorting we did at the beginning. The sorting also ensures that we start exploring from
 the nodes that are close to the ground, avoiding a situation where a floating region is expanded
-too much and reach zones that are actually not considered ``floating''.
+too much and reaches zones that are actually not considered ``floating''.
 
 \begin{algorithm}[h]
 \caption{Floating Regions Detection}
 \begin{algorithmic}[1]
-    \Require $G$ Graph that represent the mesh
+    \Require $G$ Graph that represents the mesh
     \Ensure $\mathcal{F}$ Set of floating regions 
 
     \Procedure{ExploreUpward}{$G, s, V$} \Comment{Collect the component reachable going up from $s$}
         \State $R \gets \emptyset$
         \State $Q \gets \{s\}$ \Comment{Initialize the queue with the node}
-        \While{$\lnot \Call{IsEmpty}{Q}$} \Comment{repeat untill queue is empty}
+        \While{$\lnot \Call{IsEmpty}{Q}$} \Comment{repeat until queue is empty}
             \State $n \gets \Call{Pop}{Q}$
             \State $V(n) \gets true$
             \State $R \gets \Call{Append}{R, n}$
-            \For{$a \in \Call{Adjacent}{G, n}$ with } \Comment{Explore adjacent neighbors}
+            \For{$a \in \Call{Adjacent}{G, n}$} \Comment{Explore adjacent neighbors}
                 \If{ $\Call{LayerOf}{a} \geq \Call{LayerOf}{n} \land \lnot V(a)$ } \Comment{Filter by non visited, and $\geq$ layer}
                     \State \Call{Push}{Q, a}
                 \EndIf
@@ -322,7 +322,7 @@ too much and reach zones that are actually not considered ``floating''.
             \If{$V(s)$}
                 \State \textbf{continue} \Comment{Already part of a component}
             \EndIf
-            \State $R \gets \Call{ExploreUpward}{G, s, V}$ \Comment{Exploring grpah, while only moving ``uppward''}
+            \State $R \gets \Call{ExploreUpward}{G, s, V}$ \Comment{Exploring graph, while only moving ``upward''}
             \If{$\Call{HeightOf}{s} > 0$} \Comment{If the node is detached from the ground}
                 \State $\mathcal{F} \gets \Call{AddFloatingRegion}{F, R}$ \Comment{Mark the explored node as a floating region}
             \EndIf
@@ -339,39 +339,39 @@ too much and reach zones that are actually not considered ``floating''.
 \label{sec:criticality_grouping}
 
 In this stage in the pipeline we have a set of nodes inside the mesh graph that is deemed
-``critical'' however we have no grouping or topology of the critical area themes.
+``critical'', however we have no grouping or topology of the critical areas themselves.
 This is not strictly speaking an issue, as we could in theory execute the next stage (contact
 points optimization) only once, for the entire set of critical regions, however this would 
-be less then ideal from a performance standpoint. Infact, generally speaking in this kind of 
-optimization problems is generally more efficient to optimize many small problems rather than
+be less than ideal from a performance standpoint. In fact, generally speaking in this kind of 
+optimization problem it is more efficient to optimize many small problems rather than
 one big one. Furthermore due to the way we are defining our cost function (that we will
 explain more in section \ref{sec:contact_points_opt_cf}) the cost of one set
 of connected critical nodes is independent from the cost of another set of critical
 nodes. With those two facts in mind, it is easy to see why grouping the contact points
-based on proximity, and optimize each of them as a separate problem would be convenient
+based on proximity, and optimizing each of them as a separate problem would be convenient
 from a performance standpoint, while not impacting the output of the optimizer.
 For this reason we made the choice of inserting the ``Criticality Grouping'' stage
 in the pipeline, so that we could create a sensible grouping of the critical regions,
 with the objective of optimizing them separately.
-Algorithm \cref{alg:crit_grouping} show the procedure of how grouping is executed.
+Algorithm \cref{alg:crit_grouping} shows the procedure of how grouping is executed.
 
 \subsection{Algorithm Overview}
 
 \begin{algorithm}[h]
 \caption{Criticality Grouping}
 \begin{algorithmic}[1]
-    \Require $G$ Graph that represent the mesh
+    \Require $G$ Graph that represents the mesh
     \Require $C$ Set of critical nodes detected
     \Ensure $R$ Grouped set of critical nodes
 
-    \Procedure{Explore}{$G, C, s, V$} \Comment{Collect the critical nodes reashable from $s$}
+    \Procedure{Explore}{$G, C, s, V$} \Comment{Collect the critical nodes reachable from $s$}
         \State $R \gets \emptyset$
         \State $Q \gets \{s\}$ \Comment{Initialize the queue with the node}
-        \While{$\lnot \Call{IsEmpty}{Q}$} \Comment{repeat untill queue is empty}
+        \While{$\lnot \Call{IsEmpty}{Q}$} \Comment{repeat until queue is empty}
             \State $n \gets \Call{Pop}{Q}$
             \State $V(n) \gets true$
             \State $R \gets \Call{Append}{R, n}$
-            \For{$a \in \Call{Adjacent}{G, n}$ with } \Comment{Explore adjacent neighbors}
+            \For{$a \in \Call{Adjacent}{G, n}$} \Comment{Explore adjacent neighbors}
                 \If{ $n \in C \land \lnot V(a)$ } \Comment{Filter by non visited, and critical nodes}
                     \State \Call{Push}{Q, a}
                 \EndIf
@@ -391,7 +391,7 @@ Algorithm \cref{alg:crit_grouping} show the procedure of how grouping is execute
             \If{$V(s)$}
                 \State \textbf{continue} \Comment{Already part of a component}
             \EndIf
-            \State $C \gets \Call{Explore}{G, C, s, V}$ \Comment{Exploring grpah, while only moving ``uppward''}
+            \State $C \gets \Call{Explore}{G, C, s, V}$ \Comment{Exploring graph, while only moving ``upward''}
             \State $R \gets \Call{AddGroup}{R, C}$
         \EndFor
         \State \Return $R$
@@ -401,25 +401,25 @@ Algorithm \cref{alg:crit_grouping} show the procedure of how grouping is execute
 \end{algorithm}
 
 In the algorithm \cref{alg:crit_grouping} we can see that the ``grouping'' operation mainly
-involve two steps, the first one is to apply a ``dilation'' to the critical nodes. This dilation
-is characterized by a specific parameter ($D_{max}$) that represent the distance of a dilation.
-During the dilation operation, every node that have at least one critical node closer than $D_{max}$
-is considered as well critical. This dilation is applied in order to ``merge'' critical regions
+involves two steps: the first one is to apply a ``dilation'' to the critical nodes. This dilation
+is characterized by a specific parameter ($D_{max}$) that represents the distance of a dilation.
+During the dilation operation, every node that has at least one critical node closer than $D_{max}$
+is considered critical as well. This dilation is applied in order to ``merge'' critical regions
 that are really close together in order to reduce the total number of regions the algorithm 
-will produce. The reasoning behind this erosion is that, although it is true that generally speaking
-small optimization problem are easier to solve than a single bigger one, this reasoning has a limiting.
+will produce. The reasoning behind this dilation is that, although it is true that generally speaking
+small optimization problems are easier to solve than a single bigger one, this reasoning has a limit,
 and we found that, if a mesh has a large area that is very close to the overhanging angle, the
 criticality detection algorithm would generate a very large subset of tiny critical areas.
-This was an undesirable behaver, therefore this dilation was added so that by tuning $D_{max}$
+This was an undesirable behavior, therefore this dilation was added so that by tuning $D_{max}$
 we are able to control how ``aggressively'' critical regions are divided into groups.
-of $D_{max}$ is set to zero we get the highest number of groups, while if we increase the value
+If $D_{max}$ is set to zero we get the highest number of groups, while if we increase the value
 we gradually reduce the amount of groups that are generated.
 The second stage in the grouping algorithm is the exploration of the graph itself,
 in this stage we start from every critical point, and we explore the graph by navigating
-to all the nodes that are marked as ``critical'', in this stage we keep track of then nodes that are 
-visited so to avoid visiting the same node twice, and increasing the time complexity;
-And finally, once all the nodes that are reachable form a source, we can mark those nodes
-as a ``critical group'' (i.e. a set of critical nodes that are all connected to each others).
+to all the nodes that are marked as ``critical'', in this stage we keep track of the nodes that are 
+visited so as to avoid visiting the same node twice, and increasing the time complexity.
+And finally, once all the nodes that are reachable from a source have been found, we can mark those nodes
+as a ``critical group'' (i.e. a set of critical nodes that are all connected to each other).
 
 
 
@@ -429,28 +429,28 @@ as a ``critical group'' (i.e. a set of critical nodes that are all connected to 
 The objective of this stage is to decide the ``contact points'' (i.e. where the supports
 will make contact with the printed object in order to provide a support interface).
 This step is done independently from the true optimization of the support structure.
-Generally speaking it is not true that the two choices are independent from each others, infact
+Generally speaking it is not true that the two choices are independent from each other; in fact
 we can easily imagine a scenario where placing a contact point in a specific position
 reduces the cost function for the contact points by a bit, but introduces more cost
-in the generation of the support structure. However, even tho they are not purely independent
-from each others, they are not excessively correlated, meaning that separating the two stages
-does not introduces excessive quality loss. For this reason separating the two stages
-can be considered a good idea, infact other related works such as Zhang et. al. 2020 \cite{ZHANG2020117}
+in the generation of the support structure. However, even though they are not purely independent
+from each other, they are not excessively correlated, meaning that separating the two stages
+does not introduce excessive quality loss. For this reason separating the two stages
+can be considered a good idea; in fact other related works such as Zhang et al. 2020 \cite{ZHANG2020117}
 have done exactly the same. Our method is not drastically different from theirs,
-it of course have slightly different cost function and optimization process, but 
+it of course has a slightly different cost function and optimization process, but 
 realistically speaking, in terms of novelty our approach for contact points optimization
-does not have to offer much (the same cannot be sed for the next two optimization stage).
-The optimization of contact point is achieved with a genetic algorithm, therefore
-the explanation of inner working of the algorithm is explained in separate sections,
-once for every component of the genetic algorithm (cost function, gene, mutation crossover
+does not have much to offer (the same cannot be said for the next two optimization stages).
+The optimization of contact points is achieved with a genetic algorithm, therefore
+the inner working of the algorithm is explained in separate sections,
+one for every component of the genetic algorithm (cost function, gene, mutation, crossover
 and optimization process).
-Figure \ref{fig:contact_points_opt} show the result of the optimization process, where the contact
+Figure \ref{fig:contact_points_opt} shows the result of the optimization process, where the contact
 points are represented with a small purple dot on top of the critical area (the radius however is
-not visualized). We can see how the result is not particularly interesting, as it basically looks
+not visualized). We can see how the result is not particularly interesting, as it basically looks like
 a sample of equally spaced points inside the critical area. This makes sense as generally speaking
-a good support structure satisfy exactly that condition, however this shows us how complex
-genetic-algorithm optimization is not always necessary for every task. Infact this optimization
-stage is probability the less useful of the three, and could easily be replaced by a simpler and faster
+a good support structure satisfies exactly that condition, however this shows us how complex
+genetic-algorithm optimization is not always necessary for every task. In fact this optimization
+stage is probably the least useful of the three, and could easily be replaced by a simpler and faster
 ``greedy'' algorithm that would perform very similarly.
 
 
@@ -464,41 +464,41 @@ stage is probability the less useful of the three, and could easily be replaced 
 \subsection{Genome Structure}
 \label{sec:contact_points_opt_gs}
 
-The genetic representation of a contact points choice is incredibly straightforward,
-is essentially a set of the nodes in the graph that we decided to place a support on,
+The genetic representation of a contact points choice is incredibly straightforward:
+it is essentially a set of the nodes in the graph that we decided to place a support on,
 with every node having a ``radius'' associated with it (allowing the algorithm
-a bit of flexibility, in deciding whether it is more advantageous to use one large
-support or many smaller supports)
-From this gene it is possible to derive the set of supported nodes,
-this is done by drawing a circle around the node, and selecting the support
-that are in the perimeter (the use of the perimeter rather than all the circle's area
+a bit of flexibility in deciding whether it is more advantageous to use one large
+support or many smaller supports).
+From this gene it is possible to derive the set of supported nodes;
+this is done by drawing a circle around the node, and selecting the supports
+that are on the perimeter (the use of the perimeter rather than all the circle's area
 is due to the way supports are generated. Since they are ``empty'' cones, they
-do not provide any support in the center of cone's base, but only on the perimeter,
-nevertheless this part will be explained more thoroughly in the exporting section \ref{sec:exporting})
+do not provide any support in the center of the cone's base, but only on the perimeter;
+nevertheless this part will be explained more thoroughly in the exporting section \ref{sec:exporting}).
 
 \subsection{Cost Function}
 \label{sec:contact_points_opt_cf}
 
 The cost function is derived from the criticality detection algorithm \cref{alg:crit_det}.
 As we explained in section \ref{sec:crit_detection} the output of the algorithm is
-a dictionary that map every node in the surface graph to it's criticality vale. and
-starting from this dictionary is possible to find the total cost by summing
+a dictionary that maps every node in the surface graph to its criticality value, and
+starting from this dictionary it is possible to find the total cost by summing
 all the individual costs and weighting them by the node's area.
 Nonetheless we are still required to make a few changes to the algorithm
 in order to use it as the cost function.
 The necessary changes can be seen in algorithm \ref{alg:contact_points_opt_cf},
-the first one (at line 2) is straightforward, as it is simply 
-introduce in the evaluation procedure the effect of supports. Infact the previous version
+the first one (at line 2) is straightforward, as it simply 
+introduces in the evaluation procedure the effect of supports. In fact the previous version
 of the algorithm did not consider supports at all, now however
-we must keep track of where the supports are, and in that case that node $n$
-is one of the nodes supported we automatically assign it's criticality to zero.
+we must keep track of where the supports are, and in the case that node $n$
+is one of the nodes supported we automatically assign its criticality to zero.
 The second change to the algorithm is a bit less trivial to explain.
 We can see that at line 6 we added to the final cost a portion of the ``base cost''.
 The base cost of $n$ is defined as the cost that node $n$ would have, if no supports were applied.
-$\alpha$ is a small scalar (in our final tests we used 0.03) that represent how much of the
+$\alpha$ is a small scalar (in our final tests we used 0.03) that represents how much of the
 base cost is ``passed'' back when evaluating the structure with supports enabled.
-The reason of this modeling choice, has to do with floating regions.
-As we can remember form section \ref{sec:crit_detection} the propagation factor
+The reason for this modeling choice has to do with floating regions.
+As we can remember from section \ref{sec:crit_detection} the propagation factor
 was added to avoid detecting only a tiny critical region in some particular
 scenarios such as for example the wing of the dragon 
 (see figure \ref{fig:critical_detect} and \ref{fig:critical_detect_no_prop}).
@@ -507,12 +507,12 @@ would singlehandedly remove the entire critical region, however in real life suc
 support would create many problems, both because of the z-wobble effect (\ref{sec:wobble-test})
 and because when printing the connection between supports and the model is constructed
 to be fragile on purpose, in order to simplify the removal process, making it extremely
-likely that the wing would detach from the support before it manage to connect to the body
+likely that the wing would detach from the support before it manages to connect to the body
 of the dragon.
-The addition of the base cost make it so that, when propagating,
-the criticality value has a tendency to drift towards th value it would have
-had in the case where no supports where added. This is a simple trick that allow
-floating regions to be handled correctly and avoid the issues we desired.
+The addition of the base cost makes it so that, when propagating,
+the criticality value has a tendency to drift towards the value it would have
+had in the case where no supports were added. This is a simple trick that allows
+floating regions to be handled correctly and avoids the issues we described.
 
 
 \begin{algorithm}[h]
@@ -529,12 +529,12 @@ floating regions to be handled correctly and avoid the issues we desired.
 \label{alg:contact_points_opt_cf}
 \end{algorithm}
 
-The cost associated with the criticality is only half of the equation of course,
-Infact if that was the only cost we applied to the optimizer the optimal solution
+The cost associated with the criticality is only half of the equation of course;
+in fact if that was the only cost we applied to the optimizer the optimal solution
 would be as simple as placing a support on every critical node in the graph.
 This is of course ideal from a quality of support standpoint, but is less than ideal
 if we consider the cost of the material used for the supports.
-For this reason the second part of the cost is a simply derived from a unit cost
+For this reason the second part of the cost is simply derived from a unit cost
 for every support placed, plus a linear cost proportional to the area of the support
 circle.
 
@@ -545,16 +545,16 @@ circle.
 \label{sec:contact_points_opt_mut}
 
 Since the gene we used to represent the contact points is quite simple, the
-genes mutations applied can also be simple. We have designed four fundamental
-mutations, so that every time a gene need to be mutated we can simply
+gene mutations applied can also be simple. We have designed four fundamental
+mutations, so that every time a gene needs to be mutated we can simply
 select one or more fundamental mutations, and apply them sequentially to the gene.
 The four fundamental mutations are:
 \begin{itemize}
     \item \textbf{Add Support:} This mutation picks a random node from the list of critical
-    one and place a new support with a randomly generated radius on it.
+    ones and places a new support with a randomly generated radius on it.
     \item \textbf{Remove Support:} This mutation picks a random support from the gene
-    and removes it
-    \item \textbf{Move Support:} This mutation pks a random support, and move it to a different
+    and removes it.
+    \item \textbf{Move Support:} This mutation picks a random support, and moves it to a different
     node, when selecting the new node only nodes that are within a certain radius of the original
     one are considered eligible.
     \item \textbf{Change Support Radius:} This mutation increases or decreases the radius
@@ -566,24 +566,24 @@ The four fundamental mutations are:
 \label{sec:contact_points_opt_cross}
 
 The crossover strategy is simple to explain, given two genes, a random plane is generated
-in 3D space, then we can create a new gene by selecting all the points that are in one side
-of the plane from Parent A, and all the point that are from the other side of the plane from 
-parent B.
-Figure \ref{fig:crossover_cpo} show this process in action with a two dimensional representation
+in 3D space, then we can create a new gene by selecting all the points that are on one side
+of the plane from Parent A, and all the points that are on the other side of the plane from 
+Parent B.
+Figure \ref{fig:crossover_cpo} shows this process in action with a two dimensional representation
 of a set of points.
 The generation of the random plane is done by selecting three random points from one parent 
-($P_A$, $P_B$, and $P_{\perp}$) and then selecting the plane $\pi$ such as the first two points
-are included in the plane, and such as, the plane is perpendicular to the plane $\pi*$ that include
+($P_A$, $P_B$, and $P_{\perp}$) and then selecting the plane $\pi$ such that the first two points
+are included in the plane, and such that the plane is perpendicular to the plane $\pi*$ that includes
 all three points.
-Algorithm \cref{alg:plane_construction} show a simple procedure to construct such a plane.
-The reason tis plane is constructed in this specific manner (rather than simply construct
-a plane that include three random points) is that support structures tends to be mostly flat,
-therefore with a plane that include three points it is likely that most points would hand up
+Algorithm \cref{alg:plane_construction} shows a simple procedure to construct such a plane.
+The reason this plane is constructed in this specific manner (rather than simply constructing
+a plane that includes three random points) is that support structures tend to be mostly flat,
+therefore with a plane that includes three points it is likely that most points would end up
 close to the border, making the division not very equal.
-In the algorithm described there is one small edge case, infact it cannot work if there are
+In the algorithm described there is one small edge case; in fact it cannot work if there are
 less than three points in a plane, or if the three points selected are in a straight line, 
-making it impossible to build the plane. In all of this circumstances the algorithm simply
-ignores the crossover and return a gene identical to one random parent.
+making it impossible to build the plane. In all of these circumstances the algorithm simply
+ignores the crossover and returns a gene identical to one random parent.
 
 
 \begin{figure}[h]
@@ -601,11 +601,11 @@ ignores the crossover and return a gene identical to one random parent.
     \Require $p_{\perp}$ Point from which distance is maximized
     \Ensure $\pi$ The desired plane
 
-    \Procedure{ConstructPlane}{$p_A, p_B, p_{\perp}$} \Comment{Find the plane that include the three points}
+    \Procedure{ConstructPlane}{$p_A, p_B, p_{\perp}$} \Comment{Find the plane that includes the three points}
         \State $\pi^* \gets \Call{PlaneFromPoints}{p_A, p_B, p_{\perp}}$
         \State $\mathbf{v} \gets \Call{Normal}{\pi^*}$ \Comment{Normal of plane spanned by $p_A, p_B, p_{\perp}$}
         \State $p_C \gets p_A + \mathbf{v}$ \Comment{Construct third point along the normal direction}
-        \State $\pi \gets \Call{PlaneFromPoints}{p_A, p_B, p_C}$ \Comment{Find the plane that include the three points}
+        \State $\pi \gets \Call{PlaneFromPoints}{p_A, p_B, p_C}$ \Comment{Find the plane that includes the three points}
         \State \Return $\pi$
     \EndProcedure
 \end{algorithmic}
@@ -616,7 +616,7 @@ ignores the crossover and return a gene identical to one random parent.
 \subsection{Initialization}
 \label{sec:contact_points_opt_init}
 
-The initialization of the genes is done with a simple procedure: First we calculate the area
+The initialization of the genes is done with a simple procedure: first we calculate the area
 of the critical surface we need to generate, then we calculate the number of supports that 
 need to be generated initially by multiplying the area by a ``support density'' parameter,
 finally we randomly generate the desired number of supports by repeatedly randomly
@@ -628,10 +628,10 @@ with the selected radius.
 \label{sec:contact_points_opt_par}
 
 The optimization process is fairly straightforward, it is composed of at most 2000 generations,
-each of them having 100 individuals. Patience is used as an early termination strategy to avoid waisting
-cpu cycles, and the maximum number of generations allowed without progress is set to 25.
-The selection process is elitist, with the 10 best individual always passing to the next generation,
-while the selection of the remaining 90 individuals is done using tournament selections with a 
+each of them having 100 individuals. Patience is used as an early termination strategy to avoid wasting
+CPU cycles, and the maximum number of generations allowed without progress is set to 25.
+The selection process is elitist, with the 10 best individuals always passing to the next generation,
+while the selection of the remaining 90 individuals is done using tournament selection with a 
 tournament size of 10.
 
 
@@ -639,24 +639,24 @@ tournament size of 10.
 \section{Contact Points Grouping}
 \label{sec:contact_points_grouping}
 
-This stage in the pipeline aim to group contact points based on proximity, in order to optimize
-each section individually. As the previous ``grouping'' step, this is not strictly necessary
-theoretically, however it essentially required for good performance in practice.
-The reason why splitting is acceptable in this scenario is that the support structure
-of areas that are far apart, are generally independent from each others. For example,
+This stage in the pipeline aims to group contact points based on proximity, in order to optimize
+each section individually. As in the previous ``grouping'' step, this is not strictly necessary
+theoretically, however it is essentially required for good performance in practice.
+The reason why splitting is acceptable in this scenario is that the support structures
+of areas that are far apart are generally independent from each other. For example,
 in our ``Dragon'' testcase we can imagine how the structure generated to support the left
-wing is ruffly independent from the structure generated for the right wing.
+wing is roughly independent from the structure generated for the right wing.
 For this reason optimizing them together gives minimal benefit to the objective function,
 however optimizing them separately has big performance benefits. This is because the algorithm
 for stiffness evaluation we explained in chapter \ref{cha:stiffness_algo} has a complexity
-of $o(n^2 \log (n))$ meaning that with a divide and conquer approach can be highly effective
+of $o(n^2 \log (n))$ meaning that a divide and conquer approach can be highly effective
 in reducing the computational complexity of the algorithm.
 Initially some simpler ``greedy'' algorithms for the grouping of contact points were tested,
-however none of them provided satisfactory results. This tests included strategies such as using the
+however none of them provided satisfactory results. These tests included strategies such as using the
 ``critical areas'' as a starting point, and merging them based on proximity, and other similar
-heuristics. However we found that with those type of approach it was extremely difficult to regulate
+heuristics. However we found that with those types of approach it was extremely difficult to regulate
 the right amount of ``grouping'' required for different shapes, as they tended to either
-group too aggressively, or not grouping enough. For this reason an optimization-based
+group too aggressively, or not group enough. For this reason an optimization-based
 solution was adopted using a Compositional Pattern Producing Network for generating the groups,
 with a genetic algorithm based optimization.
 The final result of a grouping step executed on the ``Dragon'' testcase can be seen in figure
@@ -678,42 +678,42 @@ individually as we did in the previous section.
 \label{sec:contact_points_grouping_gs}
 
 In the contact point grouping stage the ``gene'' is represented as a Compositional Pattern
-Producing Network (CPPN) that take as input the position of a contact points (the $x$, $y$ and $z$ coordinate)
-and give as output the group that the node is part of.
+Producing Network (CPPN) that takes as input the position of a contact point (the $x$, $y$ and $z$ coordinates)
+and gives as output the group that the node is part of.
 To categorize a point into a group we just take the last layer of the network, and pick the group
-corresponding to the neuron with the highest output. This means that the maximum number of group
+corresponding to the neuron with the highest output. This means that the maximum number of groups
 the network can produce is upper bounded by the size of the network. Generally speaking this is not an
 issue as the number of groups generated is not particularly high, meaning that even with a small
-25 neurons output layer we are not placing significant constraint on the model.
+25 neurons output layer we are not placing significant constraints on the model.
 The final topology of the network ended up as a fully connected NN, with the input layer
 of size 3, one hidden layer with size of 32, and a Sigmoid activation function, and one 
 output layer with a size of 25.
-This neural network is tiny by modern standard, and this is done for two reasons: First of all
+This neural network is tiny by modern standards, and this is done for two reasons: first of all
 the task itself is not very complicated, and can be easily performed with such a small network, so
 there is no real reason for going bigger. Secondly the training process is not really efficient as
-it rely on genetic evolution rather than back-propagation, making shallower network ideal since they
+it relies on genetic evolution rather than back-propagation, making shallower networks ideal since they
 are easier to train.
 
 \subsection{Cost Function}
 \label{sec:contact_points_grouping_cf}
 
 The cost function associated with grouping is parametrized by three values
-($K_{\text{height}}$, $K_{\text{area}}$ and $K_{\text{volume}}$)
+($K_{\text{height}}$, $K_{\text{area}}$ and $K_{\text{volume}}$).
 Their use is illustrated in algorithm \ref{alg:cpg_cf}.
-The general idea is that once a group is created we compute it's (three dimensional) convex hull
+The general idea is that once a group is created we compute its (three dimensional) convex hull
 (using the efficient Quick Hull algorithm \cite{quickhull}),
-and then apply three main costs:
-The first two are proportional to te area and the volume of the convex hull, and are
-essentially there to incentivize the algorithm to create groups that contains points
+and then apply three main costs.
+The first two are proportional to the area and the volume of the convex hull, and are
+essentially there to incentivize the algorithm to create groups that contain points
 that are close together, in order to minimize the cost. Meanwhile the third one is
-a cost that is proportional to the height of the group. This is a regularization therm
-that ensure there is a cost in creating a group, otherwise the optimizer would always and up
-with a solution that uses the highest amount of group possible.
+a cost that is proportional to the height of the group. This is a regularization term
+that ensures there is a cost in creating a group, otherwise the optimizer would always end up
+with a solution that uses the highest number of groups possible.
 Generally speaking it is less desirable to create too many groups, because we give less
-opportunities to the optimizer to ``merge'' support structure together, and therefore
+opportunities to the optimizer to ``merge'' support structures together, and therefore
 save on material; This ``undesirability'' is higher for groups with a taller height (defined
 as the maximum $z$ of the points in the group), because the taller a point is, the more expensive
-it become to generate a support structure that reaches it; This is why the regularization factor
+it becomes to generate a support structure that reaches it; This is why the regularization factor
 depends on the height, and is not just a constant.
 
 \begin{algorithm}[h]
@@ -742,10 +742,10 @@ depends on the height, and is not just a constant.
 
 Defining mutations on a neural network (especially if the network is small and shallow like ours)
 is particularly easy, as the network can be seen as a set of weights we need to tune. For this reason
-the mutation is parametrized by 4 parameters. A mutation rate ($p_m$) a reset rate ($p_r$)
-and two random distribution for mutation and reset ($\mathcal{D}_m$ and $\mathcal{D}_r$).
-With this four parameters the mutation can be easily described with algorithm \ref{alg:network_mut}.
-In the final implementation we ended up defining four different set of the four parameters,
+the mutation is parametrized by 4 parameters: a mutation rate ($p_m$), a reset rate ($p_r$)
+and two random distributions for mutation and reset ($\mathcal{D}_m$ and $\mathcal{D}_r$).
+With these four parameters the mutation can be easily described with algorithm \ref{alg:network_mut}.
+In the final implementation we ended up defining four different sets of the four parameters,
 and randomly picking one for every mutation operation.
 This was done in order to increase the stochasticity of the mutation, that is generally
 speaking a good idea for genetic algorithms.
@@ -784,30 +784,30 @@ speaking a good idea for genetic algorithms.
 \subsection{Crossover}
 \label{sec:contact_points_grouping_cross}
 
-Crossover is once again simple in the case of neural network (Especially
+Crossover is once again simple in the case of neural networks (especially
 considering that the size and shape of the network is known ``a priori'' and is
 not part of the crossover/mutation), in this case we have defined three different crossover
 strategies, and every time a crossover is executed we randomly pick one of them.
 The three strategies selected are:
 \begin{itemize}
-    \item \textbf{Uniform:} This is the traditional uniform mutation where every node in the offspring's network
-    is either inherited from Parent A or form parent B with 50-50 probability.
+    \item \textbf{Uniform:} This is the traditional uniform crossover where every node in the offspring's network
+    is either inherited from Parent A or from Parent B with 50-50 probability.
     \item \textbf{Single Point:} In this case a random number is generated between zero and the number of parameters,
     and then all of the weights that have an index lower than the generated number are inherited from one
-    parent, while the remaining one are inherited from the other.
+    parent, while the remaining ones are inherited from the other.
     \item \textbf{Arithmetic:} In this case we decide a parameter $\alpha$ (usually 0.5) and then the weights of the
     offspring ($\mathbf{\theta}_{o}$) can be expressed as a weighted summation of the weights of the two parents
-    ($\mathbf{\theta}_{A}$ and $\mathbf{\theta}_{A}$) using the simple equation: $\mathbf{\theta}_{o} = \alpha \mathbf{\theta}_{A} + (1 - \alpha)\mathbf{\theta}_{B}$
+    ($\mathbf{\theta}_{A}$ and $\mathbf{\theta}_{B}$) using the simple equation: $\mathbf{\theta}_{o} = \alpha \mathbf{\theta}_{A} + (1 - \alpha)\mathbf{\theta}_{B}$
 \end{itemize}
 
 \subsection{Initialization}
 \label{sec:contact_points_grouping_init}
 
 Initialization of the network is achieved using the famous ``He'' initialization technique
-first describe in the famous 2015 paper ``Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification''
+first described in the famous 2015 paper ``Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification''
 \cite{he2015}.
-``Xavier'' initialization \cite{xavier2010} were also tested, but were found to have slightly worst
-performances compared to He.
+``Xavier'' initialization \cite{xavier2010} was also tested, but was found to have slightly worse
+performance compared to He.
 
 
 
@@ -816,30 +816,30 @@ performances compared to He.
 \label{sec:contact_points_grouping_par}
 
 The optimization process is composed of at most 2000 generations,
-each of them having 100 individuals. Patience is used as an early termination strategy to avoid waisting
-cpu cycles, and the maximum number of generations allowed without progress is set to 100.
-The selection process is elitist, with the 10 best individual always passing to the next generation,
-while the selection of the remaining 90 individuals is done using tournament selections with a 
+each of them having 100 individuals. Patience is used as an early termination strategy to avoid wasting
+CPU cycles, and the maximum number of generations allowed without progress is set to 100.
+The selection process is elitist, with the 10 best individuals always passing to the next generation,
+while the selection of the remaining 90 individuals is done using tournament selection with a 
 tournament size of 10.
-During our testing we found that this optimization problem war really sensitive to the initialization
+During our testing we found that this optimization problem was really sensitive to the initialization
 of the neural network. Therefore, to reduce variability the optimization process is repeated 5 times,
 and only the best output is selected. The decision of doing so was also made easier by the fact 
-that this step is by far the faster, takin no more than a few seconds.
+that this step is by far the fastest, taking no more than a few seconds.
 
 \section{Support Structure Optimization}
 \label{sec:sup_struct_opt}
 
 The support structure optimization is the final major step in the pipeline.
-This involve creating a structure that manage to reach all the decided contact points,
-while minimizing a cost function that ensure the minimization of the material consumed,
+This involves creating a structure that manages to reach all the decided contact points,
+while minimizing a cost function that ensures the minimization of the material consumed,
 and maximizes the printability by applying some cost function over stiffness and overhanging
 angles.
 As we explained more thoroughly in the motivation chapter (\ref{cha:motivations})
-this stage is arguably the most novel aspect of the our work. Primarily
-doe to the fact that none of the works we have mentioned in the previous literature
+this stage is arguably the most novel aspect of our work, primarily
+due to the fact that none of the works we have mentioned in the previous literature
 contain the notion of ``Support Stiffness''.
 The optimization algorithm can be seen at work in this
-youtube video: \url{https://www.youtube.com/watch?v=muGUorMoAzM},
+YouTube video: \url{https://www.youtube.com/watch?v=muGUorMoAzM},
 or in figure \ref{fig:struct_opt} where an extrapolation of six 
 frames is displayed.
 For explaining this optimizer we will follow the same approach
@@ -863,8 +863,8 @@ of the genetic algorithm starting as always with the gene structure.
 The genome for the support structure optimization can be described as a set of $m$ individual
 genes:
 $$\mathbf{G} = \{ g_1, g_2, ..., g_m\}$$
-Each gene $g_i$ is represented by two parameters: A position in 3D space ($p_i$) and a number
-$n$ (that vary from 1 to 3) that define the number of neighbors that the point connect to. In mathematical therms:
+Each gene $g_i$ is represented by two parameters: a position in 3D space ($p_i$) and a number
+$n$ (that varies from 1 to 3) that defines the number of neighbors that the point connects to. In mathematical terms:
 $$g_i = (p_i, n_i) \qquad \forall i \in [1, m]$$
 This representation is quite simple indeed, however the slightly more complicated part
 is transforming this simple encoding into a rigid frame. This is done with algorithm
@@ -873,18 +873,18 @@ As we can see in the algorithm, every gene $g_i$ is converted into a node in the
 frame $F$. Then every node is connected to at most $n_i$ neighbors below that provide
 support. Neighbors are eligible if the connection angle is not too steep in order to
 ensure that the frames produced are printable by guaranteeing at construction time
-that the frame will not have excessive overhanging angle.
-Finally there are two minor details that are worth mentioning:
+that the frame will not have excessive overhanging angles.
+Finally there are two minor details that are worth mentioning.
 The first one is that all nodes that don't have any support are automatically 
-connected to the ground, this is of course necessary if we want the structure to not float in the void.
+connected to the ground; this is of course necessary if we want the structure to not float in the void.
 The second one is that the connections to the contact points (i.e. the points of contact
-between the support frame and the printed object.) are threated almost in the same way as
+between the support frame and the printed object) are treated almost in the same way as
 regular nodes with the only two differences being that the number of neighbors ($n$)
 is automatically set as one, and that those points are not eligible for being ``supporters''
 (this is to ensure that a contact point is not connected to another contact point with a beam
 in the final structure, which of course would be less than desirable).
-Figure \ref{fig:sup_struct_opt_gene_struct} show the the process of converting a gene
-(show in the picture on the left) into a full rigid frame (shown in the picture 
+Figure \ref{fig:sup_struct_opt_gene_struct} shows the process of converting a gene
+(shown in the picture on the left) into a full rigid frame (shown in the picture 
 to the right).
 
 
@@ -936,26 +936,26 @@ Generally speaking the primary challenge when designing the genetic representati
 of any genetic-based solver is striking a balance between a complex formulation 
 that is able to be very expressive, and a simpler formulation that is easy to optimize
 using crossover and mutation.
-The genetic representation we presented is a good middleground, between the two 
+The genetic representation we presented is a good middle ground between the two 
 constraints. The fact that we only allow each node to connect to the $n$ closest eligible
 neighbors is of course a reduction in the expressiveness of the system, however
 this downside comes with the benefit of a much simpler representation that is easier to optimize.
 During the design process more options were considered and tested.
 Some of the options that were tested include:
-A representation that organized the support structure into layer, where each layer was 
-able to be mutated separately, and then the crossover was achieved by merging different layer.
+a representation that organized the support structure into layers, where each layer was 
+able to be mutated separately, and then the crossover was achieved by merging different layers.
 This representation was easy to optimize, however the topology of the output frame was found 
 to be too restricted, and the results were not satisfactory.
-Another representation that was tested involved using a Convocational Pattern Producing Network
+Another representation that was tested involved using a Compositional Pattern Producing Network
 that essentially had as output a multi dimensional vector field, that was then used to generate
 the rigid frame. This version however although quite interesting in theory failed to deliver
-acceptable results in practice; The primary issue stemmed from the relation
+acceptable results in practice; the primary issue stemmed from the relation
 between the size of the network and the ability to train one efficiently.
 Small networks were able to be trained effectively using this method, however the resulting 
 frames were not good as the network was too small to learn any meaningful pattern.
 Increasing the size of the network would have resolved this issue, however the fact that we are
 optimizing the network using a genetic algorithm (rather than a gradient-based method)
-makes the optimization process much slower and more inefficient effectively limiting the
+makes the optimization process much slower and more inefficient, effectively limiting the
 size of the networks we can train in a reasonable amount of time.
 
 
@@ -972,56 +972,56 @@ is obtained with a simple summation of the four components
 $$
 C_\text{tot} = C_\text{stiff} + C_\text{steep} + C_\text{mat} + C_\text{coll}
 $$
-This imply that we made the choice of merging the different objectives into one,
+This implies that we made the choice of merging the different objectives into one,
 and thus optimizing a simple single-objective optimization problem.
 This is generally a faster and easier problem to optimize compared to 
-multi objective optimization problems.
-Furthermore there are not many tangible benefits in trying to find a pareto
+multi-objective optimization problems.
+Furthermore there are not many tangible benefits in trying to find a Pareto
 front of solutions when at the end only one support structure will be used for the actual print.
 
 \subsubsection{Stiffness Cost}
 
-We already discuss extensively on the reason why it is essential to ensure that the support
-remain stiff while is being printed. To summarize it in one sentence we can say that ensuring
+We already discussed extensively the reason why it is essential to ensure that the support
+remains stiff while it is being printed. To summarize it in one sentence we can say that ensuring
 the support has a sufficient level of stiffness throughout the print process is crucial for
 a successful print, failing to provide the required stiffness would result in an inadequate
 deposition of the filament due to the movement caused 
 by the z-wobble effect \ref{sec:wobble-test}.
-Furthermore we have discussed in depth on how we can define a stiffness/flexibility matrix,
+Furthermore we have discussed in depth how we can define a stiffness/flexibility matrix,
 and how we can calculate them in chapter \ref{cha:stiffness_algo}.
-This section aim to put everything together and provide the final formulation of the stiffness
-cost function. Algorithm \ref{alg:stiffness_cost} show the full procedure necessary
+This section aims to put everything together and provide the final formulation of the stiffness
+cost function. Algorithm \ref{alg:stiffness_cost} shows the full procedure necessary
 for cost calculation. We can see in the function ``StiffnessCost'' that the frame is gradually
-constructed one node at a time, this ensure we can calculate the stiffness of every point
-while it's begin built, and not just with the final structure, that as we discussed in
+constructed one node at a time; this ensures we can calculate the stiffness of every point
+while it's being built, and not just with the final structure, that as we discussed in
 section \ref{sec:stiffness_part_frames} is quite important for a few mechanical reasons.
-While the frame is being constructed two different source of costs are evaluated. The first one
+While the frame is being constructed two different sources of costs are evaluated. The first one
 is simply a function of the stiffness of each beam, this value is calculated
 inside the function ``BeamCost'' and is essentially a linear with threshold function of the compliance,
 sampled in a set of equally spaced points inside the beam.
-The compliance is calculated inside the function ``Compliance'' function, and we can see that it a simple
+The compliance is calculated inside the ``Compliance'' function, and we can see that it is a simple
 L2 norm of the $xx$ and $yy$ components of the flexibility matrix $\mathbf{D}$.
 The $xx$($yy$) component of $\mathbf{D}$ is essentially expressing what is the displacement
 caused along the $x$($y$) axis, assuming that a force is applied parallel to the $x$($y$) axis.
-The second cost that considered is the ``floating regions'' cost. The definition and detection
+The second cost that is considered is the ``floating regions'' cost. The definition and detection
 of floating regions is covered in section \ref{sec:floating_regions_detection}, however we haven't
 explained yet why floating regions are important. In a traditional ``critical area'' (i.e. an area
 where the overhanging angle is above a specific threshold) the support is placed to sustain the melted
 filament while it cools down, but once the cooling process has concluded the support is no longer necessary.
 In the case of floating regions however the printed object is (at first) not directly connected to the plate
 if not for the supports themselves, so the usefulness of the support is not limited to the first few seconds 
-after the filament is being extruded, but it remain crucial until the floating regions are connected
+after the filament is being extruded, but it remains crucial until the floating regions are connected
 to the plate by means other than the support structure. This means that, in the period of time when the floating region is not connected
 to the build plate, the support must provide an adequate level of stiffness to the floating region,
 to avoid having to deal with the z-wobble effect (\ref{sec:wobble-test}).
-For this reason the function ``FloatingRegionCost'' calculate the equivalent stiffness (that is approximated by calculating the stiffness of a point
+For this reason the function ``FloatingRegionCost'' calculates the equivalent stiffness (that is approximated by calculating the stiffness of a point
 in the center of the floating regions connected to all contact points) of every floating region.
 This equivalent stiffness is then simply converted to compliance and transformed into cost with a simple
 linear with threshold model.
-The threshold value and weight are a parameter of the floating region itself (with larger floating regions
+The threshold value and weight are parameters of the floating region itself (with larger floating regions
 requiring more stiffness).
-Disregarding the application of this cost, would result in a support structure such as the one shown in figure
-\ref{fig:no_floating_regions_cost}, where we can see that the the entire floating region is being supported by a
+Disregarding the application of this cost would result in a support structure such as the one shown in figure
+\ref{fig:no_floating_regions_cost}, where we can see that the entire floating region is being supported by a
 single beam. This would be fine if we only needed support while the filament is cooling, however
 since while the print is ongoing the floating region is connected to the plate only 
 by the single support beam the z-wobble effect would cause serious quality issues.
@@ -1068,7 +1068,7 @@ by the single support beam the z-wobble effect would cause serious quality issue
 
     \Procedure{FloatingRegionCost}{$F, r$} \Comment{Penalize floating regions that are not stiff enough}
         \State $p \gets \Call{CenterOf}{r}$
-        \State $F \gets \Call{AddNode}{F, p}$ \Comment{Add a node $p$ at the center of the reagon $r$}
+        \State $F \gets \Call{AddNode}{F, p}$ \Comment{Add a node $p$ at the center of the region $r$}
         \For{$p' \in r$}
             \State $F \gets \Call{AddBeam}{F, p, p'}$ \Comment{Connect $p$ to all contact points in the floating region}
         \EndFor
@@ -1106,23 +1106,23 @@ by the single support beam the z-wobble effect would cause serious quality issue
 
 Another undesirable feature of the generated supports is them having
 an overhanging angle (or steepness) that is too low. If this was the case
-the supports structure would itself not being printable without
-some kind of support resulting in a problem with infinite recursion.
-For this reason a simple cost based on the the steepness of the
+the support structure would itself not be printable without
+some kind of support, resulting in a problem with infinite recursion.
+For this reason a simple cost based on the steepness of the
 beams is applied in order to encourage the optimizer to produce structures
 that are fully printable.
-It should be sad that due to the way we convert the genome into a rigid
+It should be said that due to the way we convert the genome into a rigid
 frame, we could ensure that all overhanging angles are above a certain threshold
 by setting $\varPhi_{{max}}$ (line 2 of algorithm \ref{alg:gene_to_frame})
 to an appropriate value, however the ability to apply a separate cost function
 to the steepness of support is still a desirable trait, as it allows
-to express more complex requirements such as for example: ``You must keep all overhanging
-angles above $30^\circ$, and preferably above $45^\circ$ with a certain penalty
-every applied for every beam with an overhanging angle in the $35^\circ$ to
-$45^\circ$'' range.
+expressing more complex requirements such as for example: ``You must keep all overhanging
+angles above $30^\circ$, and preferably above $45^\circ$, with a certain penalty
+applied for every beam with an overhanging angle in the $35^\circ$ to
+$45^\circ$ range''.
 Calculating the steepness cost is incredibly straightforward,
 and the full procedure is shown in algorithm \ref{alg:steepness_cost}.
-The algorithm iterate over all teh beams of the frame $F$ and apply 
+The algorithm iterates over all the beams of the frame $F$ and applies a cost 
 based on the overhanging angle, and on the length of the beam (with
 longer beams being weighted more in the cost function).
 
@@ -1137,7 +1137,7 @@ longer beams being weighted more in the cost function).
         \For{$(a, b) \in \Call{Beams}{F}$} \Comment{Iterate over every beam once}
             \State $\varphi \gets \Call{HorizonAngle}{a, b}$ \Comment{Inclination of the beam w.r.t. the horizon}
             \State $d \gets \Call{Distance}{a, b}$
-            \State $c \gets c + \Call{Max}{\varPhi_{th} - \varphi, 0} \cdot d$ \Comment{Penalize beams less steap than the threshold}
+            \State $c \gets c + \Call{Max}{\varPhi_{th} - \varphi, 0} \cdot d$ \Comment{Penalize beams less steep than the threshold}
         \EndFor
         \State \Return $K_{steep} \cdot c$
     \EndProcedure
@@ -1147,19 +1147,19 @@ longer beams being weighted more in the cost function).
 
 \subsubsection{Material Cost}
 
-If we want to minimize the use of material we of course must apply a cost that tell the optimizer
+If we want to minimize the use of material we of course must apply a cost that tells the optimizer
 to do so. In the previous literature we have looked at in chapter \ref{cha:prev_literature}
 this cost was a function of the volume of the supports, however this mostly stemmed from the fact
-that their focus was primary SLS 3D printing, where printing empty objects in not possible (as the
-powder will remain trapped inside). Hour work however is more focused on FDM 3D printing, where
+that their focus was primarily SLS 3D printing, where printing empty objects is not possible (as the
+powder will remain trapped inside). Our work however is more focused on FDM 3D printing, where
 printing hollow objects is not only possible but very common. For this reason the material cost function
 is not a function of volume, but rather a function of the surface area of the supports.
-Algorithm \ref{alg:material_cost} show exactly how the cost is calculate. In here we are approximating
+Algorithm \ref{alg:material_cost} shows exactly how the cost is calculated. In here we are approximating
 every beam as a cylinder, and calculating the lateral area of the cylinder.
-This is a ruff approximation, as there might me some overestimation areas where beams join together,
-and not all beams are cylinder (specifically the one that connect a contact point to the support are
-more similar to a truncated cone) but this approximation is a good enough, as we only need to use it
-as a a cost function.
+This is a rough approximation, as there might be some overestimation in areas where beams join together,
+and not all beams are cylinders (specifically the ones that connect a contact point to the support are
+more similar to a truncated cone) but this approximation is good enough, as we only need to use it
+as a cost function.
 
 \begin{algorithm}[h]
 \caption{Support Structure Material Cost}
@@ -1182,21 +1182,21 @@ as a a cost function.
 
 \subsubsection{Collision Cost}
 
-The last undesirable feature of a support structure are collisions with the printed object.
-This is undesirable primarily because it results in a longer cleanup phases when removing
+The last undesirable feature of a support structure is collisions with the printed object.
+This is undesirable primarily because it results in a longer cleanup phase when removing
 the supports. Furthermore supports that originate from the printed object rather than the plate
-are either fragile and risk to detach while the print is ongoing, or if they are 
+are either fragile and risk detaching while the print is ongoing, or if they are 
 strong enough they often are hard to remove potentially causing damage to the printed object
 while being detached.
-For this reason we apply a cost function that penalize supports that intersect with the volume
-of the printed object. Algorithm \ref{alg:collision_cost} show the formulation of the cost function,
-we can see that is based on a simple iteration over the beams of the frame.
+For this reason we apply a cost function that penalizes supports that intersect with the volume
+of the printed object. Algorithm \ref{alg:collision_cost} shows the formulation of the cost function;
+we can see that it is based on a simple iteration over the beams of the frame.
 Each beam is converted into a set of equally spaced points, and a penalty is applied
 for every point that is inside the volume of the printed object (plus a small safety
 margin $d_{\text{exp}})$.
 The function ``IsInside'' is implemented using a ``VDB'' data structure 
 from the famous 2013 paper ``VDB: High-Resolution Sparse Volumes with Dynamic Topology''
-\cite{openvdb}. This data structure ensure collision detection could be performed in a computationally
+\cite{openvdb}. This data structure ensures collision detection could be performed in a computationally
 efficient manner ensuring the genetic algorithm could run in a reasonable time.
 The implementation of the data structure is based on the rust library ``baby-shark'' \cite{babyshark}
 with a few minor modifications to expose the correct API.
@@ -1230,26 +1230,26 @@ with a few minor modifications to expose the correct API.
 \label{sec:sup_struct_opt_mut}
 
 Thanks to the genome representation of the frame being relatively simple we are able to
-define some simple yet effective fundamental mutations. Then a to perform a complex mutation
+define some simple yet effective fundamental mutations. Then to perform a complex mutation
 we select a number $n$ of fundamental mutations we want to apply (in the range 1 to 3 in our case)
 and apply the $n$ fundamental mutations in series.
 The 5 fundamental mutations we defined are:
 \begin{itemize}
-    \item \textbf{AddPoint}: This simply add a new point in the genome. To generate the point
+    \item \textbf{AddPoint}: This simply adds a new point to the genome. To generate the point
     we randomly select the number of neighbors in the range 1 to 3, and we randomly select the position
-    in a way the $z$ value is between zero and the highest z value of all the contact points, and the x and y values
+    in a way that the $z$ value is between zero and the highest $z$ value of all the contact points, and the $x$ and $y$ values
     are generated so that the projection of the point on to the $xy$ plane falls within the
-    convex hull of all contact points projected on the same same $xy$ plane.
-    The resulting volume where new points can be sampled from is shown in figure \ref{fig:add_point_mutation}
-    \item \textbf{MovePoint}: This mutation randomly select one point, and move it in a random direction
+    convex hull of all contact points projected on the same $xy$ plane.
+    The resulting volume where new points can be sampled from is shown in figure \ref{fig:add_point_mutation}.
+    \item \textbf{MovePoint}: This mutation randomly selects one point, and moves it in a random direction
     (with a mutation that is a simple multivariate normal distribution with a mean vector of zero, and a diagonal
-    covariance matrix with a fixed variance for all directions)
-    \item \textbf{MovePoints}: This mutation try to move every point in the genome, however points are moved only
-    if a (biased) con flip is successful.
+    covariance matrix with a fixed variance for all directions).
+    \item \textbf{MovePoints}: This mutation tries to move every point in the genome, however points are moved only
+    if a (biased) coin flip is successful.
     \item \textbf{MutateContacts}: This mutation mutates the number of contact points a randomly selected 
-    node have, by either adding or subtracting, and then clipping the value if it end up outside the 
-    predefined range
-    \item \textbf{RemovePoint}: This mutation select a random point and remove it from the genome.
+    node has, by either adding or subtracting, and then clipping the value if it ends up outside the 
+    predefined range.
+    \item \textbf{RemovePoint}: This mutation selects a random point and removes it from the genome.
 \end{itemize}
 
 \begin{figure}[h]
@@ -1274,9 +1274,9 @@ randomly selected from the points inside the support structure.
 \subsection{Initialization}
 \label{sec:sup_struct_opt_init}
 
-The initialization of a fresh genome is achieved in three steps: Initially we calculate the total volume
+The initialization of a fresh genome is achieved in three steps: initially we calculate the total volume
 of the bounded region where points are allowed to be added (shown in orange in figure \ref{fig:add_point_mutation})
-then we can calculate the amount of points our gene should have by multiplying the volume with a ``support density'' 
+then we can calculate the amount of points our gene should have by multiplying the volume by a ``support density'' 
 parameter, and then finally we can start with an empty genome, and apply the mutation ``AddPoint'' as many times as is 
 necessary to reach the desired number of contact points.
 
@@ -1284,37 +1284,37 @@ necessary to reach the desired number of contact points.
 \label{sec:sup_struct_opt_par}
 
 The optimization process is composed of at most 5000 generations,
-each of them having 100 individuals. Patience is used as an early termination strategy to avoid waisting
-cpu cycles, and the maximum number of generations allowed without progress is set to 150.
-The selection process is elitist, with the 10 best individual always passing to the next generation,
-while the selection of the remaining 90 individuals is done using tournament selections with a 
+each of them having 100 individuals. Patience is used as an early termination strategy to avoid wasting
+CPU cycles, and the maximum number of generations allowed without progress is set to 150.
+The selection process is elitist, with the 10 best individuals always passing to the next generation,
+while the selection of the remaining 90 individuals is done using tournament selection with a 
 tournament size of 10.
 
 \section{Exporting}
 \label{sec:exporting}
 
-The last stage in the pipeline aim to export all the support structure we generated (that 
+The last stage in the pipeline aims to export all the support structure we generated (that 
 until now is simply a graph of connected points in 3D space) into a format that could
 be used to print something in the real world.
-The easiest wat to do so is to export the support as a 3D volume (in our case using the 
-STL format), so that, printing an object using the generated support was as simple as
+The easiest way to do so is to export the support as a 3D volume (in our case using the 
+STL format), so that printing an object using the generated support was as simple as
 importing the two models together in the slicer, and generating the g-code.
 This was not the only option, as a different one could have been to directly integrate with 
 a slicing software, which would provide some quality and usability benefits as we will discuss
 in the future work section (\ref{sec:future_work}).
-For this thesis we chosen the first option, of exporting directly a 3D model,
-both for it's simpler implementation, and also for the fact that it makes the solution
+For this thesis we chose the first option, of exporting directly a 3D model,
+both for its simpler implementation, and also for the fact that it makes the solution
 more portable (as it could work with any slicing software, rather than being locked down 
 to a single one).
 The creation of the final volume is obtained by means of merging a set of primitive
-shapes into the final structure. The shapes in question are: A cylinder that is used to
+shapes into the final structure. The shapes in question are: a cylinder that is used to
 represent every beam, a cone that is used for the connection to the contact points (given that
 contact points may have a radius different from the one of the beams), a sphere placed
 at every intersection between multiple beams, and a ``GroundFeet'' shape (basically a short
 and wide cylinder) that is added to the nodes that are attached to the ground in order 
 to help them stick to the plate.
-Algorithm \ref{alg:support_structure_exporting} show the exact way that those primitive shapes
-are combined into the final structure, and figure \ref{fig:export_output} show the final
+Algorithm \ref{alg:support_structure_exporting} shows the exact way that those primitive shapes
+are combined into the final structure, and figure \ref{fig:export_output} shows the final
 output of the exporting stage.
 
 \begin{algorithm}[h]
@@ -1326,7 +1326,7 @@ output of the exporting stage.
 
     \Procedure{ExportSupport}{$F, V$}
         \State $S \gets \emptyset$ \Comment{Initialize empty support volume}
-        \For{$(a, b) \in \Call{Beams}{F}$} \Comment{Iterate over beams (a is always the closer to the ground)}
+        \For{$(a, b) \in \Call{Beams}{F}$} \Comment{Iterate over beams ($a$ is always the closest to the ground)}
             \If {$\Call{IsContact}{b}$}
                 \State $S \gets \Call{AddCone}{S, a, b}$
             \Else

@@ -4,24 +4,24 @@
 Additive manufacturing or AM (most commonly known as 3D printing) is the process of constructing a three-dimensional object
 by means of depositing material (usually layer by layer) onto the object in order to achieve a desired shape.
 
-The origins of this technology dates back to the 1980s, with the real ``3D Printer'' being created by Hideo Kodama, and described
+The origins of this technology date back to the 1980s, with the real ``3D Printer'' being created by Hideo Kodama, and described
 in his paper ``Automatic method for fabricating a three‐dimensional plastic model with photo‐hardening polymer'' \cite{am_origins}.
-During the 2000s 3D printing remained a fairly expensive process, with it's use being limited for prototyping inside of companies
-that could afford it. A turning point in the history of the technology came in 2009, when the Fused Deposition Modeling (FDM) printing process 
-patents expired, allowing many startups to ender the game.
-In the following years, as the technology matured it become clear that 
-AM could be used for more that prototyping, and some companies started leveraging its unique advantages in actual production lines.
-One of the first industry to successfully integrate this technology in it's supply chain was the aviation sector,
-where the ability to create higgle complex shapes is extraordinary helpful to reduce weight of various components.
+During the 2000s 3D printing remained a fairly expensive process, with its use being limited to prototyping inside companies
+that could afford it. A turning point in the history of the technology came in 2009, when the Fused Deposition Modeling (FDM) printing process
+patents expired, allowing many startups to enter the game.
+In the following years, as the technology matured, it became clear that
+AM could be used for more than prototyping, and some companies started leveraging its unique advantages in actual production lines.
+One of the first industries to successfully integrate this technology into its supply chain was the aviation sector,
+where the ability to create highly complex shapes is extraordinarily helpful to reduce the weight of various components.
 
 While the technology was establishing a footprint in the manufacturing world, a separate innovation was happening on the side:
-RepRap (Replicating Rapid Prototyper) \cite{reprap} was a project developed in the University of Bath, that aimed 
+RepRap (Replicating Rapid Prototyper) \cite{reprap} was a project developed at the University of Bath that aimed
 to develop an open source 3D printer that was cheap to produce.
 The project was widely regarded as a success, and managed to build approximately 4500 machines in 2 and a half years.
 
-In 2012 Prusa Research was founded and the company started selling it's famous i3 model \cref{fig:prusa_i3} (that was based on the RepRap project)
+In 2012 Prusa Research was founded and the company started selling its famous i3 model \cref{fig:prusa_i3} (that was based on the RepRap project)
 at a starting price of approximately €600. Since then consumer 3D printers have only become better and cheaper thanks to companies
-such as Creatily, Elegoo and BambooLab.
+such as Creality, Elegoo and Bambu Lab.
 \cite{print_pictures}
 
 
@@ -38,28 +38,28 @@ such as Creatily, Elegoo and BambooLab.
 
 \section{3D printing technologies}
 
-It is worth mentioning that the therm ``Additive manufacturing'' is a broad term that includes widely different techniques, each of them
-has it's own strength and weaknesses. This section is not meant to be a comprehensive survey of all the 3D printing technologies, 
-instead we will give a brief overview of the three most important techniques, and we will mention the advantages and disadvantage
-of each of them, with a special focus on the forces that are applied on the printed object while it's being manufactured, which is
+It is worth mentioning that the term ``Additive manufacturing'' is a broad term that includes widely different techniques, each of them
+with its own strengths and weaknesses. This section is not meant to be a comprehensive survey of all the 3D printing technologies;
+instead we will give a brief overview of the three most important techniques, and we will mention the advantages and disadvantages
+of each of them, with a special focus on the forces that are applied to the printed object while it's being manufactured, which is
 a factor that is particularly relevant for this thesis.
 
 \noindent The techniques that we will explain in this section are:
 \begin{itemize}
     \item Fused Deposition Modeling (FDM)
-    \item Stereophotography (SLA)
+    \item Stereolithography (SLA)
     \item Selective Laser Sintering (SLS)
 \end{itemize}
-It is worth noting that an actual topology of 3D printing technologies is much more complicated than this simple list, and would 
-include other (a bit less popular) methods such as MJF DMLS and  Polyjet. However
+It is worth noting that an actual taxonomy of 3D printing technologies is much more complicated than this simple list, and would
+include other (a bit less popular) methods such as MJF, DMLS and PolyJet. However,
 the level of detail provided in this introduction is more than enough to understand the work presented in this thesis.
 
 \subsection{Fused Deposition Modeling (FDM)}
 
-Fused Deposition Modeling (FDM) is a technique that relies on a thermoplastic filament— that is fed by an extruder into a heated nozzle.
+Fused Deposition Modeling (FDM) is a technique that relies on a thermoplastic filament that is fed by an extruder into a heated nozzle.
 This nozzle melts the filament and moves through 3D space using a set of at least three motors.
-To control this movement, a software program called a ``slicer'' converts a 3D model into a set of instructions known as ``gcode.''
-These instructions are then processed by the printer's controller, guiding the nozzle to deposit the material layer by layer 
+To control this movement, a software program called a ``slicer'' converts a 3D model into a set of instructions known as ``gcode''.
+These instructions are then processed by the printer's controller, guiding the nozzle to deposit the material layer by layer
 until the final object is created.
 
 
@@ -71,23 +71,23 @@ until the final object is created.
     \label{fig:fdm}
 \end{figure}
 
-FDM is currently the most common 3D printing techniques for ``hobbyist'', as it's the cheapest option available and 
-have good print dimensions (with most 3D printer having a build volume of approximately 250x250x250mm).
-Furthermore FDM printing support a wide variety of materials, some of them (like PLA) are cheap,
-and easy to print, others like ABS are more durable. Then there are a series of exotic material that offer
-specific features, for example TPU is a material that is flexible and allow to print soft objects, while PVA
-is a material solvable in water and is often used to print supports that can be removed simply by submerging
+FDM is currently the most common 3D printing technique for ``hobbyists'', as it's the cheapest option available and
+has good print dimensions (with most 3D printers having a build volume of approximately 250x250x250mm).
+Furthermore FDM printing supports a wide variety of materials; some of them (like PLA) are cheap
+and easy to print, others like ABS are more durable. Then there are a series of exotic materials that offer
+specific features, for example TPU is a material that is flexible and allows printing soft objects, while PVA
+is a material soluble in water and is often used to print supports that can be removed simply by submerging
 the printed object in water.
-Another feature that is exclusive to FDM printer is the ability to print with multiple materials,
-this is done with either a mechanism that automatically switch the filament used, or with printers that
+Another feature that is exclusive to FDM printers is the ability to print with multiple materials;
+this is done with either a mechanism that automatically switches the filament used, or with printers that
 have multiple nozzles.
 
 
 
 \subsection{Stereolithography (SLA)}
 
-SLA technology (often refer to as ``Resin 3D printing'') is based on the use of a UV-reactive liquid resin material, which is cured (hardened)
- layer by layer using a ultraviolet light source. 
+SLA technology (often referred to as ``Resin 3D printing'') is based on the use of a UV-reactive liquid resin material, which is cured (hardened)
+ layer by layer using an ultraviolet light source.
 Unlike FDM, which extrudes melted plastic filament through a nozzle, SLA utilizes a high-precision UV laser or a masking LCD screen
 to precisely trace the cross-section of an object into a vat of liquid photopolymer.
 
@@ -98,25 +98,25 @@ to precisely trace the cross-section of an object into a vat of liquid photopoly
     \label{fig:sla}
 \end{figure}
 
-The greatest advantage of resin 3D printing is the precision of the model obtained. While with SLS all material must be
-deposited using a nozzle that physically move in 3D space, resin 3D printers simply need to shine a bit of light in the portion
-of the mesh that it wants to harden, this can allow an extremely high precision.
-At the time of writing, a striking example of precision in the world of (consumer) resin 3D printer is the Elegoo saturn 4 Ultra 16k.
-As the name suggest, this printer leverage a 16k screen on a plate size that is ruffly 210 x 120; This imply a pixel size that is in 
-the order of 20 \SI{}{\micro\metre}. While the size of the smallest details that is possible to print is going to be a bit higher than that
-due to the light being emitted in more directions, the resolution provided by those kind of printer is still much greater compared
+The greatest advantage of resin 3D printing is the precision of the model obtained. While with FDM all material must be
+deposited using a nozzle that physically moves in 3D space, resin 3D printers simply need to shine a bit of light in the portion
+of the mesh that they want to harden; this can allow an extremely high precision.
+At the time of writing, a striking example of precision in the world of (consumer) resin 3D printers is the Elegoo Saturn 4 Ultra 16K.
+As the name suggests, this printer leverages a 16K screen on a plate size that is roughly 210 x 120; this implies a pixel size that is in
+the order of 20 \SI{}{\micro\metre}. While the size of the smallest details that it is possible to print is going to be a bit higher than that
+due to the light being emitted in more directions, the resolution provided by those kinds of printers is still much greater compared
 to FDM printers.
-However one key disadvantage of this technology is that when comparing a resin 3D printer with a similarly priced FDM 3D printer
-the build volume is almost always going to be smaller; Furthermore the process of printing with photosensitive resin is
-a bit more complicated than FDM, and require to periodically clean the resin tank of the printer, and often involve some post-processing
+However, one key disadvantage of this technology is that when comparing a resin 3D printer with a similarly priced FDM 3D printer
+the build volume is almost always going to be smaller; furthermore, the process of printing with photosensitive resin is
+a bit more complicated than FDM, and requires periodically cleaning the resin tank of the printer, and often involves some post-processing
 steps to further harden the printed object.
 The third and final disadvantage of SLA is that generally speaking the strength of the material printed usually lags behind
 the strength of a similar object printed using FDM.
 
 In terms of adoption, stereolithography lags a bit behind FDM 3D printers. This is especially true in the consumer
-market where FDM 3D printer are the technology of choice, and resin one are a distant second.
-If we shift our focus to the industrial settings, it becomes a bit harder to define the most popular technologies.
-While it is probably still true that FDM is the most used techniques, SLA is not too far off, and still have many
+market where FDM 3D printers are the technology of choice, and resin ones are a distant second.
+If we shift our focus to industrial settings, it becomes a bit harder to define the most popular technologies.
+While it is probably still true that FDM is the most used technique, SLA is not too far off, and still has many
 applications.
 
 
@@ -124,8 +124,8 @@ applications.
 
 Selective Laser Sintering (SLS) is an industrial 3D printing technology that builds parts by using a high-power
 laser to sinter (fuse) small particles of polymer powder together.
-More specifically the process is divided into two main steps: Initially a roller deposit a thin layer of powder onto the plate,
-then a high power laser selectively melt some part of the layer, making it attach tho nearby regions, and to the layer below.
+More specifically, the process is divided into two main steps: initially a roller deposits a thin layer of powder onto the plate,
+then a high-power laser selectively melts some parts of the layer, making it attach to nearby regions, and to the layer below.
 The process is repeated a few times, until the desired shape is achieved.
 
 \begin{figure}[h]
@@ -136,57 +136,57 @@ The process is repeated a few times, until the desired shape is achieved.
 \end{figure}
 
 The biggest disadvantage of SLS technology is the cost, with even the cheapest options being priced above €5000.
-This factor relegate them almost exclusively in the industrial settings.
-In terms of features and print quality However, SLS is arguably the best option out of the one discussed so far;
-The precision is not as good as SLA, but is still a lot better than FDM, while the strength of the printed
+This factor relegates them almost exclusively to industrial settings.
+In terms of features and print quality, however, SLS is arguably the best option out of the ones discussed so far;
+the precision is not as good as SLA, but is still a lot better than FDM, while the strength of the printed
 objects is better than both previous technologies.
-In terms of material compatibility the most frequent used pouters are made of nylon or polyamide,
-however some specialized printers can also work with metal-based powders allowing to print objects
+In terms of material compatibility the most frequently used powders are made of nylon or polyamide,
+however some specialized printers can also work with metal-based powders, allowing the printing of objects
 that are unmatched in terms of strength.
 
 \section{The role of supports in 3D printing}
 \label{sec:role_of_sup}
 
-Although 3D one of the key advantage of 3D printing compared to more traditional manufacturing
-techniques is the ability to print complex shapes, that were impossible to produce using 
+Although one of the key advantages of 3D printing compared to more traditional manufacturing
+techniques is the ability to print complex shapes that were impossible to produce using
 older technologies, there are still some limitations on what can be produced.
-The biggest limitation is the need of supporting structures that are either floating, or have an overhanging
+The biggest limitation is the need to support structures that are either floating, or have an overhanging
 angle that is too steep.
 
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.5\textwidth]{images/overhangs.png}
-    \caption{support overhanging angle\cite{support_overhang}}
+    \caption{Support overhanging angle \cite{support_overhang}}
     \label{fig:overhangs}
 \end{figure}
 
 
-As a general rule of thumb, angle that are above 45-60 degrees (as shown in picture \ref{fig:overhangs})
-is generally understood to require some supports in order to be printed successfully (Although precise
-numbers widely vary by technologies, printer model, material and settings).
-The reason why supports are required is that (at least in the case of FMD 3D printing) is that
+As a general rule of thumb, angles that are above 45-60 degrees (as shown in picture \ref{fig:overhangs})
+are generally understood to require some supports in order to be printed successfully (although precise
+numbers widely vary by technology, printer model, material and settings).
+The reason why supports are required (at least in the case of FDM 3D printing) is that
 when the filament is deposited, it is in a semi-solid state, and it would have a tendency to fall
-down before it solidify. On smaller overhanging angle this is not a big issue, however as the angle increase
-the effect become more an more pronounced, and the printing quality progressively deteriorate, as we can see in figure
-\ref{fig:overhangs_det}
+down before it solidifies. On smaller overhanging angles this is not a big issue, however as the angle increases
+the effect becomes more and more pronounced, and the printing quality progressively deteriorates, as we can see in figure
+\ref{fig:overhangs_det}.
 
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.4\textwidth]{images/overhang-deterioration.png}
-    \caption{Deterioration of print quality, as the overhanging angle increase \cite{support_overhang_det}}
+    \caption{Deterioration of print quality, as the overhanging angle increases \cite{support_overhang_det}}
     \label{fig:overhangs_det}
 \end{figure}
 
 
 Another instance where supports are mandatory is the case when the object that is being printed
-has some ``floating regions'' this is an extreme case when a specific region of the printed object is
+has some ``floating regions''; this is an extreme case when a specific region of the printed object is
 attached to the plate only thanks to a section of the model that is higher than the floating region itself.
 This means (as we can see in figure \ref{fig:floating_reg}) that, since the printer is constructing
-the object layer by layer, starting from the bottom, and moving up to the top, there is a movement
+the object layer by layer, starting from the bottom, and moving up to the top, there is a moment
 during the print, where the floating region is not connected to the plate in any way, and is therefore
-``floating''. This scenario of course require supports in order to be printed successfully.
+``floating''. This scenario of course requires supports in order to be printed successfully.
 
 
 
@@ -197,11 +197,11 @@ during the print, where the floating region is not connected to the plate in any
     \label{fig:floating_reg}
 \end{figure}
 
-Even tho the example made here is primarily centered around FDM 3D printers, the same thing also apply
+Even though the example made here is primarily centered around FDM 3D printers, the same thing also applies
 to SLA. On the other hand SLS is a bit special, as the non-solidified powder can function as a support,
-and reduce the need to print supports (even tho some times a few supports are still required
-to reduce the risk of deformation, or to prevent the melted material to fall inside the powder
-below before it solidify).
+and reduce the need to print supports (even though sometimes a few supports are still required
+to reduce the risk of deformation, or to prevent the melted material from falling inside the powder
+below before it solidifies).
 
 
 \begin{figure}[h]
@@ -211,13 +211,13 @@ below before it solidify).
     \label{fig:support_dual_color}
 \end{figure}
 
-In conclusions, supports are often mandatory to print some specific structures
-that may contain overhanging angles that are too steep, or some regions, however
+In conclusion, supports are often mandatory to print some specific structures
+that may contain overhanging angles that are too steep, or some floating regions; however,
 in the case of some complex structures, such as the one shown in figure \ref{fig:support_dual_color}
-the amount of material used to print the supports can be an significant portion of the total
+the amount of material used to print the supports can be a significant portion of the total
 bill of materials necessary for a print.
-Since the recyclability of the supports ranges from hard to impossible, depending on the 
-type of material used supports are often considered a form of waste, and there have therefore
+Since the recyclability of the supports ranges from hard to impossible, depending on the
+type of material used, supports are often considered a form of waste, and there have therefore
 been many attempts at creating more efficient algorithms that are able to reduce the material
 necessary to create effective supports.
 We will explore more in depth the history of those types of algorithms in chapter \ref{cha:prev_literature}.
@@ -228,18 +228,18 @@ We will explore more in depth the history of those types of algorithms in chapte
 For reasons that will become clearer later, understanding the forces that are applied during
 the printing process to the object that is being produced is key for the understanding of this
 thesis.
-Generally speaking, 3D printing processes dent to apply some horizontal forces to the object that
+Generally speaking, 3D printing processes tend to apply some horizontal forces to the object that
 is being printed. The intensity of those forces depends on many factors (printer, material,
-various parameters ecc.) but the most important of all is the underlying printing technology.
-Generally speaking SLA is the best in this regard, as the printing process simply involve
-shining some light to the resin material, and this does not create any meaningful force.
-SLS slightly wars in this regard, as even tho it is also based on a laser (and therefore no 
-force is apply during the sintering process) the technology rely on a roller to deposit
-a the powder at every layer, and this can apply some tangential force.
+various parameters etc.) but the most important of all is the underlying printing technology.
+Generally speaking, SLA is the best in this regard, as the printing process simply involves
+shining some light on the resin material, and this does not create any meaningful force.
+SLS is slightly worse in this regard, as even though it is also based on a laser (and therefore no
+force is applied during the sintering process), the technology relies on a roller to deposit
+the powder at every layer, and this can apply some tangential force.
 FDM is where the tangential forces become more problematic, as the melted filament that is being
-extruded need to be ``dragged'' by the structure in order to sediment correctly.
+extruded needs to be ``dragged'' by the structure in order to sediment correctly.
 There are many techniques that can be used to reduce the amount of force applied, some of the most
-common one are reducing the printing speed, or introducing a z-hop (i.e. telling the printer to 
+common ones are reducing the printing speed, or introducing a z-hop (i.e. telling the printer to
 raise the nozzle by a fraction of a \SI{}{\milli\metre} before moving to another region).
 
 
@@ -247,15 +247,15 @@ raise the nozzle by a fraction of a \SI{}{\milli\metre} before moving to another
 \label{sec:wobble-test}
 
 The reason why tangential forces are relevant is that they make some shapes hard to print.
-In particular in the 3D printing community there is this test, referred to as the ``z-wobble test''
-that involve printing a narrow and tall structure, in order to see when the tangential forces
-applied to the structure will make the model ben, and therefore result in a poor quality print.
+In particular in the 3D printing community there is this test, referred to as the ``z-wobble test'',
+that involves printing a narrow and tall structure, in order to see when the tangential forces
+applied to the structure will make the model bend, and therefore result in a poor quality print.
 In figure \ref{fig:wobble-test} you can see a cylindrical beam with a diameter of
-3 \SI{}{\milli\metre} and an height of approximately 10 \SI{}{\centi\metre} that is being printed,
+3 \SI{}{\milli\metre} and a height of approximately 10 \SI{}{\centi\metre} that is being printed,
 and you can clearly see the bending effect caused by the force applied by the nozzle.
-The final result is a print that progressively deteriorate in quality as the height increase,
+The final result is a print that progressively deteriorates in quality as the height increases,
 and the wobble effect becomes more pronounced.
-Those tests are executed on a FDM printer, which is the worst case scenario for the wobble test,
+Those tests are executed on an FDM printer, which is the worst case scenario for the wobble test;
 it goes without saying that the effect would have been a lot less pronounced on an SLA printer.
 
 
