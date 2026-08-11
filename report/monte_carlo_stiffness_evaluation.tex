@@ -205,11 +205,10 @@ from the seven fundamental parameters. The formula is explicitly calculating the
 stiffness of a beam with the anchored node at $P_1=(0, 0, 0)$ and the node
 that is free to move at point $P_2 = (L, 0, 0)$ (meaning a beam of length $L$ with
 the anchored point in the origin, and extending in the same direction as the $x$ axis).
-Calculating the stiffness matrix of an arbitrary beam can be done by simply rotating
-the stiffness matrix of a beam parallel to the $x$ axis, as shown in equation \ref{for:beam_rotation}.
 
 
 \begin{equation}
+\mathbf{K} =
 \begin{bmatrix}
 \frac{EA}{L} & 0 & 0 & 0 & 0 & 0 \\
 0 & \frac{12EI_z}{L^3} & 0 & 0 & 0 & -\frac{6EI_z}{L^2} \\
@@ -290,7 +289,7 @@ in equation \ref{for:stiffness_ny}.
 \end{equation}
 
 \noindent
-Finally we can compose $\mathbf{n}_x$, $\mathbf{n}_y$, and $\mathbf{n}_z$ into a regular rotation matrix, as shown in equation
+To conclude we can compose $\mathbf{n}_x$, $\mathbf{n}_y$, and $\mathbf{n}_z$ into a regular rotation matrix, as shown in equation
 \ref{for:rotation_mat}.
 
 \begin{equation}
@@ -506,9 +505,9 @@ to understand what the tradeoffs of using this method are.
 
 \subsection{Algorithm Overview}
 
-The algorithm aims to calculate the full stiffness matrix of a frame.
-In order to do so, it begins by creating the full stiffness matrix. This matrix
-has a dimensionality of $N_{df} \times N_p$ where $N_{df}$ is the number
+The algorithm aims to calculate the full stiffness and flexibility matrix of a frame.
+In order to do so, it begins by creating the full stiffness matrix. This matrix is squared,
+with a size of $N_{df} \times N_p$ where $N_{df}$ is the number
 of degrees of freedom, and $N_p$ is the number of points in the rigid frame.
 For example a three dimensional rigid frame composed of $100$ points will have
 a stiffness matrix with a size of $600 \times 600$.
@@ -521,8 +520,8 @@ Algorithm \ref{alg:dsm} shows a very compact pseudo code of the direct stiffness
 
 
 \begin{algorithm}
-\label{alg:dsm}
 \caption{Direct Stiffness Method}
+\label{alg:dsm}
 \begin{algorithmic}[1] % [1] adds line numbers, which are very helpful
     \State $N \gets N_{df} \times \Call{size}{\text{frame}}$ \Comment{Calculate size of global matrix}
     \State $\mathbf{K} \gets \mathbf{0}_{N \times N}$ \Comment{Initialize global stiffness matrix}
@@ -576,7 +575,7 @@ important in structural engineering, as precision is key. However in our case a 
 a result would still be sufficient for guiding the support structure optimization process.
 The second requirement that we can remove from the problem is the need for calculating
 a global stiffness matrix.
-In fact the output of the direct stiffness method is a global stiffness matrix;
+In fact the output of the direct stiffness method is ``global'';
 this globality makes the matrix itself quite big, and therefore makes it computationally
 expensive to transform into a global flexibility matrix using an inversion.
 This globality property has some major benefits of course; in fact with such a matrix
@@ -588,7 +587,7 @@ Furthermore, the cost function that we plan to apply only cares about the displa
 the nozzle is touching; this is because if that node moves, the nozzle will struggle to sediment the material
 in a precise manner. However any movement in the other nodes is not considered a big issue.
 To recap, the current standard for stiffness evaluation (the direct stiffness method) is not fast enough
-for our purposes. For this reason we have developed a faster alternative that we will explain in this section.
+for our purposes. For this reason we have developed a faster alternative that we will explain in this chapter.
 The speed improvements that we have achieved were made possible by two simplifications, namely
 the shift from a global stiffness matrix to a local stiffness matrix, and the fact that we have
 allowed the algorithm to provide approximated solutions rather than exact ones.
@@ -734,8 +733,8 @@ This process is described more precisely in the Algorithm \ref{alg:dag}.
 
 
 \begin{algorithm}[h]
-\label{alg:dag}
 \caption{DAG Evaluator}
+\label{alg:dag}
 \begin{algorithmic}[1]
     \Require $G$ is a direct acyclic graph, $\nu_0$ a node in the graph.
     \Ensure $S_{\nu_0}$ is the local stiffness matrix of $\nu_0$
@@ -866,8 +865,8 @@ different widths this heuristic should be redefined to take those added factors 
 \end{equation}
 
 \begin{algorithm}[h]
-\label{alg:wdag}
 \caption{Weighted DAG Evaluator}
+\label{alg:wdag}
 \begin{algorithmic}[1]
     \Require $G$ is a direct acyclic graph, $\nu_0$ a node in the graph.
     \Ensure $S_{\nu_0}$ is the local stiffness matrix of $\nu_0$
@@ -1008,7 +1007,7 @@ GitHub repository.
 Table \ref{tab:dag_performance} shows that the Weighted DAG algorithm performs surprisingly well; we can in fact 
 see how the average error is at approximately 4\%, with the highest error hovering at around 13.5\%.
 Figure \ref{fig:test_structures} shows how those errors are distributed, where the flexibility matrix
-is represented as an ellipsoid, where a longer distance from the center represents a higher flexibility.
+is represented as an ellipsoid, with a longer distance from the center represents a higher flexibility.
 In the figure we can notice something interesting: the error seems to increase as the number of ``layers''
 a structure has increases. The effect is most notable in struct E and F.
 This error increase is of course a downside of the algorithm, however
@@ -1093,11 +1092,11 @@ approximation of the direct stiffness method's computational load (by approximat
 instead of implementing the full direct stiffness method, we simply picked the matrix inversion, as
 the most computationally intensive part, and executed that with an arbitrary matrix of the correct size.
 This provides an accurate lower bound of what the execution time would have been, if the direct stiffness
-method was used. Furthermore, instead of running the algorithm once for every node in the graph, in order
+method was used). Furthermore, instead of running the algorithm once for every node in the graph, in order
 to calculate the stiffness of the nodes while under construction, we have opted to gradually add nodes
 from the lowest z-value to the highest, and only run a full evaluation cycle every 50 nodes.
 This does not change the time complexity, but in the real world significantly reduces the load. This
-was done to give the state of the art solution a better chance at competing with our algorithm).
+was done to give the state of the art solution a better chance at competing with our algorithm.
 In the test we limited the amount of iterations to 10, this is both for consistency across testcases,
 and to avoid having testcases that are too long. For the test case using our algorithm we also ran
 a testcase limited to 100 iterations, as the single iteration times were so small that the overhead
@@ -1105,6 +1104,8 @@ associated with the initialization of the generation significantly influenced th
 Table \ref{tab:stiff_real_world_runtimes_cmp} shows the test results; we can see there is a
 huge difference of approximately 400x in the execution time of our proposed solution when compared to 
 the standard direct stiffness method approach.
+
+\section{Acknowledgements}
 To conclude we must acknowledge that the tests we made in this section can have some inaccuracy due to the fact
 that we used an approximation of the direct stiffness method approach, and due to the fact that we measured
 the execution time of the full genetic algorithm, which includes mutation, crossover, logging and many more
@@ -1113,10 +1114,7 @@ However the performance difference between the two options is so big that, even 
 we can state with absolute certainty that our stiffness evaluation algorithm is much faster than the state 
 of the art.
 
-
-\section{Acknowledgements}
-
-Before we conclude we must acknowledge that the literature surrounding stiffness evaluation is quite vast;
+Furthermore we must say that the literature surrounding stiffness evaluation is quite vast;
 in this work we considered the direct stiffness method as the state of the art, however there 
 are more options out there, including iterative methods that are usually considered faster (at least for large
 structures) than the direct stiffness method approach. Furthermore even considering only the direct
@@ -1124,7 +1122,7 @@ stiffness method there are some things we can do to make it faster, most notably
 sparse matrix inversion algorithms, or even some iterative and approximated methods for matrix inversion.
 Ultimately we deemed it unlikely that those methods could have resulted in the kind of speed improvement
 we required for our algorithm to be viable, however the fact that we have not tested all the available
-options makes it impossible for us to claim that our proposed solution is the only viable option
+options makes it impossible for us to claim that our proposed solution is the only currently available viable option
 for fast stiffness evaluation.
 
 \section{Conclusions}
@@ -1133,7 +1131,7 @@ In conclusion we can say that our algorithm is superior compared to the state of
 This speed is essential for the practical applicability of our support-structure generation algorithm,
 as having the computer run for more than a day just to save a few grams of filament is something 
 that makes no sense whatsoever, however if the wait was only a few minutes the prospect becomes a lot more enticing.
-In terms of accuracy however the direct stiffness method is of course better (after all it is an exact
+In terms of accuracy the direct stiffness method is of course better (after all it is an exact
 method, while ours is an approximated one), however for our specific needs a small inaccuracy is a price
 we are willing to pay in order to achieve the required speed.
 We can therefore say that our proposed solution performs very favorably compared to the state of the art

@@ -110,7 +110,7 @@ rewrite of the L-System.
 In the case of Vaissier et al. 2019 \cite{VAISSIER201911} an adaptation to different topologies seems more possible;
 their pre-generated structure from which they start pruning is already very similar to the topology we call ``struct'',
 and therefore it would be possible to prune it into something that could be successfully manufactured on an FDM printer.
-The task would still not be easy, as two hurdles would remain: in particular the ``switch-node'' encoding
+However the task would still not be easy, as two hurdles would remain: in particular the ``switch-node'' encoding
 that was necessary to achieve good results is incompatible with the ``struct'' topology, therefore the ``activation''
 encoding would need to be used. This is potentially a complication as by the authors' own admission the first encoding type
 was instrumental in getting good results, as it significantly compressed the search space. Due to the code
@@ -132,12 +132,15 @@ of this thesis.
 
 All the previous academic literature that we have looked at in section \ref{sec:acc_lit} is primarily
 focused on industrial technologies such as SLS printing; this means that their work is not easily
-applicable to FDM 3D printing due to the limitations that we just explained in the previous section \ref{sec:limitations}.
+applicable to FDM 3D printing due to the limitations that we explained in section \ref{sec:limitations}.
 On the other hand commercial tools available in slicers such as Cura and OrcaSlicer are obviously compatible
 with the FDM technology, but are not subject to any kind of optimization.
 The objective of this thesis is to bridge the gap between these two worlds, and to create the first public
 support structure optimizer based on genetic algorithms that is created from the ground up to work with
-FDM 3D printers.
+FDM 3D printers, in order to answer our primary research question:
+``How much material can be saved by applying Genetic algorithms to support structure optimization in FDM 3D printing?''
+
+\subsection{Action plan}
 In order to achieve the objectives there are three separate steps that we need to take:
 \begin{itemize}
     \item Selecting a topology for the supports

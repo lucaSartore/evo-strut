@@ -14,7 +14,7 @@ The reason why this thesis considered solutions coming from open source software
 from the industry, rather than limiting itself to the academic research that was available is simple:
 the academic research on the topic is quite sparse (only two papers were found at the time of writing).
 Furthermore, as we will discuss in section \ref{sec:limitations}, the approach taken by the authors is not
-really suitable for FDM 3D printing, and focuses more on SLA. Moreover, none of the related works in section \ref{sec:acc_lit}
+really suitable for FDM 3D printing, and focuses more on SLA and SLS. Moreover, none of the related works in section \ref{sec:acc_lit}
 have made the code available, and this makes the process of comparison impossible.
 For those reasons the choice was made to include in this section some solutions taken from open source
 software, as they are the de facto standard used for support generation by 3D printing enthusiasts and
@@ -64,7 +64,7 @@ a boolean variable, where 0 meant that the node was removed, and 1 meant that th
 The second strategy was called ``Switch Node Encoding'' and essentially assumed every node could only be connected
 to one of the possible downward directions, and the encoded variable simply selected one of the possible ones.
 The authors have shown how this approach drastically reduced the size of the search space, and made the optimizer's
-life a lot easier, thus making it faster and more accurate.
+life a lot easier, thus making it faster and more effective.
 
 
 \begin{figure}[h]

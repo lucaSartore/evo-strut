@@ -11,7 +11,7 @@ Then the steps two to four (Criticality Detection, Floating Regions Detection an
 are simple pre-processing steps that perform some operations in order to prepare data for the following
 steps.
 Finally steps five to seven (Contact Points Optimization, Contact Points Grouping and Support
-Structure Optimization) are the real ``Optimization'' steps, that perform the optimization
+Structure Optimization) are the real ``Core'' steps, that perform the optimization
 of the actual support. This operation is performed in three stages, rather than a single optimization 
 process, for a more efficient computation; in fact we can assume that the decision about where to place
 contact points in the areas to support is (roughly) independent from the decision on how to build a
@@ -22,7 +22,7 @@ The following list shows the steps of the pipeline in order, with a small descri
 
 \begin{itemize}
     \item \textbf{Importing:} This step loads the model and performs some simple re-meshing operations in order
-    to reduce the number of triangles in the mesh in order to obtain better performance.
+    to reduce the number of triangles in the mesh in with the objective of obtaining better performance.
     \item \textbf{Criticality Detection:} This step detects the critical regions (the points where the
     surface is too steep, and a support is required).
     \item \textbf{Floating Regions Detection:} This step detects the ``Floating regions'' (areas
@@ -30,15 +30,15 @@ The following list shows the steps of the pipeline in order, with a small descri
     as the connection is provided by layers above).
     \item \textbf{Criticality Grouping:} This step groups the critical areas detected in the step 2 into
     some areas that can be optimized separately (for more efficient computation).
-    \item \textbf{Contact Points Optimization:} This step identifies an optimal set of points where
+    \item \textbf{Contact Points Optimization:} This step optimize a set of points where
     supports will be placed using a genetic algorithm and a cost function.
     \item \textbf{Contact Points Grouping:} This step groups the contact points into areas based on proximity;
     this step is once again performed in order to optimize the different areas separately.
-    The optimization is done using a Compositional Pattern Producing Network Based Genetic Algorithm.
+    The optimization is performed using a Compositional Pattern Producing Network Based Genetic Algorithm.
     \item \textbf{Support Structure Optimization:} This step optimizes the support structure using a genetic
-    algorithm; this step is where the stiffness evaluation algorithm we developed previously is used.
-    \item \textbf{Exporting:} In the final step we generate a support structure in a mesh based 
-    on the optimized parameters; the structure is then exported in STL format.
+    algorithm; Here is where the stiffness evaluation algorithm we developed previously is used.
+    \item \textbf{Exporting:} In the final step we export the support structure as a mesh, based 
+    on the the shape optimized by the previous sections.
 \end{itemize}
 
 
@@ -89,15 +89,15 @@ and are roughly equilateral.
 \label{sec:crit_detection}
 
 The first step in the generation of automatic supports is of course knowing what zones must be supported.
-Generally speaking the presence of a support or not is usually achieved with a simple check of the 
+Generally speaking the need for a support is usually achieved with a simple check of the 
 overhanging angle (as we already saw in the introduction \ref{sec:role_of_sup}).
 One of the most basic techniques for criticality detection is to simply take the angle formed by the 
 surface normal of a triangle, and a vector facing downward, and compare that to the threshold of what
 is considered acceptable, in order to detect the critical areas.
 Most 3D printing software uses methods derived from the one we just described with a few
 key refinements such as for example bridge detection, detection of areas that are ``floating''
-etcetera. Our method is also inspired by that basic idea, but is slightly different from the 
-methods currently used in most commercial 3D printing software, as it's built with a different 
+etcetera. Our method is also inspired by the aforementioned basic idea, but is slightly different from the 
+ones currently in use in most commercial 3D printing software, as it's built with a different 
 paradigm. Instead of simply detecting a simple boolean value that tells if a surface is critical
 or not, our method aims to provide a cost function that, if minimized, reduces the amount of critical
 areas there are in a specific model. The reason why this approach was chosen is straightforward, as it 
@@ -105,7 +105,7 @@ is a simple consequence of the fact that we will need a cost function in order t
 based optimizer in the following steps.
 
 Now that we explained the reasoning behind the creation of a custom solution for criticality detection
-we can begin explaining our implementation. Algorithm \cref{alg:crit_det} shows the pseudo-code of 
+we can begin explaining our implementation. Algorithm \ref{alg:crit_det} shows the pseudo-code of 
 our implementation of a criticality detection procedure.
 The key idea behind our solution is to assign to every node in the mesh graph a ``criticality''.
 Then the critical nodes are the ones that have a criticality different than zero. This model has the benefit
@@ -118,13 +118,11 @@ top. This means that criticality increases every time the object has an overhang
 and decreases every time the criticality angle is too low. This is important because otherwise, a single
 triangle inside the mesh with a sufficiently low overhanging angle would make an entire zone
 less critical, or in the same way a single support could singlehandedly make a large critical area
-no longer critical. Figure \ref{fig:critical_detect} shows a mesh of a dragon, with the green areas
-being the meshes with a criticality score of zero, while the red areas are the critical ones.
-In here we can see the effect that criticality propagation has on the structures.
-In the bottom part of the dragon's wing we can see that the critical area is quite large,
-even though the overhanging angle is quite small. We can get a sense of why propagation is important
+no longer critical. 
+
+We can get a sense of why propagation is important
 by looking at figure \ref{fig:critical_detect_no_prop} and \ref{fig:critical_detect}.
-In the former we see what the critical regions are if no propagation is applied, meanwhile in the second one
+In the former we see what the critical regions are if no propagation is applied, meanwhile in the latter one
 we see the same output, but propagation is applied. The most notable difference is in the bottom part
 of the dragon's wing, as we can see, in the version with no propagation there is a tiny critical area
 in the tip of the wing, but as soon as the overhanging angle is small enough, the critical area disappears.
@@ -217,41 +215,44 @@ more realistic critical regions when some parts of the model are ``floating''.
 
         \State \Return $C$
     \EndProcedure
-\label{alg:crit_det}
 \end{algorithmic}
+\label{alg:crit_det}
 \end{algorithm}
 
 
 \subsection{Algorithm Overview}
 To explain \cref{alg:crit_det} we must start from the concept of layer.
-Every node in a graph is assigned to a layer (represented by an integer value);
-the ``LayerOf'' function simply associates a node with its layer, and is simply using
-the node's height as the discrimination factor.
-The reason why layers are important is that the criticality can be propagated only from
-elements of the same layer, or a layer below; it can't go below a layer.
+Every node in a graph is assigned to a layer (represented by an integer value)
+by the ``LayerOf'' function which is simply placing nodes into ``buckets'' using the node's height.
+The reason why we mark the layer is that the criticality can be propagated only from
+elements of the same layer, or a layer below; but it can't go ``downward'' (as doing so would imply 
+that something that is printed at a certain time is supporting something printed before that time).
+
 The function ``PropagationCost'' takes as input two nodes, and calculates the cost that 
 is propagated from one to the other in a specific direction, this means that if
 node $A$ has criticality $c_a$ and the propagation cost from node $A$ to node $B$ is
 $c_{ab}$ then the cost at node $B$ will be upper bounded by the value $c_a + c_{ab}$.
-This is an upper bound because it can always be lower if node $B$ has another neighbor
+The reason why we say that is an upper bound is because criticality can always decrease if node $B$ has another neighbor
 from which it can propagate a lower cost.
 It should be noted that this function can return a negative value, this is the case when 
 the angle between the two nodes is below the threshold of the maximum overhanging angle, 
 and therefore the criticality should decrease.
+
 The function ``CriticalityOf'' is used to calculate the criticality of a node, starting
 from nodes that are close to it; in the function we can see how if the node is close to the
 ground the criticality is zero (this is obvious, as if a node is attached to the plate it does
 not need any support), otherwise the criticality is initialized to the maximum possible value,
-and then is reduced if a path is found to propagate a lower criticality value from a neighbor.
-The neighbor in order to be eligible must be part of a layer that is the same or lower than the node
+and then is reduced if a path is found to propagate a lower criticality from a neighbor.
+In order to be eligible, a neighbor, must be part of a layer that is the same or lower than the node
 currently being evaluated.
 Now that we have explained the few ``utility'' functions we can tackle the core part of the algorithm,
 this is composed of the two functions ``PropagateInLayer'' and ``CriticalityDetection''.
-The idea is that the criticality is propagated from bottom to top, then nodes in the graph are organized
+To begin the procedure, nodes in the graph are organized
 in layers, and layers are evaluated from the lowest to the highest.
 The process of evaluating a layer is essentially one pass of a Dijkstra algorithm, where nodes
 are explored from the one with the lowest criticality value to the one with the highest.
 This process ensures low time complexity while ensuring that every node has the correct criticality value.
+The process is simply repeated for every layer until every node of the graph has a known cost.
 
 \section{Floating Regions Detection}
 \label{sec:floating_regions_detection}
@@ -274,19 +275,21 @@ as that topic will be extensively covered in one of the next sections (specifica
 
 \subsection{Algorithm Overview}
 
-Efficient detection of floating regions can be achieved using algorithm \cref{alg:float_det}:
-the idea is that the nodes are sorted from the lowest to the highest, then they are sampled one by one,
-and then visiting all the nodes reachable from the point, where an arch that goes from $A$ to $B$ is 
-considered valid only if the layer of $B$ is greater than or equal to the layer of $A$.
-This ensures that we cannot go ``downward'' when exploring the graph, and therefore that
-we cannot explore a floating region unless we start from a point inside that floating region.
+Efficient detection of floating regions can be achieved using algorithm \ref{alg:float_det}:
+the idea is that the nodes are sorted from the lowest to the highest. Then nodes
+are sampled based on the aforementioned  order, and for each of them we execute
+an  exploration of the graph, with the node itself being the starting point.
+During the exploration, an arch that goes from $A$ to $B$ is 
+considered valid only if the layer of $B$ is greater than or equal to the layer of $A$;
+this ensures that we cannot go ``downward'' when exploring the graph, and therefore that
+we cannot explore a floating region unless we start from a point inside that exact same region.
 While the graph is being explored, we mark nodes that have been visited to avoid visiting the same
 node twice, and increasing the time complexity. Once an exploration is completed we can decide if
 the explored area is a floating region or not. This can be simply done by checking if the height
 of the ``source'' node is equal to zero (or at least is below a certain threshold),
 if this is the case we can say that the source was attached to the ground, and therefore
 the region is not floating. If this is not the case however, the area we have explored must be a 
-floating region. We can also be sure that the node we have extracted is the lowest point in the region,
+floating region. We can be sure of this because we are certain that the node we have extracted is the lowest point in the region,
 thanks to the sorting we did at the beginning. The sorting also ensures that we start exploring from
 the nodes that are close to the ground, avoiding a situation where a floating region is expanded
 too much and reaches zones that are actually not considered ``floating''.
@@ -344,16 +347,15 @@ This is not strictly speaking an issue, as we could in theory execute the next s
 points optimization) only once, for the entire set of critical regions, however this would 
 be less than ideal from a performance standpoint. In fact, generally speaking in this kind of 
 optimization problem it is more efficient to optimize many small problems rather than
-one big one. Furthermore due to the way we are defining our cost function (that we will
+a single larger one. Furthermore due to the way we are defining our cost function (that we will
 explain more in section \ref{sec:contact_points_opt_cf}) the cost of one set
-of connected critical nodes is independent from the cost of another set of critical
-nodes. With those two facts in mind, it is easy to see why grouping the contact points
+of connected critical nodes is independent from the cost of another equivalent set. With those two facts in mind, it is easy to see why grouping the contact points
 based on proximity, and optimizing each of them as a separate problem would be convenient
 from a performance standpoint, while not impacting the output of the optimizer.
 For this reason we made the choice of inserting the ``Criticality Grouping'' stage
 in the pipeline, so that we could create a sensible grouping of the critical regions,
 with the objective of optimizing them separately.
-Algorithm \cref{alg:crit_grouping} shows the procedure of how grouping is executed.
+Algorithm \ref{alg:crit_grouping} shows the procedure of how grouping is executed.
 
 \subsection{Algorithm Overview}
 
@@ -385,7 +387,7 @@ Algorithm \cref{alg:crit_grouping} shows the procedure of how grouping is execut
 
     \Procedure{CriticalityGrouping}{$G, C$}
         \State ${R} \gets \emptyset, \quad V \gets \emptyset$ \Comment{Grouped regions and visited nodes}
-        \State ${N} \gets \Call{Dijkstra}{G, start=C, max\_distance=D_{max}}$
+        \State ${N} \gets \Call{Dilation}{G, start=C, max\_distance=D_{max}}$
         \State $C \gets C \cup N$ \Comment{Consider critical all nodes that are closer than $D_{max}$ to a critical node}
         \For{$s \in C$}
             \If{$V(s)$}
@@ -396,30 +398,37 @@ Algorithm \cref{alg:crit_grouping} shows the procedure of how grouping is execut
         \EndFor
         \State \Return $R$
     \EndProcedure
-\label{alg:crit_grouping}
 \end{algorithmic}
+\label{alg:crit_grouping}
 \end{algorithm}
 
-In the algorithm \cref{alg:crit_grouping} we can see that the ``grouping'' operation mainly
-involves two steps: the first one is to apply a ``dilation'' to the critical nodes. This dilation
-is characterized by a specific parameter ($D_{max}$) that represents the distance of a dilation.
-During the dilation operation, every node that has at least one critical node closer than $D_{max}$
-is considered critical as well. This dilation is applied in order to ``merge'' critical regions
-that are really close together in order to reduce the total number of regions the algorithm 
-will produce. The reasoning behind this dilation is that, although it is true that generally speaking
-small optimization problems are easier to solve than a single bigger one, this reasoning has a limit,
-and we found that, if a mesh has a large area that is very close to the overhanging angle, the
-criticality detection algorithm would generate a very large subset of tiny critical areas.
-This was an undesirable behavior, therefore this dilation was added so that by tuning $D_{max}$
-we are able to control how ``aggressively'' critical regions are divided into groups.
-If $D_{max}$ is set to zero we get the highest number of groups, while if we increase the value
-we gradually reduce the amount of groups that are generated.
-The second stage in the grouping algorithm is the exploration of the graph itself,
-in this stage we start from every critical point, and we explore the graph by navigating
-to all the nodes that are marked as ``critical'', in this stage we keep track of the nodes that are 
-visited so as to avoid visiting the same node twice, and increasing the time complexity.
-And finally, once all the nodes that are reachable from a source have been found, we can mark those nodes
-as a ``critical group'' (i.e. a set of critical nodes that are all connected to each other).
+\noindent
+In the algorithm (\ref{alg:crit_grouping}) we can see that the ``grouping'' operation mainly
+involves two steps:
+\begin{description}
+    \item[Dilation Step:] 
+    In this step we apply a ``dilation'' to the critical nodes. This dilation
+    is characterized by a specific parameter ($D_{max}$) that represents the distance of a dilation.
+    During the dilation operation, every node that has at least one critical node closer than $D_{max}$
+    is considered critical as well. This dilation is applied in order to ``merge'' critical regions
+    that are really close together with the objective or reducing the total number of regions the algorithm 
+    will produce. This might seem counter intuitive, as we previously claimed that many smaller problems
+    are easier to solve then a larger one, however this general rule has a limit,
+    and we found that, if a mesh has a large area that is very close to the overhanging angle, the
+    criticality detection algorithm would generate a very large subset of tiny critical areas, which is undesirable.
+    For this reason the dilation was added so that by tuning $D_{max}$
+    we are able to control how ``aggressively'' critical regions are divided into groups.
+    If $D_{max}$ is set to zero we get the highest number of groups, while if we increase the value
+    we gradually reduce the amount of groups that are generated.
+    \item[Grouping Step:] 
+    The grouping step is then achieved with a simple exploration of the graph itself,
+    in this stage we start from every critical point, and we explore the graph by navigating
+    to all the nodes that are marked as ``critical'' (but not traversing any non-critical node), 
+    in this stage we keep track of the nodes that are 
+    visited so as to avoid visiting the same node twice, and increasing the time complexity.
+    And finally, once all the nodes that are reachable from a source have been found, we can mark those nodes
+    as a ``critical group'' (i.e. a set of critical nodes that are all connected to each other).
+\end{description}
 
 
 
@@ -1026,17 +1035,16 @@ single beam. This would be fine if we only needed support while the filament is 
 since while the print is ongoing the floating region is connected to the plate only 
 by the single support beam the z-wobble effect would cause serious quality issues.
 
-
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.4\textwidth]{images/no_floating_regions_cost.png}
+    \includegraphics[width=0.25\textwidth]{images/no_floating_regions_cost.png}
     \caption{Optimization result if no floating region cost is applied}
     \label{fig:no_floating_regions_cost}
 \end{figure}
 
 
 % \begin{breakablealgorithm}
-\begin{algorithm}[H]
+\begin{algorithm}[h]
 \caption{Support Structure Stiffness Cost}
 \begin{algorithmic}[1]
 % \algnobreaks   
@@ -1348,7 +1356,7 @@ output of the exporting stage.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.6\textwidth]{images/dragon_final.png}
+    \includegraphics[width=0.45\textwidth]{images/dragon_final.png}
     \caption{Output of the export stage (printed object in red, support structure in green)}
     \label{fig:export_output}
 \end{figure}
