@@ -3,7 +3,7 @@
 
 Now that the inner workings of the algorithm have been explained we will continue with the 
 results of the evaluation procedure. The aim here is to understand if the proposed algorithm
-is working as intended, and see how it compares against some industry standard solutions.
+is working properly, and see how it compares against some industry standard solutions.
 In order to do so we will first explain our methodologies, then we will take a look at the loss
 functions of the optimizer in order to verify that the optimization loop is working as intended.
 Afterward we will move to the proper evaluation section where we will compare our solution
@@ -36,8 +36,8 @@ Selecting our baseline methods was a bit challenging as there is no clear ``stat
 for what we are trying to do. The two papers that we have looked at in the \ref{cha:prev_literature}
 chapter are not concerned with FDM 3D printing, and don't consider the necessary requirements of 
 stiffness, making them not really suitable for our application. Furthermore their code is not publicly
-available. We have even asked the authors for access to the code for comparison use only,
-but they were unable to fulfill our request due to contractual obligations with industrial partners.
+available (We have even asked the authors for access to the code for comparison use only,
+but they were unable to fulfill our request due to contractual obligations with industrial partners).
 This left us only with the options provided by the industry: ``Normal'' and ``Tree'' supports (that we have
 looked at in the \ref{cha:prev_literature} chapter).
 
@@ -111,9 +111,9 @@ with the algorithm and model associated with every test run.
 
 \section{Loss Function Trends}
 
-In this section we will print the loss functions, in order to verify that the optimizer
+In this section we will display the loss functions, in order to verify that the optimizer
 is working properly, however unlike some more traditional optimization problems that have
-a single loss function in our case we have many. In fact, as we detailed in chapter \ref{cha:support_opt_alg}
+a single loss value in our case we have many. In fact, as we detailed in chapter \ref{cha:support_opt_alg}
 we have separated the optimization problem into three different stages, each of them with its own
 loss function. Furthermore, even within a single stage, we often use the divide and conquer approach
 where instead of solving a single optimization problem we have optimized many smaller ones for a more efficient
@@ -148,9 +148,11 @@ stage) are particularly smooth; this is both a symptom of the fact that there ar
 smoothing out the process, and also of the fact that the first optimization stage is by far the easiest
 and most linear of the three.
 In some of the graphs we can see that all testcases from one to five at the end converge to a similar value
-of the loss function, but on some others (most notably \ref{fig:es_dragon_sso} and \ref{fig:es_candlestick_cpg})
-we can see that the different runs converge to different final values
-for the loss function. This is almost certainly caused by the optimizer getting stuck in a local minimum
+of the loss function, but on some others we can see that the different runs converge to different final values
+for the loss function. 
+The effect is most notable in figure \ref{fig:es_dragon_sso} and \ref{fig:es_candlestick_cpg},
+although we should note that the severity of this divergence is greatly exacerbated by a non-zero x axis.
+The divergence is certainly caused by the optimizer getting stuck in a local minimum
 and not being able to further improve the loss, which is a pretty common scenario in most genetic algorithms and gradient
 descent like optimizers. If anything our choice to use a three stage optimization problem is increasing
 the likelihood of this type of scenario occurring, as every new stage can diverge from the ``optimal'' path
@@ -359,7 +361,7 @@ computational cost is the price to pay for the savings in materials.
 Reducing those times could be done, but is not easy; the algorithm is already written in Rust,
 and compiled to assembly code, and is already well optimized for leveraging multiple cores,
 therefore any substantial gain in the computational times would probably have to come from 
-better mutations or from a more efficient stiffness evaluation algorithm.
+better mutations/crossover strategies or from a more efficient stiffness evaluation algorithm.
 Shifting our attention to the printing times, we can note that our algorithm is generally slightly
 worse compared to the existing solutions. The difference is not huge, as we are talking about 
 approximately 40 minutes in the worst case scenario, however it is still a downside of our approach,
@@ -369,7 +371,7 @@ in order to deposit the material in every individual beam.
 We have already seen this effect in section \ref{sec:sup_type}, where the ``Struct''
 support was outperforming the ``Cylinder'' in terms of material used, but not in terms of printing
 time; from this we can deduce that higher print times are inherent to the topology we have selected
-for our support, and trying to reduce them is therefore impossible or at the very least quite challenging.
+for our support, and trying to reduce them is therefore a bit challenging.
 To close this section we can say that optimization time and print time are both
 weak-points of our algorithm, however the differences are relatively small
 compared to the much larger differences in material saved, making the tradeoff
@@ -425,7 +427,7 @@ custom support strategy, and we can report that all five of them were printed
 successfully. The other two were instead printed using the ``tree-support'' (\ref{sec:tree_support})
 algorithm, and in this scenario we did experience a failure.
 In particular TSD (the dragon printed using the tree supports without any 
-user modification) has failed three times in a row before we deemed it
+user modification) has failed four times in a row before we deemed it
 not printable. The cause of the failures were the ``floating regions'' created in particular
 by the dragon's wing; in fact our algorithm has a specific stage (\ref{sec:floating_regions_detection})
 dedicated to detecting those features, and ensuring that they are provided the necessary
@@ -512,7 +514,7 @@ Another reason is that the generation of the contact points that we designed is 
 the tree supports. In this thesis we primarily focused on the support structure and paid relatively little attention
 to the actual contact points. It is possible that as part of future improvements both the limitations
 that we mentioned will be addressed, with a new support structure that is similar
-to the one we presented, but with a slightly tweaked contact zone.
+to the one we presented, but with a slightly better contact points generation.
 
 \begin{figure}[h]
     \centering

@@ -20,26 +20,26 @@ problems instead of one complex one. This approach is quite common in the litera
 been used by Zhang et al. \cite{ZHANG2020117} (the second paper we cited in the previous literature chapter).
 The following list shows the steps of the pipeline in order, with a small description of what they do:
 
-\begin{itemize}
-    \item \textbf{Importing:} This step loads the model and performs some simple re-meshing operations in order
+\begin{description}
+    \item [ Importing: ] This step loads the model and performs some simple re-meshing operations in order
     to reduce the number of triangles in the mesh in with the objective of obtaining better performance.
-    \item \textbf{Criticality Detection:} This step detects the critical regions (the points where the
+    \item [ Criticality Detection: ] This step detects the critical regions (the points where the
     surface is too steep, and a support is required).
-    \item \textbf{Floating Regions Detection:} This step detects the ``Floating regions'' (areas
+    \item [ Floating Regions Detection: ] This step detects the ``Floating regions'' (areas
     of the model that, while being printed are completely detached from the plate for a period of time,
     as the connection is provided by layers above).
-    \item \textbf{Criticality Grouping:} This step groups the critical areas detected in the step 2 into
+    \item [ Criticality Grouping: ] This step groups the critical areas detected in the step 2 into
     some areas that can be optimized separately (for more efficient computation).
-    \item \textbf{Contact Points Optimization:} This step optimize a set of points where
+    \item [ Contact Points Optimization: ] This step optimize a set of points where
     supports will be placed using a genetic algorithm and a cost function.
-    \item \textbf{Contact Points Grouping:} This step groups the contact points into areas based on proximity;
+    \item [ Contact Points Grouping: ] This step groups the contact points into areas based on proximity;
     this step is once again performed in order to optimize the different areas separately.
     The optimization is performed using a Compositional Pattern Producing Network Based Genetic Algorithm.
-    \item \textbf{Support Structure Optimization:} This step optimizes the support structure using a genetic
+    \item [ Support Structure Optimization: ] This step optimizes the support structure using a genetic
     algorithm; Here is where the stiffness evaluation algorithm we developed previously is used.
-    \item \textbf{Exporting:} In the final step we export the support structure as a mesh, based 
+    \item [ Exporting: ] In the final step we export the support structure as a mesh, based 
     on the the shape optimized by the previous sections.
-\end{itemize}
+\end{description}
 
 
 \section{Importing}
@@ -436,14 +436,14 @@ involves two steps:
 \label{sec:contact_points_opt}
 
 The objective of this stage is to decide the ``contact points'' (i.e. where the supports
-will make contact with the printed object in order to provide a support interface).
+will make contact with the printed object in order to sustain a critical region).
 This step is done independently from the true optimization of the support structure.
 Generally speaking it is not true that the two choices are independent from each other; in fact
 we can easily imagine a scenario where placing a contact point in a specific position
 reduces the cost function for the contact points by a bit, but introduces more cost
 in the generation of the support structure. However, even though they are not purely independent
 from each other, they are not excessively correlated, meaning that separating the two stages
-does not introduce excessive quality loss. For this reason separating the two stages
+does not introduce excessive loss of quality. For this reason separating the two stages
 can be considered a good idea; in fact other related works such as Zhang et al. 2020 \cite{ZHANG2020117}
 have done exactly the same. Our method is not drastically different from theirs,
 it of course has a slightly different cost function and optimization process, but 
@@ -454,10 +454,9 @@ the inner working of the algorithm is explained in separate sections,
 one for every component of the genetic algorithm (cost function, gene, mutation, crossover
 and optimization process).
 Figure \ref{fig:contact_points_opt} shows the result of the optimization process, where the contact
-points are represented with a small purple dot on top of the critical area (the radius however is
-not visualized). We can see how the result is not particularly interesting, as it basically looks like
+points are represented with a small purple dot on top of the critical area. We can see how the result is not particularly interesting, as it basically looks like
 a sample of equally spaced points inside the critical area. This makes sense as generally speaking
-a good support structure satisfies exactly that condition, however this shows us how complex
+a good support structure satisfies exactly that condition; this shows us how complex
 genetic-algorithm optimization is not always necessary for every task. In fact this optimization
 stage is probably the least useful of the three, and could easily be replaced by a simpler and faster
 ``greedy'' algorithm that would perform very similarly.
@@ -482,13 +481,12 @@ From this gene it is possible to derive the set of supported nodes;
 this is done by drawing a circle around the node, and selecting the supports
 that are on the perimeter (the use of the perimeter rather than all the circle's area
 is due to the way supports are generated. Since they are ``empty'' cones, they
-do not provide any support in the center of the cone's base, but only on the perimeter;
-nevertheless this part will be explained more thoroughly in the exporting section \ref{sec:exporting}).
+do not provide any support in the center of the cone's base, but only on the perimeter)
 
 \subsection{Cost Function}
 \label{sec:contact_points_opt_cf}
 
-The cost function is derived from the criticality detection algorithm \cref{alg:crit_det}.
+The cost function is derived from the criticality detection algorithm (\ref{alg:crit_det}).
 As we explained in section \ref{sec:crit_detection} the output of the algorithm is
 a dictionary that maps every node in the surface graph to its criticality value, and
 starting from this dictionary it is possible to find the total cost by summing
@@ -514,7 +512,7 @@ scenarios such as for example the wing of the dragon
 Without this cost term, a single well-placed support in the ``tip'' of the dragon's wing
 would singlehandedly remove the entire critical region, however in real life such a
 support would create many problems, both because of the z-wobble effect (\ref{sec:wobble-test})
-and because when printing the connection between supports and the model is constructed
+and because the connection points are designed
 to be fragile on purpose, in order to simplify the removal process, making it extremely
 likely that the wing would detach from the support before it manages to connect to the body
 of the dragon.
@@ -558,18 +556,18 @@ gene mutations applied can also be simple. We have designed four fundamental
 mutations, so that every time a gene needs to be mutated we can simply
 select one or more fundamental mutations, and apply them sequentially to the gene.
 The four fundamental mutations are:
-\begin{itemize}
-    \item \textbf{Add Support:} This mutation picks a random node from the list of critical
+\begin{description}
+    \item [ Add Support: ] This mutation picks a random node from the list of critical
     ones and places a new support with a randomly generated radius on it.
-    \item \textbf{Remove Support:} This mutation picks a random support from the gene
+    \item [ Remove Support: ] This mutation picks a random support from the gene
     and removes it.
-    \item \textbf{Move Support:} This mutation picks a random support, and moves it to a different
-    node, when selecting the new node only nodes that are within a certain radius of the original
+    \item [ Move Support: ] This mutation picks a random support, and moves it to a different
+    node; when selecting the new node only nodes that are within a certain radius of the original
     one are considered eligible.
-    \item \textbf{Change Support Radius:} This mutation increases or decreases the radius
+    \item [ Change Support Radius: ] This mutation increases or decreases the radius
     of the support by some random value, while ensuring the radius stays within some
     predetermined margins.
-\end{itemize}
+\end{description}
 
 \subsection{Crossover}
 \label{sec:contact_points_opt_cross}
@@ -588,7 +586,7 @@ Algorithm \cref{alg:plane_construction} shows a simple procedure to construct su
 The reason this plane is constructed in this specific manner (rather than simply constructing
 a plane that includes three random points) is that support structures tend to be mostly flat,
 therefore with a plane that includes three points it is likely that most points would end up
-close to the border, making the division not very equal.
+close to the border, making the split a bit unequal, and potentially causing worst outputs.
 In the algorithm described there is one small edge case; in fact it cannot work if there are
 less than three points in a plane, or if the three points selected are in a straight line, 
 making it impossible to build the plane. In all of these circumstances the algorithm simply
@@ -650,7 +648,7 @@ tournament size of 10.
 
 This stage in the pipeline aims to group contact points based on proximity, in order to optimize
 each section individually. As in the previous ``grouping'' step, this is not strictly necessary
-theoretically, however it is essentially required for good performance in practice.
+from a theoretical point of view, however it is essentially required for good performance in practice.
 The reason why splitting is acceptable in this scenario is that the support structures
 of areas that are far apart are generally independent from each other. For example,
 in our ``Dragon'' testcase we can imagine how the structure generated to support the left
@@ -710,7 +708,7 @@ The cost function associated with grouping is parametrized by three values
 ($K_{\text{height}}$, $K_{\text{area}}$ and $K_{\text{volume}}$).
 Their use is illustrated in algorithm \ref{alg:cpg_cf}.
 The general idea is that once a group is created we compute its (three dimensional) convex hull
-(using the efficient Quick Hull algorithm \cite{quickhull}),
+(calculated using the efficient Quick Hull algorithm \cite{quickhull}),
 and then apply three main costs.
 The first two are proportional to the area and the volume of the convex hull, and are
 essentially there to incentivize the algorithm to create groups that contain points
@@ -798,21 +796,21 @@ considering that the size and shape of the network is known ``a priori'' and is
 not part of the crossover/mutation), in this case we have defined three different crossover
 strategies, and every time a crossover is executed we randomly pick one of them.
 The three strategies selected are:
-\begin{itemize}
-    \item \textbf{Uniform:} This is the traditional uniform crossover where every node in the offspring's network
+\begin{description}
+    \item [Uniform:] This is the traditional uniform crossover where every node in the offspring's network
     is either inherited from Parent A or from Parent B with 50-50 probability.
-    \item \textbf{Single Point:} In this case a random number is generated between zero and the number of parameters,
+    \item [Single Point:] In this case a random number is generated between zero and the number of parameters,
     and then all of the weights that have an index lower than the generated number are inherited from one
     parent, while the remaining ones are inherited from the other.
-    \item \textbf{Arithmetic:} In this case we decide a parameter $\alpha$ (usually 0.5) and then the weights of the
+    \item [Arithmetic:] In this case we decide a parameter $\alpha$ (usually 0.5) and then the weights of the
     offspring ($\mathbf{\theta}_{o}$) can be expressed as a weighted summation of the weights of the two parents
     ($\mathbf{\theta}_{A}$ and $\mathbf{\theta}_{B}$) using the simple equation: $\mathbf{\theta}_{o} = \alpha \mathbf{\theta}_{A} + (1 - \alpha)\mathbf{\theta}_{B}$
-\end{itemize}
+\end{description}
 
 \subsection{Initialization}
 \label{sec:contact_points_grouping_init}
 
-Initialization of the network is achieved using the famous ``He'' initialization technique
+Initialization of the network is achieved using the well known ``He'' initialization technique
 first described in the famous 2015 paper ``Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification''
 \cite{he2015}.
 ``Xavier'' initialization \cite{xavier2010} was also tested, but was found to have slightly worse
@@ -840,7 +838,7 @@ that this step is by far the fastest, taking no more than a few seconds.
 
 The support structure optimization is the final major step in the pipeline.
 This involves creating a structure that manages to reach all the decided contact points,
-while minimizing a cost function that ensures the minimization of the material consumed,
+while considering a cost function that ensures the minimization of the material consumed,
 and maximizes the printability by applying some cost function over stiffness and overhanging
 angles.
 As we explained more thoroughly in the motivation chapter (\ref{cha:motivations})
@@ -873,16 +871,16 @@ The genome for the support structure optimization can be described as a set of $
 genes:
 $$\mathbf{G} = \{ g_1, g_2, ..., g_m\}$$
 Each gene $g_i$ is represented by two parameters: a position in 3D space ($p_i$) and a number
-$n$ (that varies from 1 to 3) that defines the number of neighbors that the point connects to. In mathematical terms:
+$n$ (in the range 1 to 3) that defines the number of neighbors the point ``want'' to connect to. In mathematical terms:
 $$g_i = (p_i, n_i) \qquad \forall i \in [1, m]$$
 This representation is quite simple indeed, however the slightly more complicated part
 is transforming this simple encoding into a rigid frame. This is done with algorithm
 \ref{alg:gene_to_frame}.
 As we can see in the algorithm, every gene $g_i$ is converted into a node in the rigid
 frame $F$. Then every node is connected to at most $n_i$ neighbors below that provide
-support. Neighbors are eligible if the connection angle is not too steep in order to
-ensure that the frames produced are printable by guaranteeing at construction time
-that the frame will not have excessive overhanging angles.
+support. Neighbors are eligible only if the connection angle is within the acceptable
+steepness range; This ensure that the frames produced are printable by guaranteeing 
+at construction time that the frame will not have excessive overhanging angles.
 Finally there are two minor details that are worth mentioning.
 The first one is that all nodes that don't have any support are automatically 
 connected to the ground; this is of course necessary if we want the structure to not float in the void.
@@ -934,7 +932,7 @@ to the right).
 \end{algorithm}
 
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{images/sup_struct_opt_gene_struct.png}
     \caption{Genome structure for the support structure optimization step}
@@ -949,8 +947,8 @@ The genetic representation we presented is a good middle ground between the two
 constraints. The fact that we only allow each node to connect to the $n$ closest eligible
 neighbors is of course a reduction in the expressiveness of the system, however
 this downside comes with the benefit of a much simpler representation that is easier to optimize.
-During the design process more options were considered and tested.
-Some of the options that were tested include:
+During the design process more options were tested.
+Some of those options included:
 a representation that organized the support structure into layers, where each layer was 
 able to be mutated separately, and then the crossover was achieved by merging different layers.
 This representation was easy to optimize, however the topology of the output frame was found 
@@ -999,55 +997,63 @@ by the z-wobble effect \ref{sec:wobble-test}.
 Furthermore we have discussed in depth how we can define a stiffness/flexibility matrix,
 and how we can calculate them in chapter \ref{cha:stiffness_algo}.
 This section aims to put everything together and provide the final formulation of the stiffness
-cost function. Algorithm \ref{alg:stiffness_cost} shows the full procedure necessary
+cost function.
+
+Algorithm \ref{alg:stiffness_cost} shows the full procedure necessary
 for cost calculation. We can see in the function ``StiffnessCost'' that the frame is gradually
 constructed one node at a time; this ensures we can calculate the stiffness of every point
 while it's being built, and not just with the final structure, that as we discussed in
 section \ref{sec:stiffness_part_frames} is quite important for a few mechanical reasons.
-While the frame is being constructed two different sources of costs are evaluated. The first one
-is simply a function of the stiffness of each beam, this value is calculated
-inside the function ``BeamCost'' and is essentially a linear with threshold function of the compliance,
-sampled in a set of equally spaced points inside the beam.
-The compliance is calculated inside the ``Compliance'' function, and we can see that it is a simple
-L2 norm of the $xx$ and $yy$ components of the flexibility matrix $\mathbf{D}$.
-The $xx$($yy$) component of $\mathbf{D}$ is essentially expressing what is the displacement
-caused along the $x$($y$) axis, assuming that a force is applied parallel to the $x$($y$) axis.
-The second cost that is considered is the ``floating regions'' cost. The definition and detection
-of floating regions is covered in section \ref{sec:floating_regions_detection}, however we haven't
-explained yet why floating regions are important. In a traditional ``critical area'' (i.e. an area
-where the overhanging angle is above a specific threshold) the support is placed to sustain the melted
-filament while it cools down, but once the cooling process has concluded the support is no longer necessary.
-In the case of floating regions however the printed object is (at first) not directly connected to the plate
-if not for the supports themselves, so the usefulness of the support is not limited to the first few seconds 
-after the filament is being extruded, but it remains crucial until the floating regions are connected
-to the plate by means other than the support structure. This means that, in the period of time when the floating region is not connected
-to the build plate, the support must provide an adequate level of stiffness to the floating region,
-to avoid having to deal with the z-wobble effect (\ref{sec:wobble-test}).
-For this reason the function ``FloatingRegionCost'' calculates the equivalent stiffness (that is approximated by calculating the stiffness of a point
-in the center of the floating regions connected to all contact points) of every floating region.
-This equivalent stiffness is then simply converted to compliance and transformed into cost with a simple
-linear with threshold model.
-The threshold value and weight are parameters of the floating region itself (with larger floating regions
-requiring more stiffness).
-Disregarding the application of this cost would result in a support structure such as the one shown in figure
-\ref{fig:no_floating_regions_cost}, where we can see that the entire floating region is being supported by a
-single beam. This would be fine if we only needed support while the filament is cooling, however
-since while the print is ongoing the floating region is connected to the plate only 
-by the single support beam the z-wobble effect would cause serious quality issues.
+While the frame is being constructed two different sources of costs are evaluated:
+
+\begin{description}
+    \item[Stiffness Cost:] 
+    The stiffness cost is simply a function of the stiffness of each beam, this value is calculated
+    inside the function ``BeamCost'' and is essentially a linear with threshold function of the compliance,
+    sampled in a set of equally spaced points inside the beam.
+    The compliance is calculated inside the ``Compliance'' function, and we can see that it is a simple
+    L2 norm of the $xx$ and $yy$ components of the flexibility matrix $\mathbf{D}$.
+    The $xx$($yy$) component of $\mathbf{D}$ is essentially expressing what is the displacement
+    caused along the $x$($y$) axis, assuming that a force is applied parallel to the $x$($y$) axis.
+    \item[Floating Regions Cost:] 
+    A floating region cost is applied in order to suite the specific need
+    that a floating region has, compared to regular critical areas
+    (definition and detection of floating regions is define in section \ref{sec:floating_regions_detection}).
+    In a traditional ``critical area'' (i.e. an area where the overhanging angle
+    is above a specific threshold) the support is placed to sustain the melted
+    filament while it cools down, but once the cooling process has concluded the support is no longer necessary.
+    In the case of floating regions however the printed object is (at first) not directly connected to the plate
+    if not for the supports themselves, so the usefulness of the support is not limited to the first few seconds 
+    after the filament is extruded, but it remains crucial until the floating regions are connected
+    to the plate by means other than the support structure. This means that, in the period of time when the floating region is not connected
+    to the build plate, the support must provide an adequate level of stiffness to the floating region,
+    to avoid having to deal with the z-wobble effect (\ref{sec:wobble-test}).
+    For this reason the function ``FloatingRegionCost'' calculates the equivalent stiffness (that is approximated by calculating the stiffness of a point
+    in the center of the floating regions connected to all contact points) of every floating region.
+    This equivalent stiffness is then simply converted to compliance and transformed into cost with a simple
+    linear with threshold model.
+    The threshold value and weight are parameters of the floating region itself (with larger floating regions
+    requiring more stiffness).
+    Disregarding the application of this cost would result in a support structure such as the one shown in figure
+    \ref{fig:no_floating_regions_cost}, where we can see that the entire floating region is being supported by a
+    single beam. This would be fine if we only needed support while the filament is cooling, however
+    since while the print is ongoing the floating region is connected to the plate only 
+    by the single support beam the z-wobble effect would cause serious quality issues.
+\end{description}
+
+
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.25\textwidth]{images/no_floating_regions_cost.png}
+    \includegraphics[width=0.24\textwidth]{images/no_floating_regions_cost.png}
     \caption{Optimization result if no floating region cost is applied}
     \label{fig:no_floating_regions_cost}
 \end{figure}
 
 
-% \begin{breakablealgorithm}
 \begin{algorithm}[h]
 \caption{Support Structure Stiffness Cost}
 \begin{algorithmic}[1]
-% \algnobreaks   
     \Require $F$ The rigid frame, with nodes sorted by height
     \Require $\mathcal{R}$ The set of floating regions
     \Ensure $c$ The total stiffness cost
@@ -1058,7 +1064,6 @@ by the single support beam the z-wobble effect would cause serious quality issue
     \EndProcedure
 
     \Statex
-    % \algmaybreak
 
     \Procedure{BeamCost}{$F, s, n$} \Comment{Penalize excessive compliance along the beam $s \to n$}
         \State $\mathbf{K}_s \gets \Call{StiffnessOf}{F, s}$
@@ -1072,7 +1077,6 @@ by the single support beam the z-wobble effect would cause serious quality issue
     \EndProcedure
 
     \Statex
-    % \algmaybreak
 
     \Procedure{FloatingRegionCost}{$F, r$} \Comment{Penalize floating regions that are not stiff enough}
         \State $p \gets \Call{CenterOf}{r}$
@@ -1086,7 +1090,6 @@ by the single support beam the z-wobble effect would cause serious quality issue
     \EndProcedure
 
     \Statex
-    % \algmaybreak
 
     \Procedure{StiffnessCost}{$F, \mathcal{R}$}
         \State $c \gets 0$
@@ -1105,7 +1108,6 @@ by the single support beam the z-wobble effect would cause serious quality issue
     \EndProcedure
 \end{algorithmic}
 \label{alg:stiffness_cost}
-% \end{breakablealgorithm}
 \end{algorithm}
 \FloatBarrier
 
@@ -1158,16 +1160,16 @@ longer beams being weighted more in the cost function).
 If we want to minimize the use of material we of course must apply a cost that tells the optimizer
 to do so. In the previous literature we have looked at in chapter \ref{cha:prev_literature}
 this cost was a function of the volume of the supports, however this mostly stemmed from the fact
-that their focus was primarily SLS 3D printing, where printing empty objects is not possible (as the
+that their focus was primarily focused on SLS 3D printing, where printing empty objects is not possible (as the
 powder will remain trapped inside). Our work however is more focused on FDM 3D printing, where
-printing hollow objects is not only possible but very common. For this reason the material cost function
+printing hollow objects is not only possible but very common. For this reason our material cost function
 is not a function of volume, but rather a function of the surface area of the supports.
 Algorithm \ref{alg:material_cost} shows exactly how the cost is calculated. In here we are approximating
 every beam as a cylinder, and calculating the lateral area of the cylinder.
 This is a rough approximation, as there might be some overestimation in areas where beams join together,
 and not all beams are cylinders (specifically the ones that connect a contact point to the support are
 more similar to a truncated cone) but this approximation is good enough, as we only need to use it
-as a cost function.
+as a guiding cost function.
 
 \begin{algorithm}[h]
 \caption{Support Structure Material Cost}
@@ -1196,7 +1198,7 @@ the supports. Furthermore supports that originate from the printed object rather
 are either fragile and risk detaching while the print is ongoing, or if they are 
 strong enough they often are hard to remove potentially causing damage to the printed object
 while being detached.
-For this reason we apply a cost function that penalizes supports that intersect with the volume
+For this reason we assign a cost to supports that intersect with the volume
 of the printed object. Algorithm \ref{alg:collision_cost} shows the formulation of the cost function;
 we can see that it is based on a simple iteration over the beams of the frame.
 Each beam is converted into a set of equally spaced points, and a penalty is applied
@@ -1207,7 +1209,7 @@ from the famous 2013 paper ``VDB: High-Resolution Sparse Volumes with Dynamic To
 \cite{openvdb}. This data structure ensures collision detection could be performed in a computationally
 efficient manner ensuring the genetic algorithm could run in a reasonable time.
 The implementation of the data structure is based on the rust library ``baby-shark'' \cite{babyshark}
-with a few minor modifications to expose the correct API.
+with a few minor modifications to expose the correct APIs.
 
 
 \begin{algorithm}[h]
@@ -1242,23 +1244,23 @@ define some simple yet effective fundamental mutations. Then to perform a comple
 we select a number $n$ of fundamental mutations we want to apply (in the range 1 to 3 in our case)
 and apply the $n$ fundamental mutations in series.
 The 5 fundamental mutations we defined are:
-\begin{itemize}
-    \item \textbf{AddPoint}: This simply adds a new point to the genome. To generate the point
+\begin{description}
+    \item [ AddPoint ]: This simply adds a new point to the genome. To generate the point
     we randomly select the number of neighbors in the range 1 to 3, and we randomly select the position
     in a way that the $z$ value is between zero and the highest $z$ value of all the contact points, and the $x$ and $y$ values
     are generated so that the projection of the point on to the $xy$ plane falls within the
     convex hull of all contact points projected on the same $xy$ plane.
     The resulting volume where new points can be sampled from is shown in figure \ref{fig:add_point_mutation}.
-    \item \textbf{MovePoint}: This mutation randomly selects one point, and moves it in a random direction
+    \item [ MovePoint ]: This mutation randomly selects one point, and moves it in a random direction
     (with a mutation that is a simple multivariate normal distribution with a mean vector of zero, and a diagonal
     covariance matrix with a fixed variance for all directions).
-    \item \textbf{MovePoints}: This mutation tries to move every point in the genome, however points are moved only
+    \item [ MovePoints ]: This mutation tries to move every point in the genome, however points are moved only
     if a (biased) coin flip is successful.
-    \item \textbf{MutateContacts}: This mutation mutates the number of contact points a randomly selected 
-    node has, by either adding or subtracting, and then clipping the value if it ends up outside the 
+    \item [ MutateContacts ]: This mutation mutates the number of contact points a randomly selected 
+    node has, by either adding or subtracting one, and then clipping the value if it ends up outside the 
     predefined range.
-    \item \textbf{RemovePoint}: This mutation selects a random point and removes it from the genome.
-\end{itemize}
+    \item [ RemovePoint ]: This mutation selects a random point and removes it from the genome.
+\end{description}
 
 \begin{figure}[h]
     \centering

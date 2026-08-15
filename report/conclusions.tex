@@ -19,7 +19,7 @@ In order to apply genetic algorithms to FDM 3D printing support structure
 generation, two main challenges were solved: the first one was the evaluation 
 of stiffness in a time efficient manner (which we tackled in chapter 
 \ref{cha:stiffness_algo}), and the second one was the implementation of an 
-algorithm that was able to generate a wide variety of support structures (and 
+algorithm that was able to generate and optimize a wide variety of support structures (and 
 not only simple trees).
 
 In the results chapter (\ref{cha:results}) we have shown how our algorithm is 
@@ -39,7 +39,7 @@ a viable approach to solve the problem.
 \section{Contributions}
 Our work presented four key contributions, of which the first two can be considered
 ``major'', while the last two are minor, but still significant.
-The four contributions ordered by relevance are:
+The four contributions are:
 
 \begin{description}
 \item[Monte Carlo stiffness evaluation] (Chapter~\ref{cha:stiffness_algo})
@@ -113,7 +113,7 @@ and even if we had had access to the code, the resulting supports would have pro
 unprintable, as they were designed for SLS/SLA 3D printers.
 The reduction in material consumption that we have achieved is significant;
 even acknowledging that the 43\% of reduction only translates to 10-30 grams 
-of material saved per print, the amount of prints in circulation is exorbitant,
+of material saved per print, the amount of 3D printers in circulation is exorbitant,
 and is rapidly increasing, and a few grams saved every print would still result in
 a pretty sizable reduction in plastic waste if our system (or a similar one)
 was adopted at scale.
