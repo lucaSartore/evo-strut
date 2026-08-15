@@ -33,13 +33,13 @@ and an ``Armadillo'' taken from Stanford's 3D Scanning Repository.
 \subsection{Baseline Methods}
 
 Selecting our baseline methods was a bit challenging as there is no clear ``state of the art''
-for what we are trying to do. The two papers that we have looked at in the \ref{cha:prev_literature}
-chapter are not concerned with FDM 3D printing, and don't consider the necessary requirements of 
+for what we are trying to do. The two papers that we have looked at in chapter \ref{cha:prev_literature}
+are not concerned with FDM 3D printing, and don't consider the necessary requirements of
 stiffness, making them not really suitable for our application. Furthermore their code is not publicly
 available (we have even asked the authors for access to the code for comparison use only,
 but they were unable to fulfill our request due to contractual obligations with industrial partners).
 This left us only with the options provided by the industry: ``Normal'' and ``Tree'' supports (that we have
-looked at in the \ref{cha:prev_literature} chapter).
+looked at in chapter \ref{cha:prev_literature}).
 
 \subsection{Hardware}
 
@@ -151,13 +151,14 @@ In some of the graphs we can see that all testcases from one to five at the end 
 of the loss function, but on some others we can see that the different runs converge to different final values
 for the loss function. 
 The effect is most notable in figures \ref{fig:es_dragon_sso} and \ref{fig:es_candlestick_cpg},
-although we should note that the severity of this divergence is greatly exacerbated by a non-zero y axis.
-The divergence is certainly caused by the optimizer getting stuck in a local minimum
+although we should note that the severity of this divergence is greatly exacerbated by the fact that the
+$y$ axis does not start at zero.
+The divergence is almost certainly caused by the optimizer getting stuck in a local minimum
 and not being able to further improve the loss, which is a pretty common scenario in most genetic algorithms and gradient
 descent like optimizers. If anything, our choice to use a three-stage optimization problem is increasing
 the likelihood of this type of scenario occurring, as every new stage can diverge from the ``optimal'' path
 creating a cascade effect that can substantially vary the final output.
-However we should not overstate the impact that this effect has on the quality of the solutions, 
+However we should not overstate the impact that this effect has on the quality of the solutions;
 even acknowledging that some of the testcases did not perform as well as others, the overall trend
 is still quite good, with the rate of improvement decreasing over time, but still managing a substantial
 improvement by the end of the run.
@@ -240,15 +241,15 @@ improvement by the end of the run.
 \end{figure}
 
 
-\section{Reduction in material usage}
+\section{Reduction in Material Usage}
 
 \begin{table}[ht]
     \centering
     \caption{Reduction in material usage}
     \label{tab:mat_usage_reduction}
-    \begin{tabular}{lllllll}
+    \begin{tabular}{llllll}
     \toprule
-        Test ID & Total Fil.[g] & Model Fil. [g] & Support Fil. [g] & Reduction [g] & Reduction [\%] & \\ \midrule
+        Test ID & Total Fil. [g] & Model Fil. [g] & Support Fil. [g] & Reduction [g] & Reduction [\%] \\ \midrule
         ES1D & 111.23 & 57.23 & 54.00 & 26.94 & 33\% \\
         ES2D & 108.63 & 57.23 & 51.40 & 29.54 & 36\% \\
         ES3D & 106.29 & 57.23 & 49.06 & 31.88 & 39\% \\
@@ -284,7 +285,7 @@ improvement by the end of the run.
 In this section we will evaluate how much material was saved by the supports generated with 
 our algorithm with respect to the state of the art. In this case, we will consider OrcaSlicer's
 ``Tree Supports'' (\ref{sec:tree_support}) as the state of the art method, as it generally yields
-a better result compared to the ``Normal Supports'' algorithm, and even with other slicers'
+a better result compared to the ``Normal Supports'' algorithm, and even to other slicers'
 tree-like supports. In the case of the ``Armadillo'' and ``Candlestick'', all the parameters
 were set to the default value, and no manual intervention was necessary.
 In the case of the ``Dragon'' model however, some manual support placement was necessary
@@ -299,7 +300,7 @@ as it has provided some important savings on all three of the tested models.
 We can note how the performance is not exactly identical on the three models,
 as it ranges from a 50\% reduction in the ``Armadillo'' to a more modest 37\% 
 cut in the case of the ``Dragon''. This variation probably stems
-from the height difference of the two models; the dragon is a wide but short 
+from the height difference of the models; the dragon is a wide but short
 object, while the armadillo and the candlestick are taller and thinner.
 Generally speaking, the taller a support is, the more expensive it becomes,
 meaning that there is a larger margin of improvement.
@@ -351,7 +352,7 @@ as well as the time necessary to print the final object including supports are t
 important parameters worth considering when comparing different support structure optimization
 algorithms.
 In the case of the optimization time the comparison is particularly one-sided; as we can see
-in table \ref{tab:opt_and_print_time}, our algorithm generally needs between 300 and 700 seconds
+in table \ref{tab:opt_and_print_time}, our algorithm generally needs between 300 and 750 seconds
 for a full optimization; meanwhile all the existing solutions are extremely quick, all finishing
 below 10 seconds. This result is to be expected, as both the ``Tree Support'' and the ``Normal Support''
 algorithms are simple greedy procedures, and don't perform any kind of optimization,
@@ -359,12 +360,12 @@ meanwhile our proposed solution is an optimization-based approach that requires 
 thousand iterations to arrive at a good result. In this respect we can say that the higher
 computational cost is the price to pay for the savings in materials.
 Reducing those times could be done, but is not easy; the algorithm is already written in Rust,
-and compiled to assembly code, and is already well optimized for leveraging multiple cores,
+and compiled to machine code, and is already well optimized for leveraging multiple cores,
 therefore any substantial gain in the computational times would probably have to come from 
 better mutations/crossover strategies or from a more efficient stiffness evaluation algorithm.
 Shifting our attention to the printing times, we can note that our algorithm is generally slightly
 worse compared to the existing solutions. The difference is not huge, as we are talking about 
-approximately 40 minutes in the worst-case scenario; however it is still a downside of our approach,
+approximately 30-90 minutes depending on the testcase; however it is still a downside of our approach,
 and it is worth trying to understand why.
 The most obvious cause of this increased time is the increased distance the nozzle has to cover
 in order to deposit the material in every individual beam.
@@ -377,7 +378,7 @@ weak points of our algorithm, however the differences are relatively small
 compared to the much larger differences in material saved, making the tradeoff
 possibly worth it.
 
-\section{Final outputs}
+\section{Final Outputs}
 
 The final outputs are simple STL files that can be imported into any 3D printing
 slicing software. The files are publicly available in the official GitHub repository
@@ -506,10 +507,10 @@ of the print quality for the testcase ``Dragon'' using both our algorithm and th
 We can say that the one provided by the tree support is ever so slightly better, especially if we take 
 a look at the dragon's leg to the left.
 There are generally two main reasons for this. The first one is that our algorithm is not properly
-integrated with a slicer, instead it simply outputs a 3D model that can be printed together with
+integrated with a slicer; instead it simply outputs a 3D model that can be printed together with
 a specific object and provides support. This lack of integration makes it harder to use special 
 printing techniques such as interface layers (which essentially are a few layers printed with 
-an higher filament density to help the support detach).
+a higher filament density to help the support detach).
 Another reason is that the generation of the contact points that we designed is perhaps not on par with
 the tree supports. In this thesis we primarily focused on the support structure and paid relatively little attention
 to the actual contact points. It is possible that, as part of future improvements, both the limitations
@@ -542,7 +543,7 @@ and especially to normal supports. Those challenges are not impossible to overco
 that we were able to print five models successfully, however we deemed it appropriate to present what those challenges are,
 and provide a few insights on how they can be solved, so that anyone trying to reproduce our work could start 
 with some knowledge.
-There are two main challenges that our topology suffers from; the first one is the z-wobble effect \ref{sec:wobble-test},
+There are two main challenges that our topology suffers from; the first one is the z-wobble effect (\ref{sec:wobble-test}),
 however this is addressed by our optimization algorithm, which automatically applies cost to parts that are not stiff enough.
 The algorithm can of course be tweaked in order to generate supports that are more or less stiff according to user preferences;
 there are three main ways of doing so: the first two imply modifying the cost function by either reducing the cost

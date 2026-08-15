@@ -37,11 +37,11 @@ algorithms, namely the objective of producing a support that minimizes the mater
 One key thing to understand, however, is that support structures are not necessarily portable
 across different 3D printing technologies.
 Indeed, some technologies (such as for example SLA, and to a lesser extent SLS) exert minimal
-forces on the object while it is being printed, meanwhile in FDM, the nozzle will always
+forces on the object while it is being printed; meanwhile, in FDM, the nozzle will always
 put a bit of force onto the object it is printing while it deposits the material. This means
 that printing tall and skinny structures on an FDM printer often results in them bending
 and ultimately causing the print to fail.
-SLA and SLS 3D printing software often find themselves designing supports with
+SLA and SLS 3D printing software often finds itself designing supports with
 tall and skinny structures, as the thinner a support is, the less material it consumes.
 FDM software, however, tends to construct structures that are a bit thicker, as supports that are too
 thin would result in them bending and/or breaking during printing.
@@ -73,7 +73,7 @@ One key component of the cost function is stiffness, as we want to prevent beams
 a failure. However, stiffness evaluation of a complex rigid frame is a time-consuming process, and
 for our genetic algorithm to converge we need to run this evaluation process hundreds of thousands
 of times. For this reason, instead of using traditional stiffness evaluation algorithms, we designed
-our own faster alternative. Our algorithm is a Monte Carlo approach, as we had to sacrifice a bit of
+our own faster alternative. Our algorithm is approximated, as we had to sacrifice a bit of
 accuracy in order to get the required speed. Our tests have shown that (for our specific use case)
 our algorithm is about 400 times faster, while only losing about 4\% of accuracy when compared
 to exact methods.

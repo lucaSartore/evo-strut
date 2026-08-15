@@ -176,9 +176,9 @@ more realistic critical regions when some parts of the model are ``floating''.
             \State \Return 0
         \EndIf
         \State $c \gets $ CRITICALITY\_MAX \Comment{Initialize criticality at max value}
-        \For{$a \in \Call{AdjacentNodes}{G, n$}} \Comment{Iterate over adjacent nodes}
-            \If {$\Call{LayerOf} {a} <= \Call{LayerOf}{n} \land a \in \mathcal{M}$}
-                \State $c_a \gets \mathcal{M}(a) + \Call{PropagationCost}{a, n}$
+        \For{$a \in \Call{Adjacent}{G, n}$} \Comment{Iterate over adjacent nodes}
+            \If {$\Call{LayerOf}{a} \leq \Call{LayerOf}{n} \land a \in \mathcal{M}$}
+                \State $c_a \gets \mathcal{M}(a) + \Call{PropagationCost}{G, a, n}$
                 \State $c \gets \Call{Min}{c, c_a}$
             \EndIf
         \EndFor
@@ -201,7 +201,6 @@ more realistic critical regions when some parts of the model are ``floating''.
                 \State $\Call{TryUpdatePriority}{PriorityQueue, a, c}$
             \EndFor
         \EndWhile
-        \State \Return $0$;
     \EndProcedure
     
     \Statex
@@ -327,7 +326,7 @@ too much and reaches zones that are actually not considered ``floating''.
             \EndIf
             \State $R \gets \Call{ExploreUpward}{G, s, V}$ \Comment{Exploring graph, while only moving ``upward''}
             \If{$\Call{HeightOf}{s} > 0$} \Comment{If the node is detached from the ground}
-                \State $\mathcal{F} \gets \Call{AddFloatingRegion}{F, R}$ \Comment{Mark the explored node as a floating region}
+                \State $\mathcal{F} \gets \Call{AddFloatingRegion}{\mathcal{F}, R}$ \Comment{Mark the explored region as floating}
             \EndIf
         \EndFor
         \State \Return $\mathcal{F}$
@@ -394,7 +393,7 @@ Algorithm \ref{alg:crit_grouping} shows the procedure of how grouping is execute
             \If{$V(s)$}
                 \State \textbf{continue} \Comment{Already part of a component}
             \EndIf
-            \State $R' \gets \Call{Explore}{G, C, s, V}$ \Comment{Exploring graph, while only moving ``upward''}
+            \State $R' \gets \Call{Explore}{G, C, s, V}$ \Comment{Exploring graph of connected regions}
             \State $R \gets \Call{AddGroup}{R, R'}$
         \EndFor
         \State \Return $R$
@@ -510,7 +509,7 @@ The reason for this modeling choice has to do with floating regions.
 As we can remember from section \ref{sec:crit_detection} the propagation factor
 was added to avoid detecting only a tiny critical region in some particular
 scenarios such as for example the wing of the dragon 
-(see figure \ref{fig:critical_detect} and \ref{fig:critical_detect_no_prop}).
+(see figures \ref{fig:critical_detect} and \ref{fig:critical_detect_no_prop}).
 Without this cost term, a single well-placed support in the ``tip'' of the dragon's wing
 would singlehandedly remove the entire critical region, however in real life such a
 support would create many problems, both because of the z-wobble effect (\ref{sec:wobble-test})
@@ -579,7 +578,7 @@ Parent B.
 Figure \ref{fig:crossover_cpo} shows this process in action with a two dimensional representation
 of a set of points.
 The generation of the random plane is done by selecting three random points from one parent 
-($P_A$, $P_B$, and $P_{\perp}$) and then selecting the plane $\pi$ such that the first two points
+($p_A$, $p_B$, and $p_{\perp}$) and then selecting the plane $\pi$ such that the first two points
 are included in the plane, and such that the plane is perpendicular to the plane $\pi^*$ that includes
 all three points.
 Algorithm \ref{alg:plane_construction} shows a simple procedure to construct such a plane.
@@ -588,7 +587,7 @@ a plane that includes three random points) is that support structures tend to be
 therefore with a plane that includes three points it is likely that most points would end up
 close to the border, making the split a bit unequal, and potentially causing worse outputs.
 In the algorithm described there is one small edge case; in fact it cannot work if there are
-fewer than three points in a plane, or if the three points selected are in a straight line,
+fewer than three points in a genome, or if the three points selected are in a straight line,
 making it impossible to build the plane. In all of these circumstances the algorithm simply
 ignores the crossover and returns a gene identical to one random parent.
 
@@ -734,7 +733,7 @@ depends on the height, and is not just a constant.
         \For {$g \in G$}
             \State $h \gets \Call{ConvexHull}{g}$
             \State $c \gets c + 
-                K_{\text{height}} \cdot \Call{Height}{h} +
+                K_{\text{height}} \cdot \Call{MaxHeight}{g} +
                 K_{\text{area}} \cdot \Call{Area}{h} +
                 K_{\text{volume}} \cdot \Call{Volume}{h}$
         \EndFor
@@ -767,9 +766,9 @@ speaking a good idea for genetic algorithms.
     \Require $\mathcal{D}_r$: Arbitrary probability distribution for reset
     \Ensure $N^*$: The mutated network
 
-    \Procedure{MutateNetwork}{$G$} \Comment{Compute the cost of a set of groups}
+    \Procedure{MutateNetwork}{$N$}
         \State $N^* \gets \emptyset$ \Comment{Initialize empty network}
-        \For {$n \in G$} \Comment{Iterate over the parameters of $G$}
+        \For {$n \in N$} \Comment{Iterate over the parameters of $N$}
             \State Sample $x \sim \mathcal{U}(0,1)$
             \If{$x < p_m$} \Comment{Weight mutation}
                 \State Sample $m \sim \mathcal{D}_m$
@@ -780,7 +779,7 @@ speaking a good idea for genetic algorithms.
             \Else
                 \State $n^* \gets n$
             \EndIf
-            \State $N^* \gets \Call{AddParameter}{G^*, n^*}$ \Comment {Adding the mutated weight to the new network}
+            \State $N^* \gets \Call{AddParameter}{N^*, n^*}$ \Comment {Adding the mutated weight to the new network}
         \EndFor
         \State \Return $N^*$ \Comment {Returning the fully mutated network}
     \EndProcedure
@@ -797,14 +796,14 @@ not part of the crossover/mutation), in this case we have defined three differen
 strategies, and every time a crossover is executed we randomly pick one of them.
 The three strategies selected are:
 \begin{description}
-    \item [Uniform:] This is the traditional uniform crossover where every node in the offspring's network
+    \item [Uniform:] This is the traditional uniform crossover where every weight in the offspring's network
     is either inherited from Parent A or from Parent B with 50-50 probability.
     \item [Single Point:] In this case a random number is generated between zero and the number of parameters,
     and then all of the weights that have an index lower than the generated number are inherited from one
     parent, while the remaining ones are inherited from the other.
     \item [Arithmetic:] In this case we decide a parameter $\alpha$ (usually 0.5) and then the weights of the
-    offspring ($\mathbf{\theta}_{o}$) can be expressed as a weighted summation of the weights of the two parents
-    ($\mathbf{\theta}_{A}$ and $\mathbf{\theta}_{B}$) using the simple equation: $\mathbf{\theta}_{o} = \alpha \mathbf{\theta}_{A} + (1 - \alpha)\mathbf{\theta}_{B}$
+    offspring ($\boldsymbol{\theta}_{o}$) can be expressed as a weighted summation of the weights of the two parents
+    ($\boldsymbol{\theta}_{A}$ and $\boldsymbol{\theta}_{B}$) using the simple equation: $\boldsymbol{\theta}_{o} = \alpha \boldsymbol{\theta}_{A} + (1 - \alpha)\boldsymbol{\theta}_{B}$
 \end{description}
 
 \subsection{Initialization}
@@ -904,7 +903,7 @@ to the right).
     \Ensure $F$: The rigid frame
 
     \Procedure{FindSupporters}{$S, p, n$} \Comment{Up to $n$ nodes below $p$ that can hold it}
-        \State $E \gets \{ q \in S : \Call{OverhangingAngle}{q, p} > \varPhi_{max} \}$ \Comment{Eligible if the beam is not too steep}
+        \State $E \gets \{ q \in S : \Call{OverhangingAngle}{q, p} > \varPhi_{th} \}$ \Comment{Eligible if the beam is not too steep}
         \If{$E \neq \emptyset$}
             \State \Return $\Call{Nearest}{E, p, n}$ \Comment{The $n$ closest eligible nodes}
         \EndIf
@@ -1029,7 +1028,7 @@ While the frame is being constructed two different sources of costs are evaluate
     to the build plate, the support must provide an adequate level of stiffness to the floating region,
     to avoid having to deal with the z-wobble effect (\ref{sec:wobble-test}).
     For this reason the function ``FloatingRegionCost'' calculates the equivalent stiffness (that is approximated by calculating the stiffness of a point
-    in the center of the floating regions connected to all contact points) of every floating region.
+    in the center of the floating region, connected to all contact points) of every floating region.
     This equivalent stiffness is then simply converted to compliance and transformed into cost with a simple
     linear with threshold model.
     The threshold value and weight are parameters of the floating region itself (with larger floating regions
@@ -1069,7 +1068,7 @@ While the frame is being constructed two different sources of costs are evaluate
         \State $\mathbf{K}_s \gets \Call{StiffnessOf}{F, s}$
         \State $c \gets 0$
         \For{$p \in \Call{Sample}{s, n, \delta}$} \Comment{Sample points moving from $s$ towards $n$ with a spacing of $\delta$}
-            \State $\mathbf{K}_p \gets \Call{Series}{\mathbf{K}, s, p}$ \Comment{Stiffness at the sampled point $p$}
+            \State $\mathbf{K}_p \gets \Call{Series}{\mathbf{K}_s, s, p}$ \Comment{Stiffness at the sampled point $p$}
             \State $\gamma \gets \Call{Compliance}{\mathbf{K}_p}$
             \State $c \gets c + \lambda \cdot \Call{Max}{\gamma - \gamma_{th}, 0}$ \Comment{Cost only for compliance above the threshold}
         \EndFor
@@ -1098,10 +1097,10 @@ While the frame is being constructed two different sources of costs are evaluate
             \State $F' \gets \Call{AddNodeAndBeams}{F', n}$ \Comment{Gradually construct $F'$ one node at a time}
             \For{$s \in \Call{Supporters}{F', n}$} \Comment{Apply a cost for every beam supporting $n$}
                 \State $c \gets c + \Call{BeamCost}{F', s, n}$ 
-                \For {$r \in \mathcal{R}\quad \text{t.c.}\quad r \subset F'$} \Comment{Iterate over floating regions fully included in $F'$}
-                    \State $c \gets c + \Call{FloatingRegionCost}{F', r}$ \Comment{Apply the relative cost}
-                    \State $\mathcal{R} \gets \mathcal{R} \setminus \{r\}$ \Comment{Remove $r$ from $\mathcal{R}$ to avoid applying cost twice}
-                \EndFor
+            \EndFor
+            \For {$r \in \mathcal{R}\quad \text{s.t.}\quad r \subset F'$} \Comment{Iterate over floating regions fully included in $F'$}
+                \State $c \gets c + \Call{FloatingRegionCost}{F', r}$ \Comment{Apply the relative cost}
+                \State $\mathcal{R} \gets \mathcal{R} \setminus \{r\}$ \Comment{Remove $r$ from $\mathcal{R}$ to avoid applying cost twice}
             \EndFor
         \EndFor
         \State \Return $c$
@@ -1123,12 +1122,12 @@ beams is applied in order to encourage the optimizer to produce structures
 that are fully printable.
 It should be said that due to the way we convert the genome into a rigid
 frame, we could ensure that all overhanging angles are above a certain threshold
-by setting $\varPhi_{{max}}$ (line 2 of algorithm \ref{alg:gene_to_frame})
+by setting $\varPhi_{{th}}$ (line 2 of algorithm \ref{alg:gene_to_frame})
 to an appropriate value, however the ability to apply a separate cost function
 to the steepness of support is still a desirable trait, as it allows
 expressing more complex requirements such as for example: ``You must keep all overhanging
 angles above $30^\circ$, and preferably above $45^\circ$, with a certain penalty
-applied for every beam with an overhanging angle in the $35^\circ$ to
+applied for every beam with an overhanging angle in the $30^\circ$ to
 $45^\circ$ range''.
 Calculating the steepness cost is incredibly straightforward,
 and the full procedure is shown in algorithm \ref{alg:steepness_cost}.

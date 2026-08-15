@@ -12,7 +12,7 @@ The problem is of course not new, and there are therefore well-studied solutions
 in a bit; however, a key constraint that we have is that the algorithm must be fast (as it will be placed in the
 evaluation loop of a genetic algorithm). This speed is not something that is easily achieved with existing solutions,
 and this is why we are proposing a new approximated approach for stiffness evaluation that sacrifices a bit of accuracy
-in order to achieve unmatched speed.
+in order to achieve the necessary speed.
 
 \section{Problem Statement}
 \label{sec:stiff_problem_statement}
@@ -31,9 +31,9 @@ that exact solutions are not needed, as long as solutions are accurate enough.
 By synthesizing these requirements and constraints, we can define the problem as follows:
 \\
 \\
-\noindent\textit{Given a \textbf{rigid frame (\ref{sec:rigid_frame})}}, find an algorithm that is able to calculate
+\noindent\textit{Given a \textbf{rigid frame (\ref{sec:rigid_frame})}, find an algorithm that is able to calculate
 an approximation of the \textbf{Flexibility Matrix (\ref{sec:flex_matrix})} for one specific \textbf{node} in the frame
-in a timely manner.
+in a timely manner.}
 
 \subsection{Stiffness of partially constructed frames}
 \label{sec:stiffness_part_frames}
@@ -103,10 +103,10 @@ Generally speaking, a stiffness matrix is a $Dn \times Dn$ matrix where $D$ is t
 and $n$ is the number of nodes a rigid frame has, and it describes how the structure reacts to external forces.
 For example, a three-dimensional frame that has 10 points has a stiffness matrix with dimensionality $60 \times 60$
 (as the degrees of freedom are 6, namely translation and rotation along the $x$, $y$ and $z$ axes).
-The unit of measure of the stiffness matrix is $N/m$ as it represents the force that is required
-to produce a specific displacement.
-Figure \ref{fig:beam} shows a Cantilever Stiffness Matrix \ref{sec:cantilever_matrixes} (a special
-case of the stiffness matrix that represents one beam anchored at one end).
+The unit of measure of the stiffness matrix is $N/m$ for the translational part as it represents the force that is required
+to produce a specific displacement; with rotational and coupling blocks having corresponding torque/angle units instead of meters.
+Figure \ref{fig:beam} and equation \ref{for:stiffness} shows an example of a Cantilever Stiffness Matrix (a special
+case of the stiffness matrix that represents one beam anchored at one end, see section \ref{sec:cantilever_matrixes}).
 In this case, the matrix is $6 \times 6$, as there are 6 degrees of freedom in 3D space, and the frame only has
 one node that is free to move.
 The stiffness matrix provides a simple and computationally efficient relation between $\mathbf{u}$ and $\mathbf{f}$ (equation \ref{for:stiffness}).
@@ -242,10 +242,10 @@ Let's call $\mathbf{K}_x$ the stiffness matrix of beam $\mathbf{B}_x$; this matr
 Then we can calculate the transposition matrix $\mathbf{T}$ that translates from the frame of reference
 of $\mathbf{B}_x$ to the frame of reference of $\mathbf{B}$.
 Using the transposition matrix we can calculate $\mathbf{K}$ (the stiffness matrix of the beam $\mathbf{B}$)
-with a simple matrix multiplication, as shown in equation \ref{for:beam_rotation}.
+with a simple set of matrix multiplications, as shown in equation \ref{for:beam_rotation}.
 
 \begin{equation}
-\mathbf{K} = \mathbf{T} \mathbf{K}_x
+\mathbf{K} = \mathbf{T}^T \mathbf{K}_x \mathbf{T}
 \label{for:beam_rotation}
 \end{equation}
 
@@ -571,7 +571,7 @@ that we can remove in order to achieve a significant improvement in speed.
 The first one is the correctness requirement. The Direct Stiffness Method is an exact method,
 meaning that it finds the exact stiffness of a specific frame; this is of course extremely
 important in structural engineering, as precision is key. However, in our case a small
-(approximately below 15\%) error in the stiffness value is not a huge issue, as such
+error in the stiffness value is not a huge issue, as such
 a result would still be sufficient for guiding the support structure optimization process.
 The second requirement that we can remove from the problem is the need for calculating
 a global stiffness matrix.
@@ -650,7 +650,7 @@ Calculating the local stiffness matrix in point $P$ of the structure
 shown in figure \ref{fig:reducible_frame} using the reduction method can be achieved with a 
 simple set of steps. The first one is to understand the orientation of the beams. This involves
 starting from point $P$ and traversing the graph in a breadth-first search order, marking the direction
-of travel of every arch in the graph (or beam in the frame); then we can find the direction of the beam,
+of travel of every arc in the graph (or beam in the frame); then we can find the direction of the beam,
 as being the opposite with respect to the direction of travel in the graph.
 The result of this traversing operation can be observed in figure \ref{fig:reducible_frame_with_arrow};
 here the arrows indicate the direction of the cantilever beam, where the tail of the arrow
@@ -697,7 +697,7 @@ of frames that it can evaluate.
 In the previous section we have explored a method to calculate the local stiffness matrix of a specific
 subset of the set of possible frames. In this section we will try to extend the algorithm into something that
 could work with all the possible frames.
-This will be achieved by means of ``translating'' a non reducible frame into
+This will be achieved by means of ``translating'' a non-reducible frame into
 a reducible one, in a way that minimizes the loss of accuracy, and then applying
 a simple reduction. 
 We decided to present two algorithms for this, the first one is called ``DAG Method'', and as the name implies
@@ -713,14 +713,14 @@ The first step in the DAG method is to traverse the graph using Dijkstra's Algor
 distance as the distance between nodes.
 The graph is explored starting from $P$ (the point we want to know the stiffness of) up until
 all nodes have been explored.
-When visiting the graph, the algorithm marks the direction of travel of every arch, transforming
+When visiting the graph, the algorithm marks the direction of travel of every arc, transforming
 the frame into a Directed Acyclic Graph.
 Once this is done, we can calculate the local stiffness matrix of every beam in the graph (this step remains the same
 as before, where the direction of the beam is the opposite of the direction of travel, and the stiffness matrix
 is calculated using the equations we described in section \ref{sec:cantilever_matrixes}).
 At this point, we can start recursively calculating the stiffness of every node, as a parallel of all the outgoing
-arches, where each arch's stiffness is a ``series'' operation between the stiffness
-of the node the arch is going to and the stiffness of the beam that the connection represents.
+arcs, where each arc's stiffness is a ``series'' operation between the stiffness
+of the node the arc is going to and the stiffness of the beam that the connection represents.
 This process is described more precisely in Algorithm \ref{alg:dag}.
 
 
@@ -744,7 +744,7 @@ This process is described more precisely in Algorithm \ref{alg:dag}.
             \State \Return $\mathcal{M}(\nu)$
         \EndIf
         \State $\mathbf{K}_{\nu} \gets \mathbf{0}_{6 \times 6}$
-        \For{$a \in \Call{Outgoing}{G, \nu}$} \Comment{Iterate over outgoing arches from $\nu$}
+        \For{$a \in \Call{Outgoing}{G, \nu}$} \Comment{Iterate over outgoing arcs from $\nu$}
             \State $\mathbf{K}_{a} \gets \Call{EvalStiffness}{G, a.target, \mathcal{M}}$ \Comment{Calculate stiffness of the node $a$ is pointing to}
             \State $\mathbf{K}_{b} \gets \Call{BeamStiffness}{a.beam}$ \Comment{Stiffness of the beam connecting $a$ to $\nu$}
             \State $\mathbf{K}_{\nu} \gets \mathbf{K}_{\nu} \stiffparallel (\mathbf{K}_{a} \stiffseries_{a.beam} \mathbf{K}_b )$ \Comment{Merge stiffnesses together}
@@ -813,11 +813,11 @@ to calculate those weights.
 An effective heuristic for weight evaluation can be derived from the distance traveled in the graph;
 this method begins by once again exploring the frame's graph starting from the point we want to know the
 stiffness of ($P$) and traversing the graph using Dijkstra's algorithm until we reach the ground.
-This time however, instead of just marking the direction of travel of each node, we also mark the total
+This time however, instead of just marking the direction of travel of each arc, we also mark the total
 (Euclidean) distance traveled so far. In figure \ref{fig:weighted_dag_strategy} the traveled Euclidean
 distances are marked as a small green number close to the beam arrow.
 The idea is to use those distances to ``split'' the stiffness of a node among the 
-incoming arches, in a way that prevents a gross overestimation of the stiffness value.
+incoming arcs, in a way that prevents a gross overestimation of the stiffness value.
 The exact way stiffness is split up can be seen in algorithm \ref{alg:wdag}.
 
 
@@ -831,14 +831,14 @@ The exact way stiffness is split up can be seen in algorithm \ref{alg:wdag}.
 Applying algorithm \ref{alg:wdag} to the frame shown in figure \ref{fig:weighted_dag_strategy} would result 
 in $\mathbf{K}_{Peq}$ (the local stiffness in point $P$) having the exact formulation that is shown in equation \ref{for:wdag_eq}.
 As we can see from the part highlighted in red, the correction weights are applied to the stiffness in $N1$.
-In the first two equations we can see how the weights associated with the arches $B3$ and $B4$ sum up to one;
-this ensures that stiffness is not multiplied whenever a node has two incoming arches. All other arches
+In the first two equations we can see how the weights associated with the arcs $\mathbf{B}_3$ and $\mathbf{B}_4$ sum up to one;
+this ensures that stiffness is not multiplied whenever a node has two incoming arcs. All other arcs
 have a weight of one (that is omitted in the equation for readability).
-This evaluation is based on the heuristic that when multiple arches are connected into a single node,
+This evaluation is based on the heuristic that when multiple arcs are connected into a single node,
 we can approximate the load distribution using the inverse of the distance traversed in the graph.
 This approximation makes sense, as we can expect stiffness to decrease the more the distance increases,
 and therefore if there are two paths from the node where the force is being applied to a specific supporting
-node $B_x$, we can expect the shorter path to ``absorb'' more of the stiffness of the supporting node.
+node, we can expect the shorter path to ``absorb'' more of the stiffness of the supporting node.
 There is one notable exception worth mentioning: the method described here is assuming all beams
 have the same diameter and material (and therefore the same stiffness, assuming the length is the same).
 This is generally true for the type of structure we need to evaluate in the support generation for 3D printing,
@@ -859,7 +859,7 @@ different widths this heuristic should be redefined to take those added factors 
     \mathbf{K}_{N2} &= (\textcolor{red}{\mathbf{K}_{N1}'} \stiffseries_{\mathbf{B}_3} \mathbf{K}_3) \stiffparallel \mathbf{K}_1\\
     \mathbf{K}_{Peq} &= (\mathbf{K}_{N2} \stiffseries_{\mathbf{B}_5} \mathbf{K}_{5}) \stiffparallel (\textcolor{red}{\mathbf{K}_{N1}''} \stiffseries_{\mathbf{B}_4} \mathbf{K}_{4}) \\
     &\text{Or} \\
-    \mathbf{K}_{Peq} &= ((\mathbf{K}_{1} \stiffparallel (\colorbox{cyan!10}{($w_{B3}\mathbf{K}_{2})$} \stiffseries_{\mathbf{B}_3} \mathbf{K}_3) ) \stiffseries_{\mathbf{B}_5} \mathbf{K}_{5}) \stiffparallel (\colorbox{cyan!10}{$(w_{B4}\mathbf{K}_{2})$} \stiffseries_{\mathbf{B}_4} \mathbf{K}_4)
+    \mathbf{K}_{Peq} &= ((\mathbf{K}_{1} \stiffparallel (\colorbox{cyan!10}{$(w_{B3}\mathbf{K}_{2})$} \stiffseries_{\mathbf{B}_3} \mathbf{K}_3) ) \stiffseries_{\mathbf{B}_5} \mathbf{K}_{5}) \stiffparallel (\colorbox{cyan!10}{$(w_{B4}\mathbf{K}_{2})$} \stiffseries_{\mathbf{B}_4} \mathbf{K}_4)
 \end{split}
 \label{for:wdag_eq}
 \end{equation}
@@ -871,16 +871,16 @@ different widths this heuristic should be redefined to take those added factors 
     \Require $G$ is a directed acyclic graph, $\nu_0$ a node in the graph.
     \Ensure $\mathbf{K}_{\nu_0}$ is the local stiffness matrix of $\nu_0$
 
-    \Procedure{WeightOf}{$G, s, d$} \Comment{Compute the weight of the arch $s$(ource) $\rightarrow$ $d$(estination)}
-        \State $d_s \gets \Call{DistanceAt}{G, s, d}$ \Comment{Traveled distance when traversing the arch $s \rightarrow d$}
+    \Procedure{WeightOf}{$G, s, d$} \Comment{Compute the weight of the arc $s$(ource) $\rightarrow$ $d$(estination)}
+        \State $d_s \gets \Call{DistanceAt}{G, s, d}$ \Comment{Traveled distance when traversing the arc $s \rightarrow d$}
         \State $w_s \gets d_s^{-1}$ \Comment{weight is inverse of distance (closer nodes are weighted more)}
         \State $w_{tot} \gets 0$
-        \For{$s' \in \Call{Incoming}{G, d}$} \Comment{Iterate over incoming arches to $d$}
-            \State $d_{s'} \gets \Call{DistanceAt}{G, s', d}$ \Comment{Traveled distance when traversing the arch $s' \rightarrow d$}
+        \For{$s' \in \Call{Incoming}{G, d}$} \Comment{Iterate over incoming arcs to $d$}
+            \State $d_{s'} \gets \Call{DistanceAt}{G, s', d}$ \Comment{Traveled distance when traversing the arc $s' \rightarrow d$}
             \State $w_{s'} \gets d_{s'}^{-1}$
             \State $w_{tot} \gets w_{tot} + w_{s'}$
         \EndFor
-        \State  \Return $w_s / w_{tot}$ \Comment{Return the weight of $s \rightarrow d$ relative to the other arches incoming in $d$}
+        \State  \Return $w_s / w_{tot}$ \Comment{Return the weight of $s \rightarrow d$ relative to the other arcs incoming in $d$}
     \EndProcedure
 
     \Statex
@@ -890,7 +890,7 @@ different widths this heuristic should be redefined to take those added factors 
             \State \Return $\mathcal{M}(\nu)$
         \EndIf
         \State $\mathbf{K}_{\nu} \gets \mathbf{0}_{6 \times 6}$ 
-        \For{$a \in \Call{Outgoing}{G, \nu}$} \Comment{Iterate over outgoing arches from $\nu$}
+        \For{$a \in \Call{Outgoing}{G, \nu}$} \Comment{Iterate over outgoing arcs from $\nu$}
             \State $\mathbf{K}_{a} \gets \Call{EvalStiffness}{G, a.target, \mathcal{M}}$ \Comment{Calculate stiffness of the node $a$ is pointing to}
             \State $w \gets \Call{WeightOf}{G, \nu, a.target}$
             \State $\mathbf{K}_{a}' \gets w\mathbf{K}_{a}$ \Comment{Add the correction factor to $\mathbf{K}_{a}$}
@@ -921,7 +921,7 @@ and the lines inside the for loop are executed at most $n_{beams}$ times for the
 Finally matrix inversion is an $O(1)$ operation, as in this case the matrices have constant size ($6 \times 6$ for 
 three-dimensional frames).
 The time complexity for evaluating an entire frame increases by a factor of $n$ and becomes $O(n^2 \log{n})$;
-this is because the algorithm shown is local, and only calculates the stiffness of a single beam, therefore 
+this is because the algorithm shown is local, and only calculates the stiffness of a single node, therefore 
 it needs to be applied multiple times to calculate the stiffness of an entire structure.
 One key advantage of using local methods w.r.t. global methods is that, assuming we want to know the 
 stiffness while the structure is being built (for the reasons explained in section \ref{sec:stiffness_part_frames})
@@ -931,7 +931,7 @@ evaluate the stiffness of the last node added; the evaluation of a single node s
 the final complexity is the aforementioned $O(n^2 \log{n})$. It is also important to note that, even though the 
 final complexity is $O(n^2 \log{n})$, this is entirely due to the fact that we are using Dijkstra; however,
 the part of the algorithm that propagates the stiffness and does a bunch of matrix multiplications and
-inversions is only $O(o^2)$. This factor should be considered, as for smaller structures the heavy matrix multiplications
+inversions is only $O(n^2)$. This factor should be considered, as for smaller structures the heavy matrix multiplications
 are more likely to be the bottleneck compared to the more efficient Dijkstra algorithm.
 
 \section{Performance Evaluation}
@@ -1042,7 +1042,7 @@ Table \ref{tab:stiff_time_compl_cmp} shows how, in the third scenario,
 where we want to calculate the flexibility matrix of all the nodes in the
 frame, while they are under construction (that is what we need in our evaluation function)
 our proposed approximated algorithm provides a time complexity that
-is lower compared to the state of the art by a factor of $n \log {n}$,
+is lower compared to the state of the art by a factor of $n^2(\log {n})^{-1}$,
 making it the clear winner in this scenario.
 
 

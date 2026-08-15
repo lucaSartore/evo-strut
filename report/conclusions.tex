@@ -42,7 +42,7 @@ Our work presented four key contributions, of which the first two can be conside
 The four contributions are:
 
 \begin{description}
-\item[Monte Carlo stiffness evaluation] (Chapter~\ref{cha:stiffness_algo})
+\item[Approximated stiffness evaluation] (Chapter~\ref{cha:stiffness_algo})
 This algorithm made the entire project viable, as having a proxy for the stiffness
 of the support structure was essential in the reduction of the z-wobble effect (\ref{sec:wobble-test}).
 Algorithms for stiffness and flexibility evaluation of rigid frames already existed, of course,
@@ -155,7 +155,7 @@ which are not excessive, but are a limitation that is worth considering.
 
 \item[More challenging print] Our support structures are more delicate when compared to the ``Tree support''
 or the ``Normal support'' strategies. In our tests we did not experience substantial challenges in printing
-the support structure, however it is possible, if not likely, that on a improperly tuned 3D printer
+the support structure, however it is possible, if not likely, that on an improperly tuned 3D printer
 our support structure would have a significantly higher likelihood of failure compared to the other methods
 we mentioned.
     
@@ -185,7 +185,7 @@ limitations that we think should be addressed before any wider adoption are:
     annoying and time consuming.
     Furthermore, a better integration would include some quality-of-life features that are expected nowadays
     on modern slicers, such as the ability to manually add and remove supports or the use of interface layers
-    (which is a technique that involves printing the last few layers with an higher density, or with a different material
+    (which is a technique that involves printing the last few layers with a higher density, or with a different material
     to ensure the supports are easy to remove).
     \item[Reduction in parameter numbers and ease of use] The current algorithm has 60+ tunable parameters
     that are necessary to make the algorithm work. Luckily we have found that those parameters generalize well
@@ -215,7 +215,7 @@ Fixing those limitations would involve:
     \item Creating a better algorithm for the generation
 of the contact points in order to remove the minor deterioration in quality that we observed when
 using our supports
-    \item Integrate our project into one or more popular slicers,
+    \item Integrating our project into one or more popular slicers,
 in order to reduce the friction for using our system
     \item Simplifying the configuration process by finding some good defaults for the parameters
 and possibly selecting a subset of important parameters that should be exposed to the user,

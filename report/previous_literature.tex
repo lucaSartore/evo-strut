@@ -60,7 +60,7 @@ The authors emphasized how correctly selecting those parameters was essential fo
 
 The paper has also presented two different encoding structures to use in the optimization part (shown in figure \ref{fig:paper_1_encoding}).
 The first strategy was called ``Activation Encoding'', where every beam of the graph was assigned
-a boolean variable, where 0 meant that the node was removed, and 1 meant that the node was kept.
+a boolean variable, where 0 meant that the beam was removed, and 1 meant that the beam was kept.
 The second strategy was called ``Switch Node Encoding'' and essentially assumed every node could only be connected
 to one of the possible downward directions, and the encoded variable simply selected one of the possible ones.
 The authors have shown how this approach drastically reduced the size of the search space, and made the optimizer's
@@ -91,8 +91,8 @@ in section \ref{sec:limitations}, is not really applicable to FDM 3D printing.
 
 This paper was also developed with the idea to apply genetic algorithms to the problem of support structure
 optimization. The key novelty here was the introduction of a multi-objective optimization program.
-While in the previous paper \ref{sec:paper_1} the objective function was limited to minimizing the volume, in this
-paper they focus on minimizing both the volume and the collisions \ref{fig:paper_2_collisions} between the support and the printed object.
+While in the previous paper (section \ref{sec:paper_1}) the objective function was limited to minimizing the volume, in this
+paper they focus on minimizing both the volume and the collisions (figure \ref{fig:paper_2_collisions}) between the support and the printed object.
 Minimizing collisions is essential to ensure that the supports are easy to remove.
 In order to optimize not only a single solution, but the set of Pareto-optimal solutions, the authors used
 the NSGA-II algorithm.
@@ -107,7 +107,7 @@ the NSGA-II algorithm.
 One key novelty of this paper is the use of a dual stage optimization approach. They in fact decided to
 split the optimization into two separate problems. In the first one they find the critical structures, and they then
 proceed to optimize the set of ``contact points'' (i.e. the positions where the support structure will attach to the object).
-This optimization problem is solved, and then they move on to the second stage, in which they use an L-System \ref{fig:paper_2_l_system}
+This optimization problem is solved, and then they move on to the second stage, in which they use an L-System (figure \ref{fig:paper_2_l_system})
 whose parameters are optimized by genetic algorithms to improve the structure of the trees.
 
 
@@ -121,7 +121,7 @@ whose parameters are optimized by genetic algorithms to improve the structure of
 Finally, after a post-processing step that selects one solution out of the evolved solutions,
 a support structure is obtained. In the paper they tested the algorithm against
 a collection of similar software and found that the reduction in use of material was approximately
-40\%, although it is worth noting that they did show any print test.
+40\%, although it is worth noting that they did not show any print test.
 Nevertheless, the results are quite good, and can be seen in figure \ref{fig:paper_2_results}.
 
 \begin{figure}[h]
@@ -146,13 +146,13 @@ The primary options to choose from here were OrcaSlicer \cite{orca_slicer} and C
 However, after a quick test, it became clear that OrcaSlicer's support algorithms are superior
 to Cura's in terms of material use; therefore, they were selected as the key benchmark.
 
-\subsection{``Normal Support'' (OrcasSicer)}
+\subsection{``Normal Support'' (OrcaSlicer)}
 \label{sec:normal_supports}
 
 Normal supports are one of the first examples of auto-generated supports for 3D printing;
 they are nothing special, as they are limited to a uniform wall creating a zig-zag pattern in order
 to reach the critical region.
-Compered to modern algorithms they are considered wasteful;
+Compared to modern algorithms they are considered wasteful.
 Their inefficiency is simply given by the fact that the design is a straight wall that connects the critical
 section at the top to the building plate at the bottom. Other more optimized algorithms try to merge multiple
 critical areas together, in order to generate a single support that is narrower at the bottom, and branches out at the
@@ -193,12 +193,11 @@ independent structures that go up to a certain height.
 One key feature of tree supports that should not be overlooked is the fact that the tree structures
 are thicker at the bottom and they gradually get skinnier at the top. This is essential to ensure that
 the supports can be printed correctly, as having supports that are too skinny at the bottom
-would cause a z-wobble effect \ref{fig:wobble-test}, thus leading to a failure.
+would cause a z-wobble effect (figure \ref{fig:wobble-test}), thus leading to a failure.
 It is also important to note that the tree gets skinnier as it grows in order to save material; this can be done
 due to the fact that when the nozzle is applying force by depositing the filament, the tree itself
 is acting as a lever (with the fulcrum being the plate, and the force being applied where the nozzle is),
-and therefore the closer you are to the plate, the less advantageous the lever becomes, thus reducing
-the amount of stiffness that the tree needs to provide in order to not bend.
+and therefore the bottom part of the tree is subject to a larger force compared to the top part.
 
 
 
@@ -209,7 +208,7 @@ the amount of stiffness that the tree needs to provide in order to not bend.
     \label{fig:tree_supports}
 \end{figure}
 
-One final feature of the tree supports is the way they handle ``multi layer supports'' (defined in \ref{sec:normal_supports}).
+One final feature of the tree supports is the way they handle ``multi layer supports'' (defined in section \ref{sec:normal_supports}).
 As you can see in figure \ref{fig:multi-layer-support} when faced with this circumstance the algorithm tries to find a diagonal
 route that manages to support the critical area without intersecting with the printed object. This feature is quite
 liked by the community as it makes the supports easier to detach, even though it slightly increases the amount of material required
