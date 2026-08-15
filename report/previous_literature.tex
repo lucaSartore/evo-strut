@@ -5,7 +5,7 @@ The idea to reduce the amount of plastic wasted on supports with the use of bett
 generation algorithms is certainly not a new one, and there is a lot of ongoing
 research on the topic. However, most of the research is conducted by companies in
 the space, and by open source developers, with only a fraction of it ending up
-in academic research. For this reason this section is divided into two parts:
+in academic research. For this reason, this section is divided into two parts:
 in the first one we will give an overview of the papers that are adjacent
 to this thesis (namely papers that apply genetic algorithms to the generation
 of supports); in the second section we will take a look at the industry standard
@@ -29,12 +29,12 @@ allow us to properly evaluate the proposed algorithm with some simple comparison
 This paper was the first one to apply genetic algorithms to support structure generation, and did so with a relatively
 straightforward approach. They began by identifying the overhangs (i.e. the zones that required supports)
 (figure \ref{fig:paper_1} part 1), then they used a procedural algorithm to design a grid around the structure
-(figure \ref{fig:paper_1} part 2). In the next step (figure \ref{fig:paper_1} part 3) a pre-processing was applied to remove
+(figure \ref{fig:paper_1} part 2). In the next step (figure \ref{fig:paper_1} part 3), a pre-processing step was applied to remove
 from the structures the beams that could be excluded from the solution ``a priori''. Step 4 followed, where
 a genetic algorithm was used to prune the structure and remove further unnecessary beams; in this step the cost
-function applied was a simple function of the volume of the supports (figure \ref{fig:paper_1} part 4). Finally a simple
+function applied was a simple function of the volume of the supports (figure \ref{fig:paper_1} part 4). Finally, a simple
 post-processing algorithm was applied, in order to further reduce the material used (figure \ref{fig:paper_1} part 5).
-This is done with a series of simple steps such as for example connecting every two beams in series with an individual
+This is done with a series of simple steps such as, for example, connecting every two beams in series with an individual
 beam that will always be the same length or shorter than the sum of the other two.
 
 
@@ -59,7 +59,7 @@ The authors emphasized how correctly selecting those parameters was essential fo
 \end{figure}
 
 The paper has also presented two different encoding structures to use in the optimization part (shown in figure \ref{fig:paper_1_encoding}).
-The first strategy was called ``Activation Encoding'' where every beam of the graph was assigned
+The first strategy was called ``Activation Encoding'', where every beam of the graph was assigned
 a boolean variable, where 0 meant that the node was removed, and 1 meant that the node was kept.
 The second strategy was called ``Switch Node Encoding'' and essentially assumed every node could only be connected
 to one of the possible downward directions, and the encoded variable simply selected one of the possible ones.
@@ -76,13 +76,13 @@ life a lot easier, thus making it faster and more effective.
 
 The paper concluded by testing the algorithm on a variety of meshes, and against a variety of support generation
 algorithms selected from academic papers, and a variety of industry standard tools.
-They showed how their framework managed to reduce the use of material by 10-20\% compared to the previous
+They showed how their framework managed to reduce the use of material by 10--20\% compared to the previous
 best results.
 The paper also showed one real world print made with their algorithm using a Laser Beam Melting (LBM) 3D printer
 (which is a technology conceptually pretty similar to SLS). In conclusion this paper is quite relevant to the
 work conducted in this thesis, as it's the first application of genetic algorithms for support structure optimization.
 However, their work was heavily focused on LBM, and due to a set of factors that we will explain
-in section \ref{sec:limitations} is not really applicable to FDM 3D printing.
+in section \ref{sec:limitations}, is not really applicable to FDM 3D printing.
 
 
 
@@ -92,7 +92,7 @@ in section \ref{sec:limitations} is not really applicable to FDM 3D printing.
 This paper was also developed with the idea to apply genetic algorithms to the problem of support structure
 optimization. The key novelty here was the introduction of a multi-objective optimization program.
 While in the previous paper \ref{sec:paper_1} the objective function was limited to minimizing the volume, in this
-paper they focus on minimizing both the volume and the collisions \ref{fig:paper_2_collisions} among the support and the printed object.
+paper they focus on minimizing both the volume and the collisions \ref{fig:paper_2_collisions} between the support and the printed object.
 Minimizing collisions is essential to ensure that the supports are easy to remove.
 In order to optimize not only a single solution, but the set of Pareto-optimal solutions, the authors used
 the NSGA-II algorithm.
@@ -106,9 +106,9 @@ the NSGA-II algorithm.
 
 One key novelty of this paper is the use of a dual stage optimization approach. They in fact decided to
 split the optimization into two separate problems. In the first one they find the critical structures, and they then
-proceed to optimize the set of ``contact points'' (i.e. the position where the support structure will attach to the object).
-This optimization problem is solved, and then they move on to the second stage, in which they used an L-System \ref{fig:paper_2_l_system}
-whose parameters were optimized by genetic algorithms to optimize the structure of the trees.
+proceed to optimize the set of ``contact points'' (i.e. the positions where the support structure will attach to the object).
+This optimization problem is solved, and then they move on to the second stage, in which they use an L-System \ref{fig:paper_2_l_system}
+whose parameters are optimized by genetic algorithms to optimize the structure of the trees.
 
 
 \begin{figure}[h]
@@ -136,15 +136,15 @@ Nevertheless, the results are quite good, and can be seen in figure \ref{fig:pap
 
 
 The academic literature that was reviewed in the previous section is primarily geared towards
-industrial settings, and is therefore more focused on SLS technologies (or similar), however
+industrial settings, and is therefore more focused on SLS technologies (or similar); however,
 this thesis is more centered around FDM technologies, and is therefore trying to solve a set
 of problems that is slightly different with respect to the papers that we just reviewed.
 For this reason a second class of ``state of the art'' solutions is presented here.
 This is a collection of support generation algorithms taken from the most used slicers for FDM printers
 on the market.
 The primary options to choose from here were OrcaSlicer \cite{orca_slicer} and Cura \cite{cura}.
-However, after a quick test it became clear that OrcaSlicer's support algorithms are superior
-to Cura's in terms of material use, therefore they were selected as the key benchmark.
+However, after a quick test, it became clear that OrcaSlicer's support algorithms are superior
+to Cura's in terms of material use; therefore, they were selected as the key benchmark.
 
 \subsection{``Normal Support'' (Orca slicer)}
 \label{sec:normal_supports}
@@ -186,7 +186,7 @@ an alpha release of Cura in late 2022 \cite{tree_supports}.
 Ever since then they have only improved, and they have become beloved by the community.
 Their design is incredibly simple and yet effective: critical regions that are close together
 are merged into a single branch that moves towards the plate, and gradually merges with other branches.
-This is ensuring that the taller a critical area is, the more likely it is that its support
+This ensures that the taller a critical area is, the more likely it is that its support
 will merge with others while moving towards the plate. This has proven very effective in reducing
 the amount of material, as every time two branches are merged we remove the need to have two
 independent structures that go up to a certain height.
@@ -195,7 +195,7 @@ One key feature of tree supports that should not be overlooked is the fact that 
 are thicker at the bottom and they gradually get skinnier at the top. This is essential to ensure that
 the supports can be printed correctly, as having supports that are too skinny at the bottom
 would cause a z-wobble effect \ref{fig:wobble-test}, thus leading to a failure.
-It is also important to note that the tree gets skinnier as it grows in order to save material, this can be done
+It is also important to note that the tree gets skinnier as it grows in order to save material; this can be done
 due to the fact that when the nozzle is applying force by depositing the filament, the tree itself
 is acting as a lever (with the fulcrum being the plate, and the force being applied where the nozzle is),
 and therefore the closer you are to the nozzle, the less advantageous the lever becomes, thus reducing

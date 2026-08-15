@@ -19,8 +19,8 @@ RepRap (Replicating Rapid Prototyper) \cite{reprap} was a project developed at t
 to develop an open source 3D printer that was cheap to produce.
 The project was widely regarded as a success, and managed to build approximately 4500 machines in two and a half years.
 
-In 2012 Prusa Research was founded and the company started selling its famous i3 model (\ref{fig:prusa_i3}) (that was based on the RepRap project)
-at a starting price of approximately €600. Since then consumer 3D printers have only become better and cheaper thanks to companies
+In 2012 Prusa Research was founded and the company started selling its famous i3 model (figure \ref{fig:prusa_i3}) (that was based on the RepRap project)
+at a starting price of approximately €600. Since then, consumer 3D printers have only become better and cheaper thanks to companies
 such as Creality, Elegoo and Bambu Lab.
 
 
@@ -72,8 +72,8 @@ until the final object is created.
 
 FDM is currently the most common 3D printing technique for ``hobbyists'', as it's the cheapest option available and
 has good print dimensions (with most 3D printers having a build volume of approximately 250x250x250mm).
-Furthermore FDM printing supports a wide variety of materials; some of them (like PLA) are cheap
-and easy to print, others like ABS are more durable. Then there are a series of exotic materials that offer
+Furthermore, FDM printing supports a wide variety of materials; some of them (like PLA) are cheap
+and easy to print, others like ABS are more durable. Then there is a series of exotic materials that offer
 specific features, for example TPU is a material that is flexible and allows printing soft objects, while PVA
 is a material soluble in water and is often used to print supports that can be removed simply by submerging
 the printed object in water.
@@ -99,17 +99,17 @@ to precisely trace the cross-section of an object into a vat of liquid photopoly
 
 The greatest advantage of resin 3D printing is the precision of the model obtained. While with FDM all material must be
 deposited using a nozzle that physically moves in 3D space, resin 3D printers simply need to shine a bit of light in the portion
-of the mesh that they want to harden; this can allow an extremely high precision.
+of the mesh that they want to harden; this can allow for an extremely high precision.
 At the time of writing, a striking example of precision in the world of (consumer) resin 3D printers is the Elegoo Saturn 4 Ultra 16K.
-As the name suggests, this printer leverages a 16K screen on a plate size that is roughly 210 x 120\SI{}{\milli\meter}; this implies a pixel size that is in
+As the name suggests, this printer leverages a 16K screen on a plate size that is roughly 210 x 120 \SI{}{\milli\metre}; this implies a pixel size that is in
 the order of 20 \SI{}{\micro\metre}. While the size of the smallest details that it is possible to print is going to be a bit higher than that
 due to the light being emitted in more directions, the resolution provided by those kinds of printers is still much greater compared
 to FDM printers.
-However, one key disadvantage of this technology is that when comparing a resin 3D printer with a similarly priced FDM 3D printer
+However, one key disadvantage of this technology is that when comparing a resin 3D printer with a similarly priced FDM 3D printer,
 the build volume is almost always going to be smaller; furthermore, the process of printing with photosensitive resin is
 a bit more complicated than FDM, and requires periodically cleaning the resin tank of the printer, and often involves some post-processing
 steps to further harden the printed object.
-The third and final disadvantage of SLA is that generally speaking the strength of the material printed usually lags behind
+The third and final disadvantage of SLA is that, generally speaking, the strength of the material printed usually lags behind
 the strength of a similar object printed using FDM.
 
 In terms of adoption, stereolithography lags a bit behind FDM 3D printers. This is especially true in the consumer
@@ -139,7 +139,7 @@ This factor relegates them almost exclusively to industrial settings.
 In terms of features and print quality, however, SLS is arguably the best option out of the ones discussed so far;
 the precision is not as good as SLA, but is still a lot better than FDM, while the strength of the printed
 objects is better than both previous technologies.
-In terms of material compatibility the most frequently used powders are made of nylon or polyamide,
+In terms of material compatibility, the most frequently used powders are made of nylon or polyamide,
 however some specialized printers can also work with metal-based powders, allowing the printing of objects
 that are unmatched in terms of strength.
 
@@ -184,7 +184,7 @@ has some ``floating regions''; this is an extreme case when a specific region of
 attached to the plate only thanks to a section of the model that is higher than the floating region itself.
 This means (as we can see in figure \ref{fig:floating_reg}) that, since the printer is constructing
 the object layer by layer, starting from the bottom, and moving up to the top, there is a moment
-during the print, where the floating region is not connected to the plate in any way, and is therefore
+during the print where the floating region is not connected to the plate in any way, and is therefore
 ``floating''. This scenario of course requires supports in order to be printed successfully.
 
 
@@ -197,7 +197,7 @@ during the print, where the floating region is not connected to the plate in any
 \end{figure}
 
 Even though the example made here is primarily centered around FDM 3D printers, the same thing also applies
-to SLA. On the other hand SLS is a bit special, as the non-solidified powder can function as a support,
+to SLA. On the other hand, SLS is a bit special, as the non-solidified powder can function as a support,
 and reduce the need to print supports (even though sometimes a few supports are still required
 to reduce the risk of deformation, or to prevent the melted material from falling inside the powder
 below before it solidifies).
@@ -212,7 +212,7 @@ below before it solidifies).
 
 In conclusion, supports are often mandatory to print some specific structures
 that may contain overhanging angles that are too steep, or some floating regions; however,
-in the case of some complex structures, such as the one shown in figure \ref{fig:support_dual_color}
+in the case of some complex structures, such as the one shown in figure \ref{fig:support_dual_color},
 the amount of material used to print the supports can be a significant portion of the total
 bill of materials necessary for a print.
 Since the recyclability of the supports ranges from hard to impossible, depending on the
@@ -229,7 +229,7 @@ the printing process to the object that is being produced is key for the underst
 thesis.
 Generally speaking, 3D printing processes tend to apply some horizontal forces to the object that
 is being printed. The intensity of those forces depends on many factors (printer, material,
-various parameters etc.) but the most important of all is the underlying printing technology.
+various parameters, etc.), but the most important of all is the underlying printing technology.
 Generally speaking, SLA is the best in this regard, as the printing process simply involves
 shining some light on the resin material, and this does not create any meaningful force.
 SLS is slightly worse in this regard, as even though it is also based on a laser (and therefore no
@@ -237,7 +237,7 @@ force is applied during the sintering process), the technology relies on a rolle
 the powder at every layer, and this can apply some tangential force.
 FDM is where the tangential forces become more problematic, as the melted filament that is being
 extruded needs to be ``dragged'' by the structure in order to sediment correctly.
-There are many techniques that can be used to reduce the amount of force applied, some of the most
+There are many techniques that can be used to reduce the amount of force applied; some of the most
 common ones are reducing the printing speed, or introducing a z-hop (i.e. telling the printer to
 raise the nozzle by a fraction of a \SI{}{\milli\metre} before moving to another region).
 
@@ -253,7 +253,7 @@ In figure \ref{fig:wobble-test} you can see a cylindrical beam with a diameter o
 3 \SI{}{\milli\metre} and a height of approximately 10 \SI{}{\centi\metre} that is being printed,
 and you can clearly see the bending effect caused by the force applied by the nozzle.
 The final result is a print that progressively deteriorates in quality as the height increases,
-due to the wobble effect becomes more pronounced.
+due to the wobble effect becoming more pronounced.
 Those tests are executed on an FDM printer, which is the worst case scenario for the wobble test;
 it goes without saying that the effect would have been a lot less pronounced on an SLA printer.
 

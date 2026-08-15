@@ -4,7 +4,7 @@
 \addcontentsline{toc}{chapter}{Abstract} % add to index
 
 
-The additive manufacturing technology (i.e. 3D printing) has gained substantial popularity in recent years,
+Additive manufacturing technology (i.e. 3D printing) has gained substantial popularity in recent years,
 both in industrial settings (where technologies such as SLA and SLS dominate)
 and in the consumer space (where FDM or Fused Deposition Modelling printers are
 by far the most common option due to the lower price).
@@ -55,11 +55,11 @@ while FDM is left unaddressed by the current literature.
 
 Our work's aim is to fill the void in the literature by creating a genetic-algorithm
 based support structure optimizer that is specifically designed with FDM 3D printers
-in mind. in order to achieve this objective, we began by selecting a ``topology'' of the support
-structure. All of the previous literature had used tree-like structures with a fixed
-size beam; this is fine for SLA and SLS, but when testing this topology on an FDM printer
+in mind. In order to achieve this objective, we began by selecting a ``topology'' of the support
+structure. All of the previous literature had used tree-like structures with a fixed-size
+beam; this is fine for SLA and SLS, but when testing this topology on an FDM printer
 we found out that the tree wasn't stiff enough, and resulted in a failed print.
-Meanwhile open source FDM 3D printing software is also using tree topologies,
+Meanwhile, open-source FDM 3D printing software is also using tree topologies,
 but the thickness of the beams is greater at the bottom, making the entire structure
 stable (but consuming more material).
 In our algorithm we decided to use a rigid frame topology (where, unlike in a tree,
@@ -88,12 +88,12 @@ The results were validated in the real world with real print tests, and all the
 models were printed successfully.
 
 Our current approach has a few downsides, including longer printing time
-and a slightly worse print quality (which are caused by the design of
+and slightly worse print quality (which are caused by the design of
 the contact points, and we believe can be addressed in future work),
 but is overall a substantial improvement over the current state of the art.
 We believe that with a few refinements and ease-of-use improvements
 our algorithm could save a measurable amount of plastic if
-it managed to get a wide adoption.
+it managed to get wide adoption.
 
 
 

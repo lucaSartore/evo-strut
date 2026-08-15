@@ -17,15 +17,15 @@ common in the consumer space).
 
 In order to apply genetic algorithms to FDM 3D printing support structure 
 generation, two main challenges were solved: the first one was the evaluation 
-of stiffness in a time efficient manner (which we tackled in chapter 
+of stiffness in a time-efficient manner (which we tackled in chapter
 \ref{cha:stiffness_algo}), and the second one was the implementation of an 
 algorithm that was able to generate and optimize a wide variety of support structures (and 
 not only simple trees).
 
 In the results chapter (\ref{cha:results}) we have shown how our algorithm is 
-indeed able to save a significant amount of material compared to state of the 
-art methods, with a few minor downsides. Some of these, such as the contact 
-points structure being inferior to the state of the art one, are temporary and 
+indeed able to save a significant amount of material compared to state-of-the-art
+methods, with a few minor downsides. Some of these, such as the contact
+points structure being inferior to the state-of-the-art one, are temporary and
 could be improved in future works, while others, such as the time necessary 
 for the optimization or the longer print times, are structural to the method 
 itself and are probably not improvable by as much.
@@ -45,12 +45,12 @@ The four contributions are:
 \item[Monte Carlo stiffness evaluation] (Chapter~\ref{cha:stiffness_algo})
 This algorithm made the entire project viable, as having a proxy for the stiffness
 of the support structure was essential in the reduction of the z-wobble effect (\ref{sec:wobble-test}).
-Algorithms for stiffness and flexibility evaluation of rigid frames already existed of course,
-however, as we shown in section \ref{sec:stiff_speed_cmp}, using those would have resulted
+Algorithms for stiffness and flexibility evaluation of rigid frames already existed, of course,
+however, as we showed in section \ref{sec:stiff_speed_cmp}, using those would have resulted
 in our optimization algorithm taking more than one day to execute, which is obviously not worth
-doing to save 10-30 grams of plastic. By contrast, the algorithm we developed for stiffness
+doing to save 10--30 grams of plastic. By contrast, the algorithm we developed for stiffness
 evaluation reduces the computational time from over one day to a few minutes, making the prospect
-of saving those 10-30 grams a lot more enticing.
+of saving those 10--30 grams a lot more enticing.
 
 \item[Non-tree support structure optimization] (Section~\ref{sec:sup_struct_opt})
 The previous methodologies for support structure optimization adopted
@@ -61,21 +61,21 @@ are unstable for supporting tall regions in the context of FDM 3D printing,
 as they tend to flex too much and potentially detach from the plate.
 For this reason we developed a novel optimization algorithm that was able
 to optimize a wider variety of support topologies. This wider variety
-of support topologies was used to produce stiffer structures, that were indeed
+of support topologies was used to produce stiffer structures that were indeed
 able to reach and support taller critical areas.
 
 \item[Improved critical/floating region detection] (Sections~\ref{sec:crit_detection}, \ref{sec:floating_regions_detection})
 Our proposed solution paid special attention to floating regions, and to the ``propagation'' of critical
 areas, resulting in a support structure generation that was more aware of what regions required to be simply
 supported, and what regions required to be supported and to be provided with some stiffness.
-Our procedure was proven essential with the ``Dragon'' print test, where using ``stock'' state of the
-art methods resulted in several failed prints forcing us to manually add some supports; meanwhile
+Our procedure was proven essential with the ``Dragon'' print test, where using ``stock'' state-of-the-art
+methods resulted in several failed prints, forcing us to manually add some supports; meanwhile
 our method was able to generate a feasible support structure without user input.
 
 
 \item[Contact Points Grouping using CPPNs] (Section~\ref{sec:contact_points_grouping})
 The grouping of the contact points is not strictly essential, however it is required
-for the divide and conquer approach we used to speed up the support structure optimization.
+for the divide-and-conquer approach we used to speed up the support structure optimization.
 Our approach for the grouping of nodes was based on a Compositional Pattern Producing
 Network (CPPN) which, although it is not a novel idea, can be considered novel in the specific
 context of support structure optimization.
@@ -87,9 +87,9 @@ context of support structure optimization.
 
 Our work has shown that there are still significant improvements that could be made 
 to support structure optimization algorithms for FDM 3D printing. In our implementation
-we allowed for a more flexible topology of the support; specifically we used a rigid frame,
+we allowed for a more flexible topology of the support; specifically, we used a rigid frame,
 while all previous literature we considered was limited to tree-like structures.
-This allowed maintaining sufficiently stiff structures without the need of increasing
+This allowed maintaining sufficiently stiff structures without the need to increase
 the diameter of the beams (and thus consuming more material).
 This need for a stiffer structure stemmed from the fact that our work is focused 
 on FDM 3D printing, where the nozzle is applying some significant forces to the supports
@@ -112,19 +112,19 @@ as their code was not made publicly available due to some agreement with industr
 and even if we had had access to the code, the resulting supports would have probably been
 unprintable, as they were designed for SLS/SLA 3D printers.
 The reduction in material consumption that we have achieved is significant;
-even acknowledging that the 43\% of reduction only translates to 10-30 grams 
-of material saved per print, the amount of 3D printers in circulation is exorbitant,
+even acknowledging that the 43\% of reduction only translates to 10--30 grams
+of material saved per print, the number of 3D printers in circulation is exorbitant,
 and is rapidly increasing, and a few grams saved every print would still result in
 a pretty sizable reduction in plastic waste if our system (or a similar one)
 was adopted at scale.
 
 
-Our approach is not without downsides, in particular it requires higher computational
-costs in the beginning, and slightly higher print times, however we think both of these 
-factors can be addressed; indeed the computational costs could be amortized, as most 3D models
+Our approach is not without downsides; in particular, it requires higher computational
+costs in the beginning, and slightly higher print times. However, we think both of these
+factors can be addressed; indeed, the computational costs could be amortized, as most 3D models
 are designed once and printed many times, meaning that we could run our algorithm only once, and then
-re-use the supports multiple times. The slower printing speeds are harder to address, however 
-we should note this factor was not considered at all in the cost function, meaning that
+re-use the supports multiple times. The slower printing speeds are harder to address; however,
+we should note that this factor was not considered at all in the cost function, meaning that
 some marginal improvements could be achieved simply by correctly codifying the additional time.
 Overall we think that this thesis has proven the potential that our approach has,
 and we believe that it could gain wider adoption once a few key limitations have been addressed.
@@ -133,12 +133,12 @@ how they could be mitigated in future works.
 
 \section{Limitations}
 
-Our work has some limitations and downsides when compared to state of the art support 
-structure generation methods. Generally speaking we can divide those limitations 
+Our work has some limitations and downsides when compared to state-of-the-art support
+structure generation methods. Generally speaking, we can divide those limitations
 into two categories: ``structural'' limitations and ``implementation specific'' limitations.
-The first category of limitations is, as the name implies, structural to the proposed solution
-and are tradeoffs that will probably remain, regardless of how much effort is put in 
-improving our work. On the other hand, the second class of limitation is, as the name implies,
+The first category of limitations is, as the name implies, structural to the proposed solution,
+and they are tradeoffs that will probably remain, regardless of how much effort is put into
+improving our work. On the other hand, the second class of limitations is, as the name implies,
 implementation specific, and can therefore improve with potential future work.
 
 \subsection{Structural Limitations}
@@ -155,7 +155,7 @@ which are not excessive, but are a limitation that is worth considering.
 
 \item [More challenging print] Our support structures are more delicate when compared to the ``Tree support''
 or the ``Normal support'' strategies. In our tests we did not experience substantial challenges in printing
-the support structure, however it is possible if not likely that on a not properly tuned 3D printer
+the support structure, however it is possible, if not likely, that on a not properly tuned 3D printer
 our support structure would have a significantly higher likelihood of failure compared to the other methods
 we mentioned.
     
@@ -173,7 +173,7 @@ limitations that we think should be addressed before any wider adoption are:
 \begin{description}
     \item[Contact Points Topology] Our work's primary focus was on the support structure optimization, 
     however the way that contact points are selected, and especially their structure/topology is another important
-    part in support structure generation. This part of the algorithm is not as important in the context of material 
+    part of support structure generation. This part of the algorithm is not as important in the context of material
     reduction, however it is quite important for the final quality of the printed output.
     As we have seen in section \ref{sec:print_quality}, there is a small but noticeable difference in quality
     between the support generated by our algorithm, and the one generated by the ``Tree Supports''.
@@ -181,16 +181,16 @@ limitations that we think should be addressed before any wider adoption are:
     into the slicer software together with the mesh of the object we want to print. This approach is 
     advantageous in the context of a research project, as it's easy to implement, and is portable across
     multiple slicing software, however in a deployment ``at scale'' it would be ideal to have a more in depth
-    integration with a specific slicer, in order to remove the need for multiple passages, that are both
+    integration with a specific slicer, in order to remove the need for multiple passages, which are both
     annoying and time consuming.
-    Furthermore a better integration would include some creature comfort features that are expected nowadays
+    Furthermore, a better integration would include some creature comfort features that are expected nowadays
     on modern slicers, such as the ability to manually add and remove supports or the use of interface layers
     (which is a technique that involves printing the last few layers with a lower density, or with a different material
     to ensure the supports are easy to remove).
     \item[Reduction in parameter numbers and ease of use] The current algorithm has 60+ tunable parameters
     that are necessary to make the algorithm work. Luckily we have found that those parameters generalize well
-    (in other words we have used the same parameters for all three of the models we tested); however
-    a simplification process where only the more important parameters are exposed, and a good default is found 
+    (in other words, we have used the same parameters for all three of the models we tested); however,
+    a simplification process where only the more important parameters are exposed, and a good default is found
     for all the others would be necessary to make this algorithm user-friendly. This task is not necessarily
     hard, but it does require a bit of experimentation, ideally on different printers, which makes it 
     a bit resource intensive.
@@ -200,7 +200,7 @@ limitations that we think should be addressed before any wider adoption are:
 \label{sec:future_work}
 
 In terms of future work for improving or expanding the capabilities of our algorithm
-we see two broad categories of potential follow ups. We can call the first one 
+we see two broad categories of potential follow-ups. We can call the first one
 ``Refinement works'' and this includes all the few improvements that could 
 be made to our algorithm with the aim of making it production ready, and
 distributing it to a large user-base; the second one can be called ``Expansion works''
@@ -212,7 +212,7 @@ Refining the work for a wide scale deployment mostly involves fixing
 the implementation-specific limitations we listed in section \ref{sec:imp_spec_limit}.
 Fixing those limitations would involve: creating a better algorithm for the generation
 of the contact points in order to remove the minor deterioration in quality that we observed when
-using our supports; Then we would need to integrate our project into one or more popular slicers,
+using our supports; then we would need to integrate our project into one or more popular slicers,
 in order to reduce the friction for using our system; and finally the last step would involve
 simplifying the configuration process by finding some good defaults for the parameters
 and possibly selecting a subset of important parameters that should be exposed to the user,
@@ -240,11 +240,11 @@ potential future improvements of our work, those are:
     In our current work, the rigid frame we are constructing is made of beams that all have the same
     width. This however is not a fundamental constraint in 3D printing, indeed we could construct
     structures with an arbitrary beam thickness. For this reason we are proposing that, as part of future
-    improvements the width of the beam could be an optimized parameter, rather than a simple constant
+    improvements, the width of the beam could be an optimized parameter, rather than a simple constant
     defined by the user. This would imply that the algorithm could decide whether it is more advantageous
     to build a support using many smaller beams, or a single larger beam.
     This improvement would go hand in hand with the previous one we listed (the costification of the print time)
-    as generally speaking a single thicker beam is going to be printed faster compared to a set of 
+    as, generally speaking, a single thicker beam is going to be printed faster compared to a set of
     smaller beams, meaning that the ability to decide beam width would potentially result 
     in greater time savings when compared to the costification of the print time. 
 \end{description}
@@ -266,8 +266,8 @@ slicers, hopefully resulting in a measurable reduction in plastic consumption.
 
 \subsection*{AI Usage Disclaimer}
 
-As required by the university, this section will disclaim any AI usage for this thesis.
-AI has been used through the coding process, in limited scope mostly as autocompletion
+As required by the university, this section will disclose any AI usage for this thesis.
+AI has been used throughout the coding process, in limited scope mostly as autocompletion
 and for quick and simple refactors.
 Only a few isolated modules have been primarily written by AI (with human revision)
 and those mostly include self-contained modules such as the convex-hull 
