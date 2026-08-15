@@ -9,7 +9,7 @@ the limitations and listing some potential future improvements.
 \section{Summary}
 
 In our work we developed a novel support structure 
-optimization using genetic algorithms. As we explained in the motivations 
+optimization algorithm using genetic algorithms. As we explained in the motivations 
 (\ref{cha:motivations}), some similar algorithms exist in the literature, but 
 they were primarily focused on industrial 3D printing technologies such as SLS, 
 whereas our algorithm is designed explicitly for FDM 3D printing (which is more 
@@ -149,13 +149,13 @@ by tree supports (\ref{sec:tree_support}).
 The two key limitations are:
 \begin{description}
 
-\item [Higher printing time] The rigid frame topology requires the nozzle to do a lot more travel
+\item[Higher printing time] The rigid frame topology requires the nozzle to do a lot more travel
 in order to deposit the material in the desired places. This of course results in higher print times,
 which are not excessive, but are a limitation that is worth considering.
 
-\item [More challenging print] Our support structures are more delicate when compared to the ``Tree support''
+\item[More challenging print] Our support structures are more delicate when compared to the ``Tree support''
 or the ``Normal support'' strategies. In our tests we did not experience substantial challenges in printing
-the support structure, however it is possible, if not likely, that on a not properly tuned 3D printer
+the support structure, however it is possible, if not likely, that on a improperly tuned 3D printer
 our support structure would have a significantly higher likelihood of failure compared to the other methods
 we mentioned.
     
@@ -180,12 +180,12 @@ limitations that we think should be addressed before any wider adoption are:
     \item[Better Integration with Slicers] Our algorithm simply outputs a 3D mesh that is then imported
     into the slicer software together with the mesh of the object we want to print. This approach is 
     advantageous in the context of a research project, as it's easy to implement, and is portable across
-    multiple slicing software, however in a deployment ``at scale'' it would be ideal to have a more in depth
+    multiple slicing programs, however in a deployment ``at scale'' it would be ideal to have a more in depth
     integration with a specific slicer, in order to remove the need for multiple passages, which are both
     annoying and time consuming.
-    Furthermore, a better integration would include some creature comfort features that are expected nowadays
+    Furthermore, a better integration would include some quality-of-life features that are expected nowadays
     on modern slicers, such as the ability to manually add and remove supports or the use of interface layers
-    (which is a technique that involves printing the last few layers with a lower density, or with a different material
+    (which is a technique that involves printing the last few layers with an higher density, or with a different material
     to ensure the supports are easy to remove).
     \item[Reduction in parameter numbers and ease of use] The current algorithm has 60+ tunable parameters
     that are necessary to make the algorithm work. Luckily we have found that those parameters generalize well
@@ -201,7 +201,7 @@ limitations that we think should be addressed before any wider adoption are:
 
 In terms of future work for improving or expanding the capabilities of our algorithm
 we see two broad categories of potential follow-ups. We can call the first one
-``Refinement works'' and this includes all the few improvements that could 
+``Refinement works'' and this includes all the improvements that could 
 be made to our algorithm with the aim of making it production ready, and
 distributing it to a large user-base; the second one can be called ``Expansion works''
 and contains some ideas that were not tested in this thesis, but could provide interesting
@@ -210,13 +210,17 @@ new functionalities/capabilities to our algorithm.
 \subsection{Refinement Works}
 Refining the work for a wide scale deployment mostly involves fixing
 the implementation-specific limitations we listed in section \ref{sec:imp_spec_limit}.
-Fixing those limitations would involve: creating a better algorithm for the generation
+Fixing those limitations would involve:
+\begin{itemize}
+    \item Creating a better algorithm for the generation
 of the contact points in order to remove the minor deterioration in quality that we observed when
-using our supports; then we would need to integrate our project into one or more popular slicers,
-in order to reduce the friction for using our system; and finally the last step would involve
-simplifying the configuration process by finding some good defaults for the parameters
+using our supports
+    \item Integrate our project into one or more popular slicers,
+in order to reduce the friction for using our system
+    \item Simplifying the configuration process by finding some good defaults for the parameters
 and possibly selecting a subset of important parameters that should be exposed to the user,
 while leaving more complex and less important ones on a separate ``advanced'' configuration layer.
+\end{itemize} 
 
 \subsection{Expansion Works}
 
@@ -228,12 +232,12 @@ In this respect there are two key lines of work that we would like to highlight 
 potential future improvements of our work, those are:
 
 \begin{description}
-    \item[Costifying Print Time] 
+    \item[Introducing Print Time Costs] 
     In the results chapter (\ref{cha:results}) we have noted that our algorithm produces supports that
     on average take slightly longer to print. This primarily stems from the fact that the ``rigid frame''
     support topology requires that the nozzle move around more to deposit the material, however this does
     not mean that this print time can never improve; indeed our current algorithm is not properly
-    costifying the print time, however we can imagine that, as part of a future improvement, a new component
+    considering print times in the cost function, however we can imagine that, as part of a future improvement, a new component
     could be added to the cost function, that properly penalizes structures that take too long to print,
     therefore reducing this downside.
     \item[Extending to Variable Beam Width] 
@@ -243,10 +247,10 @@ potential future improvements of our work, those are:
     improvements, the width of the beam could be an optimized parameter, rather than a simple constant
     defined by the user. This would imply that the algorithm could decide whether it is more advantageous
     to build a support using many smaller beams, or a single larger beam.
-    This improvement would go hand in hand with the previous one we listed (the costification of the print time)
+    This improvement would go hand in hand with the previous one we listed (the introduction of print time costs)
     as, generally speaking, a single thicker beam is going to be printed faster compared to a set of
-    smaller beams, meaning that the ability to decide beam width would potentially result 
-    in greater time savings when compared to the costification of the print time. 
+    smaller beams, meaning that the ability to decide beam width would allow the model
+    to produce structures that are faster to print.
 \end{description}
 
 \subsection*{Closing Remarks}

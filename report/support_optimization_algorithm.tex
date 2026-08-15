@@ -89,7 +89,7 @@ and are roughly equilateral.
 \label{sec:crit_detection}
 
 The first step in the generation of automatic supports is of course knowing what zones must be supported.
-Generally speaking the need for a support is usually achieved with a simple check of the 
+Generally speaking detecting the need for a support is usually achieved with a simple check of the 
 overhanging angle (as we already saw in the introduction \ref{sec:role_of_sup}).
 One of the most basic techniques for criticality detection is to simply take the angle formed by the 
 surface normal of a triangle, and a vector facing downward, and compare that to the threshold of what
@@ -115,7 +115,7 @@ The second key idea that our solution brings to the table is the concept of ``cr
 This concept represents the fact that criticality is not an arbitrary value assigned to every single
 triangle, regardless of the neighbors; instead the criticality is ``propagated'' from the bottom to the
 top. This means that criticality increases every time the object has an overhanging angle that is too high,
-and decreases every time the criticality angle is too low. This is important because otherwise, a single
+and decreases every time the overhanging angle is too low. This is important because otherwise, a single
 triangle inside the mesh with a sufficiently low overhanging angle would make an entire zone
 less critical, or in the same way a single support could singlehandedly make a large critical area
 no longer critical. 
@@ -177,8 +177,8 @@ more realistic critical regions when some parts of the model are ``floating''.
         \EndIf
         \State $c \gets $ CRITICALITY\_MAX \Comment{Initialize criticality at max value}
         \For{$a \in \Call{AdjacentNodes}{G, n$}} \Comment{Iterate over adjacent nodes}
-            \If {$\Call{LayerOf} {a} <= \Call{LayerOf}{n} \land a \in M$}
-                \State $c_a \gets M(a) + \Call{PropagationCost}{a, n}$
+            \If {$\Call{LayerOf} {a} <= \Call{LayerOf}{n} \land a \in \mathcal{M}$}
+                \State $c_a \gets \mathcal{M}(a) + \Call{PropagationCost}{a, n}$
                 \State $c \gets \Call{Min}{c, c_a}$
             \EndIf
         \EndFor
@@ -349,8 +349,8 @@ be less than ideal from a performance standpoint. In fact, generally speaking in
 optimization problem it is more efficient to optimize many small problems rather than
 a single larger one. Furthermore, due to the way we are defining our cost function (that we will
 explain more in section \ref{sec:contact_points_opt_cf}) the cost of one set
-of connected critical nodes is independent from the cost of another equivalent set.
-With those two facts in mind, it is easy to see why grouping the contact points
+of connected critical regions is independent from the cost of another equivalent set.
+With those two facts in mind, it is easy to see why grouping the contact regions
 based on proximity, and optimizing each of them as a separate problem would be convenient
 from a performance standpoint, while not impacting the output of the optimizer.
 For this reason we made the choice of inserting the ``Criticality Grouping'' stage
@@ -375,7 +375,7 @@ Algorithm \ref{alg:crit_grouping} shows the procedure of how grouping is execute
             \State $V(n) \gets true$
             \State $R \gets \Call{Append}{R, n}$
             \For{$a \in \Call{Adjacent}{G, n}$} \Comment{Explore adjacent neighbors}
-                \If{ $n \in C \land \lnot V(a)$ } \Comment{Filter by non visited, and critical nodes}
+                \If{ $a \in C \land \lnot V(a)$ } \Comment{Filter by non visited, and critical nodes}
                     \State \Call{Push}{Q, a}
                 \EndIf
             \EndFor
@@ -394,8 +394,8 @@ Algorithm \ref{alg:crit_grouping} shows the procedure of how grouping is execute
             \If{$V(s)$}
                 \State \textbf{continue} \Comment{Already part of a component}
             \EndIf
-            \State $C \gets \Call{Explore}{G, C, s, V}$ \Comment{Exploring graph, while only moving ``upward''}
-            \State $R \gets \Call{AddGroup}{R, C}$
+            \State $R' \gets \Call{Explore}{G, C, s, V}$ \Comment{Exploring graph, while only moving ``upward''}
+            \State $R \gets \Call{AddGroup}{R, R'}$
         \EndFor
         \State \Return $R$
     \EndProcedure
@@ -480,7 +480,7 @@ with every node having a ``radius'' associated with it (allowing the algorithm
 a bit of flexibility in deciding whether it is more advantageous to use one large
 support or many smaller supports).
 From this gene it is possible to derive the set of supported nodes;
-this is done by drawing a circle around the node, and selecting the supports
+this is done by drawing a circle around the node, and selecting the nodes
 that are on the perimeter (the use of the perimeter rather than all the circle's area
 is due to the way supports are generated. Since they are ``empty'' cones, they
 do not provide any support in the center of the cone's base, but only on the perimeter).
@@ -547,8 +547,6 @@ For this reason the second part of the cost is simply derived from a unit cost
 for every support placed, plus a linear cost proportional to the area of the support
 circle.
 
-%note to self: might add equation here if necessary
-
 
 \subsection{Mutations}
 \label{sec:contact_points_opt_mut}
@@ -582,7 +580,7 @@ Figure \ref{fig:crossover_cpo} shows this process in action with a two dimension
 of a set of points.
 The generation of the random plane is done by selecting three random points from one parent 
 ($P_A$, $P_B$, and $P_{\perp}$) and then selecting the plane $\pi$ such that the first two points
-are included in the plane, and such that the plane is perpendicular to the plane $\pi*$ that includes
+are included in the plane, and such that the plane is perpendicular to the plane $\pi^*$ that includes
 all three points.
 Algorithm \ref{alg:plane_construction} shows a simple procedure to construct such a plane.
 The reason this plane is constructed in this specific manner (rather than simply constructing
@@ -610,7 +608,7 @@ ignores the crossover and returns a gene identical to one random parent.
     \Require $p_{\perp}$ Point from which distance is maximized
     \Ensure $\pi$ The desired plane
 
-    \Procedure{ConstructPlane}{$p_A, p_B, p_{\perp}$} \Comment{Find the plane that includes the three points}
+    \Procedure{ConstructPlane}{$p_A, p_B, p_{\perp}$}
         \State $\pi^* \gets \Call{PlaneFromPoints}{p_A, p_B, p_{\perp}}$
         \State $\mathbf{v} \gets \Call{Normal}{\pi^*}$ \Comment{Normal of plane spanned by $p_A, p_B, p_{\perp}$}
         \State $p_C \gets p_A + \mathbf{v}$ \Comment{Construct third point along the normal direction}
@@ -658,7 +656,7 @@ wing is roughly independent from the structure generated for the right wing.
 For this reason optimizing them together gives minimal benefit to the objective function,
 however optimizing them separately has big performance benefits. This is because the algorithm
 for stiffness evaluation we explained in chapter \ref{cha:stiffness_algo} has a complexity
-of $o(n^2 \log (n))$ meaning that a divide and conquer approach can be highly effective
+of $O(n^2 \log (n))$ meaning that a divide and conquer approach can be highly effective
 in reducing the computational complexity of the algorithm.
 Initially some simpler ``greedy'' algorithms for the grouping of contact points were tested,
 however none of them provided satisfactory results. These tests included strategies such as using the
@@ -691,7 +689,7 @@ Producing Network (CPPN) that takes as input the position of a contact point (th
 and gives as output the group that the node is part of.
 To categorize a point into a group we just take the last layer of the network, and pick the group
 corresponding to the neuron with the highest output. This means that the maximum number of groups
-the network can produce is upper bounded by the size of the network. Generally speaking this is not an
+the network can produce is upper bounded by the size of the last layer. Generally speaking this is not an
 issue as the number of groups generated is not particularly high, meaning that even with a small
 25-neuron output layer we are not placing significant constraints on the model.
 The final topology of the network ended up as a fully connected NN, with the input layer
@@ -731,7 +729,7 @@ depends on the height, and is not just a constant.
     \Require $G$ Set of grouped contact points
     \Ensure $c$ The total cost
 
-    \Procedure{ConstructPlane}{$G$} \Comment{Compute the cost of a set of groups}
+    \Procedure{CostOf}{$G$} \Comment{Compute the cost of a set of groups}
         \State $c \gets 0$
         \For {$g \in G$}
             \State $h \gets \Call{ConvexHull}{g}$
@@ -1247,21 +1245,21 @@ we select a number $n$ of fundamental mutations we want to apply (in the range 1
 and apply the $n$ fundamental mutations in series.
 The 5 fundamental mutations we defined are:
 \begin{description}
-    \item [ AddPoint ]: This simply adds a new point to the genome. To generate the point
+    \item[ AddPoint ]: This simply adds a new point to the genome. To generate the point
     we randomly select the number of neighbors in the range 1 to 3, and we randomly select the position
     in a way that the $z$ value is between zero and the highest $z$ value of all the contact points, and the $x$ and $y$ values
     are generated so that the projection of the point onto the $xy$ plane falls within the
     convex hull of all contact points projected on the same $xy$ plane.
     The resulting volume where new points can be sampled from is shown in figure \ref{fig:add_point_mutation}.
-    \item [ MovePoint ]: This mutation randomly selects one point, and moves it in a random direction
+    \item[ MovePoint ]: This mutation randomly selects one point, and moves it in a random direction
     (with a mutation that is a simple multivariate normal distribution with a mean vector of zero, and a diagonal
     covariance matrix with a fixed variance for all directions).
-    \item [ MovePoints ]: This mutation tries to move every point in the genome, however points are moved only
+    \item[ MovePoints ]: This mutation tries to move every point in the genome, however points are moved only
     if a (biased) coin flip is successful.
-    \item [ MutateContacts ]: This mutation mutates the number of contact points a randomly selected 
+    \item[ MutateContacts ]: This mutation mutates the number of contact points/neighbors a randomly selected 
     node has, by either adding or subtracting one, and then clipping the value if it ends up outside the 
     predefined range.
-    \item [ RemovePoint ]: This mutation selects a random point and removes it from the genome.
+    \item[ RemovePoint ]: This mutation selects a random point and removes it from the genome.
 \end{description}
 
 \begin{figure}[h]
@@ -1290,7 +1288,7 @@ The initialization of a fresh genome is achieved in three steps: initially we ca
 of the bounded region where points are allowed to be added (shown in orange in figure \ref{fig:add_point_mutation})
 then we can calculate the amount of points our gene should have by multiplying the volume by a ``support density'' 
 parameter, and then finally we can start with an empty genome, and apply the mutation ``AddPoint'' as many times as is 
-necessary to reach the desired number of contact points.
+necessary to reach the desired number of nodes.
 
 \subsection{Optimization Process and Parameters}
 \label{sec:sup_struct_opt_par}

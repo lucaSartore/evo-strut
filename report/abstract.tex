@@ -1,5 +1,5 @@
 \chapter*{Abstract} % no number
-\label{abtract}
+\label{abstract}
 
 \addcontentsline{toc}{chapter}{Abstract} % add to index
 
@@ -12,7 +12,7 @@ by far the most common option due to the lower price).
 The fast adoption of 3D printers mostly stems from the fact that
 they allow manufacturing very complex shapes that would often be impossible to produce
 using more traditional manufacturing techniques; however, although they are very flexible
-in the variety of producible shapes, 3D printers still can't construct any arbitrary
+in the variety of producible shapes, 3D printers still cannot construct any arbitrary
 object.
 
 The biggest challenge that prevents an object from being printed in one piece
@@ -21,7 +21,7 @@ The vast majority of 3D printers work by constructing a particular object in a l
 where every layer is constructed by ``adding'' the material in the desired places.
 This of course creates some issues when a large area needs to be created
 without having anything below (often referred to as ``overhangs'');
-in this case the layer can't lean on anything,
+in this case the layer cannot lean on anything,
 meaning that most of the time it will fall down and cause a failed print.
 
 The most common way to deal with overhangs is through the use of supports;
@@ -37,7 +37,7 @@ algorithms, namely the objective of producing a support that minimizes the mater
 One key thing to understand, however, is that support structures are not necessarily portable
 across different 3D printing technologies.
 Indeed, some technologies (such as for example SLA, and to a lesser extent SLS) exert minimal
-forces on the object while it's being printed, meanwhile in FDM, the nozzle will always
+forces on the object while it is being printed, meanwhile in FDM, the nozzle will always
 put a bit of force onto the object it is printing while it deposits the material. This means
 that printing tall and skinny structures on an FDM printer often results in them bending
 and ultimately causing the print to fail.
@@ -79,7 +79,7 @@ our algorithm is about 400 times faster, while only losing about 4\% of accuracy
 to exact methods.
 
 The genetic algorithm executes in three stages. This is done to reduce
-the complexity of the problem, by separating it into three separate problems.
+the complexity of the problem, by separating it into three different problems.
 The three problems are: selection of the contact points,
 grouping of different areas together, and optimization of the support structures.
 The final result is a reduction of approximately 43\% in the material usage

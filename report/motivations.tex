@@ -42,9 +42,9 @@ following case study is presented: we generated 3 different support structures t
 
 \begin{description}
     \item [ Tree: ] This structure is formed by an individual beam with a diameter of 3mm; it reaches
-    the support waiting until the last possible second to branch out into five different branches to ensure
+    the support waiting until the last moment to branch out into five different branches to ensure
     the minimum usage of material (at the expense of structural stability of course).
-    \item [ Struct: ] This structure is formed by a set of four beams with a diameter of 3mm; the vertical ones are joined together
+    \item [ Struct: ] This structure is formed by a set of four beams with a diameter of 3mm; Beams are then joined together
     by some structural elements that provide greater stability compared to the tree. The structural elements are
     designed with a 45-degree angle in order to ensure that they can be printed without requiring supports.
     \item [ Cylinder: ] This is a large cylinder that is empty on the inside to save on weight; it represents by far
@@ -77,7 +77,7 @@ to move around as much, and can therefore complete the print faster.
 \end{table}
 
 Even though in theory the tree structure seems to be the clear winner, when we try to print it on a real-world FDM
-3D printer the z-wobble \ref{fig:wobble-test} effect is so prevalent that the print results in a failure.
+3D printer the z-wobble effect (\ref{fig:wobble-test}) is so prevalent that the print results in a failure.
 You can see some pictures from the printing test in figure \ref{fig:topologies_print_test}, however a much clearer video on the failure can be found on
 YouTube: \url{https://youtu.be/ZPdutyBA2Yg}. Fortunately the other two topologies were able to be printed without
 any issue.
@@ -100,7 +100,7 @@ with an SLA printer in mind may not work at all if applied to the FDM technology
 \section{Limitations of previous work}
 \label{sec:limitations}
 
-In both the papers that we have looked at (\ref{sec:paper_1} \ref{sec:paper_2}) the topology chosen for the support
+In both the papers that we have looked at (\ref{sec:paper_1} and \ref{sec:paper_2}) the topology chosen for the support
 is a tree; this choice makes total sense in the context of their work, as they were focused on SLA and SLS 3D printing
 techniques; however, as we just explained, this kind of topology is not adequate for FDM 3D printing.
 It is reasonable to think that this limitation could be addressed with some simple modifications to the algorithm,
@@ -110,7 +110,7 @@ rewrite of the L-System.
 In the case of Vaissier et al. 2019 \cite{VAISSIER201911} an adaptation to different topologies seems more possible;
 their pre-generated structure from which they start pruning is already very similar to the topology we call ``struct'',
 and therefore it would be possible to prune it into something that could be successfully manufactured on an FDM printer.
-However the task would still not be easy, as two hurdles would remain: in particular the ``switch-node'' encoding
+However the task would still not be easy, as one major hurdle would remain: in particular the ``switch-node'' encoding
 that was necessary to achieve good results is incompatible with the ``struct'' topology, therefore the ``activation''
 encoding would need to be used. This is potentially a complication as by the authors' own admission the first encoding type
 was instrumental in getting good results, as it significantly compressed the search space. Due to the code
@@ -119,7 +119,7 @@ any successful adaptation to a different topology would require designing a thir
 use-case.
 
 In the case of commercial software the limitations are a lot simpler to explain.
-Both Normal Supports \ref{sec:normal_supports} and Tree Supports \ref{sec:tree_support} are simple ``greedy''
+Both Normal Supports (\ref{sec:normal_supports}) and Tree Supports (\ref{sec:tree_support}) are simple ``greedy''
 algorithms that don't perform any kind of optimization. This is not necessarily a bad thing, as greedy solutions are
 extremely fast, and can often be quite good if done correctly. However, the question of how much waste is being generated
 by not performing any sort of optimization still remains, and answering such a question is one of the key contributions
@@ -138,7 +138,7 @@ with the FDM technology, but are not subject to any kind of optimization.
 The objective of this thesis is to bridge the gap between these two worlds, and to create the first public
 support structure optimizer based on genetic algorithms that is created from the ground up to work with
 FDM 3D printers, in order to answer our primary research question:
-``How much material can be saved by applying Genetic algorithms to support structure optimization in FDM 3D printing?''
+``How much material can be saved by applying genetic algorithms to support structure optimization in FDM 3D printing?''
 
 \subsection{Action plan}
 In order to achieve the objectives, there are three separate steps that we need to take:

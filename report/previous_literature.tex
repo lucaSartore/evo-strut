@@ -28,7 +28,7 @@ allow us to properly evaluate the proposed algorithm with some simple comparison
 
 This paper was the first one to apply genetic algorithms to support structure generation, and did so with a relatively
 straightforward approach. They began by identifying the overhangs (i.e. the zones that required supports)
-(figure \ref{fig:paper_1} part 1), then they used a procedural algorithm to design a grid around the structure
+as seen in figure \ref{fig:paper_1} part 1, then they used a procedural algorithm to design a grid around the structure
 (figure \ref{fig:paper_1} part 2). In the next step (figure \ref{fig:paper_1} part 3), a pre-processing step was applied to remove
 from the structures the beams that could be excluded from the solution ``a priori''. Step 4 followed, where
 a genetic algorithm was used to prune the structure and remove further unnecessary beams; in this step the cost
@@ -46,7 +46,7 @@ beam that will always be the same length or shorter than the sum of the other tw
 \end{figure}
 
 In the algorithm described above the grid was generated using a set of parameters (that were not subject to
-implicit optimization by the genetic algorithm). Those parameters were the height of a section, the distance
+explicit optimization by the genetic algorithm). Those parameters were the height of a section, the distance
 between the ``columns'', as well as the diameter of the beams; those parameters can be seen in figure \ref{fig:paper_1_param}.
 The authors emphasized how correctly selecting those parameters was essential for the quality of the results.
 
@@ -108,7 +108,7 @@ One key novelty of this paper is the use of a dual stage optimization approach. 
 split the optimization into two separate problems. In the first one they find the critical structures, and they then
 proceed to optimize the set of ``contact points'' (i.e. the positions where the support structure will attach to the object).
 This optimization problem is solved, and then they move on to the second stage, in which they use an L-System \ref{fig:paper_2_l_system}
-whose parameters are optimized by genetic algorithms to optimize the structure of the trees.
+whose parameters are optimized by genetic algorithms to improve the structure of the trees.
 
 
 \begin{figure}[h]
@@ -121,7 +121,7 @@ whose parameters are optimized by genetic algorithms to optimize the structure o
 Finally, after a post-processing step that selects one solution out of the evolved solutions,
 a support structure is obtained. In the paper they tested the algorithm against
 a collection of similar software and found that the reduction in use of material was approximately
-40\%, although it is worth noting that they did only test prints of one object.
+40\%, although it is worth noting that they did show any print test.
 Nevertheless, the results are quite good, and can be seen in figure \ref{fig:paper_2_results}.
 
 \begin{figure}[h]
@@ -146,14 +146,13 @@ The primary options to choose from here were OrcaSlicer \cite{orca_slicer} and C
 However, after a quick test, it became clear that OrcaSlicer's support algorithms are superior
 to Cura's in terms of material use; therefore, they were selected as the key benchmark.
 
-\subsection{``Normal Support'' (Orca slicer)}
+\subsection{``Normal Support'' (OrcasSicer)}
 \label{sec:normal_supports}
 
 Normal supports are one of the first examples of auto-generated supports for 3D printing;
 they are nothing special, as they are limited to a uniform wall creating a zig-zag pattern in order
 to reach the critical region.
-Compared to other techniques such as tree supports \ref{sec:tree_support}, those are considered a bit
-wasteful.
+Compered to modern algorithms they are considered wasteful;
 Their inefficiency is simply given by the fact that the design is a straight wall that connects the critical
 section at the top to the building plate at the bottom. Other more optimized algorithms try to merge multiple
 critical areas together, in order to generate a single support that is narrower at the bottom, and branches out at the
@@ -177,7 +176,7 @@ as many contact points between the support and the object, thus making the suppo
 
 
 
-\subsection{``Tree Supports'' (Orca slicer)}
+\subsection{``Tree Supports'' (OrcaSlicer)}
 \label{sec:tree_support}
 
 Tree supports are the modern gold standard for lean support structures in FDM 3D printing.
@@ -198,7 +197,7 @@ would cause a z-wobble effect \ref{fig:wobble-test}, thus leading to a failure.
 It is also important to note that the tree gets skinnier as it grows in order to save material; this can be done
 due to the fact that when the nozzle is applying force by depositing the filament, the tree itself
 is acting as a lever (with the fulcrum being the plate, and the force being applied where the nozzle is),
-and therefore the closer you are to the nozzle, the less advantageous the lever becomes, thus reducing
+and therefore the closer you are to the plate, the less advantageous the lever becomes, thus reducing
 the amount of stiffness that the tree needs to provide in order to not bend.
 
 
