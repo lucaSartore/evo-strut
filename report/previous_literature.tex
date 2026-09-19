@@ -1,33 +1,30 @@
-\chapter{Previous Literature}
+\chapter{Related Work}
 \label{cha:prev_literature}
 
-The idea to reduce the amount of plastic wasted on supports with the use of better
+The idea of reducing the amount of plastic wasted on supports with the use of better
 generation algorithms is certainly not a new one, and there is a lot of ongoing
 research on the topic. However, most of the research is conducted by companies in
-the space, and by open source developers, with only a fraction of it ending up
-in academic research. For this reason, this section is divided into two parts:
-in the first one we will give an overview of the papers that are adjacent
+the space, and by open-source developers, with only a fraction of it ending up
+in academic research. For this reason, this section is divided into two parts: in the first one, we will give an overview of the papers that are adjacent
 to this thesis (namely papers that apply genetic algorithms to the generation
-of supports); in the second section we will take a look at the industry standard
+of supports); in the second part, we will take a look at the industry standard
 algorithms for support generation.
-The reason why this thesis considered solutions coming from open source software, and
-from the industry, rather than limiting itself to the academic research that was available is simple:
+The reason why this thesis considered solutions coming from open-source software, and
+from the industry, rather than limiting itself to the academic research that is available is simple:
 the academic research on the topic is quite sparse (only two papers were found at the time of writing).
 Furthermore, as we will discuss in section \ref{sec:limitations}, the approach taken by the authors is not
 really suitable for FDM 3D printing, and focuses more on SLA and SLS. Moreover, none of the related works in section \ref{sec:acc_lit}
 have made the code available, and this makes the process of comparison impossible.
-For those reasons the choice was made to include in this section some solutions taken from open source
+For those reasons, the choice was made to include in this section some solutions taken from open-source
 software, as they are the de facto standard used for support generation by 3D printing enthusiasts and
 allow us to properly evaluate the proposed algorithm with some simple comparisons.
 
 \section{Academic Literature}
 \label{sec:acc_lit}
 
-\subsection[Genetic-algorithm based framework for lattice support structure optimization]{Genetic-algorithm based framework for lattice support structure optimization in additive manufacturing \cite{VAISSIER201911}}
-\label{sec:paper_1}
 
-This paper was the first one to apply genetic algorithms to support structure generation, and did so with a relatively
-straightforward approach. They began by identifying the overhangs (i.e. the zones that required supports)
+The study \cite{VAISSIER201911} was the first one to apply genetic algorithms to support structure generation, and did so with a relatively
+straightforward approach. They began by identifying the overhangs (i.e., the zones that required supports)
 as seen in figure \ref{fig:paper_1} part 1, then they used a procedural algorithm to design a grid around the structure
 (figure \ref{fig:paper_1} part 2). In the next step (figure \ref{fig:paper_1} part 3), a pre-processing step was applied to remove
 from the structures the beams that could be excluded from the solution ``a priori''. Step 4 followed, where
@@ -38,80 +35,77 @@ This is done with a series of simple steps such as, for example, connecting ever
 beam that will always be the same length or shorter than the sum of the other two.
 
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.95\textwidth]{images/paper1.png}
     \caption{Pipeline of paper \cite{VAISSIER201911}}
     \label{fig:paper_1}
 \end{figure}
 
-In the algorithm described above the grid was generated using a set of parameters (that were not subject to
+In the algorithm described above, the grid was generated using a set of parameters (that were not subject to
 explicit optimization by the genetic algorithm). Those parameters were the height of a section, the distance
 between the ``columns'', as well as the diameter of the beams; those parameters can be seen in figure \ref{fig:paper_1_param}.
 The authors emphasized how correctly selecting those parameters was essential for the quality of the results.
 
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.4\textwidth]{images/paper1_params.png}
     \caption{Parameters used for structure (paper \cite{VAISSIER201911})}
     \label{fig:paper_1_param}
 \end{figure}
 
-The paper has also presented two different encoding structures to use in the optimization part (shown in figure \ref{fig:paper_1_encoding}).
+The study also presented two different encoding structures to use in the optimization part (shown in figure \ref{fig:paper_1_encoding}).
 The first strategy was called ``Activation Encoding'', where every beam of the graph was assigned
-a boolean variable, where 0 meant that the beam was removed, and 1 meant that the beam was kept.
+a boolean variable, with 0 meaning that the beam was removed, and 1 indicating that the beam was kept.
 The second strategy was called ``Switch Node Encoding'' and essentially assumed every node could only be connected
 to one of the possible downward directions, and the encoded variable simply selected one of the possible ones.
-The authors have shown how this approach drastically reduced the size of the search space, and made the optimizer's
+The authors have shown how this approach drastically reduced the size of the search space and made the optimizer's
 life a lot easier, thus making it faster and more effective.
 
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.95\textwidth]{images/paper1_encoding.png}
     \caption{The activation encoding (left), and switch node encoding (right) (paper \cite{VAISSIER201911})}
     \label{fig:paper_1_encoding}
 \end{figure}
 
-The paper concluded by testing the algorithm on a variety of meshes, and against a variety of support generation
-algorithms selected from academic papers, and a variety of industry standard tools.
+The paper concluded by testing the algorithm on a variety of meshes and against a variety of support generation
+algorithms selected from academic papers, and a variety of industry-standard tools.
 They showed how their framework managed to reduce the use of material by 10--20\% compared to the previous
 best results.
-The paper also showed one real world print made with their algorithm using a Laser Beam Melting (LBM) 3D printer
-(which is a technology conceptually pretty similar to SLS). In conclusion this paper is quite relevant to the
+The paper also showed one real-world print made with their algorithm using a Laser Beam Melting (LBM) 3D printer
+(which is a technology conceptually pretty similar to SLS). In conclusion, this paper is quite relevant to the
 work conducted in this thesis, as it's the first application of genetic algorithms for support structure optimization.
 However, their work was heavily focused on LBM, and due to a set of factors that we will explain
-in section \ref{sec:limitations}, is not really applicable to FDM 3D printing.
+in section \ref{sec:limitations}, it is not really applicable to FDM 3D printing.
 
 
 
-\subsection[Bio-inspired generative design for support structure generation and optimization in Additive Manufacturing (AM)]{Bio-inspired generative design for support structure generation and optimization in Additive Manufacturing (AM) \cite{ZHANG2020117}}
-\label{sec:paper_2}
-
-This paper was also developed with the idea to apply genetic algorithms to the problem of support structure
+In a second study \cite{ZHANG2020117}, other authors developed the idea to apply genetic algorithms to the problem of support structure
 optimization. The key novelty here was the introduction of a multi-objective optimization program.
-While in the previous paper (section \ref{sec:paper_1}) the objective function was limited to minimizing the volume, in this
-paper they focus on minimizing both the volume and the collisions (figure \ref{fig:paper_2_collisions}) between the support and the printed object.
+While in the previously mentioned work the objective function was limited to minimizing the volume, in this
+paper, the authors focused on minimizing both the volume and the collisions (figure \ref{fig:paper_2_collisions}) between the support and the printed object.
 Minimizing collisions is essential to ensure that the supports are easy to remove.
 In order to optimize not only a single solution, but the set of Pareto-optimal solutions, the authors used
 the NSGA-II algorithm.
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.5\textwidth]{images/paper_2_collisions.png}
     \caption{Collisions between the supports and the model (paper \cite{ZHANG2020117})}
     \label{fig:paper_2_collisions}
 \end{figure}
 
-One key novelty of this paper is the use of a dual stage optimization approach. They in fact decided to
-split the optimization into two separate problems. In the first one they find the critical structures, and they then
-proceed to optimize the set of ``contact points'' (i.e. the positions where the support structure will attach to the object).
-This optimization problem is solved, and then they move on to the second stage, in which they use an L-System (figure \ref{fig:paper_2_l_system})
-whose parameters are optimized by genetic algorithms to improve the structure of the trees.
+One key novelty of this paper is the use of a dual-stage optimization approach. The authors, in fact, decided to
+split the optimization into two separate problems. In the first one, they find the critical structures, and they then
+proceed to optimize the set of ``contact points'' (i.e., the positions where the support structure will attach to the object).
+When this optimization problem is solved, they move on to the second stage, in which they use an L-System (figure \ref{fig:paper_2_l_system})
+whose parameters are optimized by genetic algorithms to improve the structure of tree-based supports.
 
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.5\textwidth]{images/paper_2_l_system.png}
     \caption{L-system used by Zhang et al. 2020 \cite{ZHANG2020117}}
@@ -119,12 +113,12 @@ whose parameters are optimized by genetic algorithms to improve the structure of
 \end{figure}
 
 Finally, after a post-processing step that selects one solution out of the evolved solutions,
-a support structure is obtained. In the paper they tested the algorithm against
+a support structure is obtained. In the paper, they tested the algorithm against
 a collection of similar software and found that the reduction in use of material was approximately
 40\%, although it is worth noting that they did not show any print test.
-Nevertheless, the results are quite good, and can be seen in figure \ref{fig:paper_2_results}.
+Nevertheless, the results are quite good, as can be seen in figure \ref{fig:paper_2_results}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.5\textwidth]{images/paper_2_results.png}
     \caption{Result of Zhang et al. 2020 \cite{ZHANG2020117}}
@@ -139,7 +133,7 @@ The academic literature that was reviewed in the previous section is primarily g
 industrial settings, and is therefore more focused on SLS technologies (or similar); however,
 this thesis is more centered around FDM technologies, and is therefore trying to solve a set
 of problems that is slightly different with respect to the papers that we just reviewed.
-For this reason a second class of ``state of the art'' solutions is presented here.
+For this reason, a second class of state-of-the-art solutions is presented here.
 This is a collection of support generation algorithms taken from the most used slicers for FDM printers
 on the market.
 The primary options to choose from here were OrcaSlicer \cite{orca_slicer} and Cura \cite{cura}.
@@ -152,21 +146,21 @@ to Cura's in terms of material use; therefore, they were selected as the key ben
 Normal supports are one of the first examples of auto-generated supports for 3D printing;
 they are nothing special, as they are limited to a uniform wall creating a zig-zag pattern in order
 to reach the critical region.
-Compared to modern algorithms they are considered wasteful.
+Compared to modern algorithms, they are considered wasteful.
 Their inefficiency is simply given by the fact that the design is a straight wall that connects the critical
 section at the top to the building plate at the bottom. Other more optimized algorithms try to merge multiple
 critical areas together, in order to generate a single support that is narrower at the bottom, and branches out at the
 top. This of course reduces the required material.
 Another key feature of modern support generation algorithms that this algorithm doesn't have is a clean way
-to handle supports that are ``multi layer'' (defined as a critical area that instead of having a direct line of sight
+to handle supports that are ``multi-layer '' (defined as a critical area that, instead of having a direct line of sight
 to the build plate has another part of the printed object that blocks the direct path from the critical area to the floor).
 We can see this clearly in figure \ref{fig:multi-layer-support},
-where the normal support algorithm, when faced with a ``multi layer'' support, simply creates a structure that goes
+where the normal support algorithm, when faced with a ``multi-layer '' support, simply creates a structure that goes
 straight down, and that rests on the printed object. This is generally considered undesirable, as it creates twice
 as many contact points between the support and the object, thus making the support removal process more complicated.
 
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=1.0\textwidth]{images/normal_support.png}
     \caption{Normal supports (OrcaSlicer)}
@@ -180,14 +174,14 @@ as many contact points between the support and the object, thus making the suppo
 \label{sec:tree_support}
 
 Tree supports are the modern gold standard for lean support structures in FDM 3D printing.
-They are a relatively new idea with the first version of their current form tracing back to
+They are a relatively new idea, with the first version of their current form tracing back to
 an alpha release of Cura in late 2022 \cite{tree_supports}.
-Ever since then they have only improved, and they have become beloved by the community.
+Ever since then, they have improved, and they have become popular in the 3D printing community.
 Their design is incredibly simple and yet effective: critical regions that are close together
 are merged into a single branch that moves towards the plate, and gradually merges with other branches.
 This ensures that the taller a critical area is, the more likely it is that its support
 will merge with others while moving towards the plate. This has proven very effective in reducing
-the amount of material, as every time two branches are merged we remove the need to have two
+the amount of material, as every time two branches are merged, we remove the need to have two
 independent structures that go up to a certain height.
 
 One key feature of tree supports that should not be overlooked is the fact that the tree structures
@@ -201,20 +195,20 @@ and therefore the bottom part of the tree is subject to a larger force compared 
 
 
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=1.0\textwidth]{images/tree_support.png}
     \caption{Tree supports (OrcaSlicer)}
     \label{fig:tree_supports}
 \end{figure}
 
-One final feature of the tree supports is the way they handle ``multi layer supports'' (defined in section \ref{sec:normal_supports}).
-As you can see in figure \ref{fig:multi-layer-support} when faced with this circumstance the algorithm tries to find a diagonal
+One final feature of the tree supports is the way they handle ``multi-layer supports'' (defined in section \ref{sec:normal_supports}).
+As you can see in figure \ref{fig:multi-layer-support} when faced with this circumstance, the algorithm tries to find a diagonal
 route that manages to support the critical area without intersecting with the printed object. This feature is quite
 liked by the community as it makes the supports easier to detach, even though it slightly increases the amount of material required
 for the supports.
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
 
     \begin{minipage}{0.48\textwidth}

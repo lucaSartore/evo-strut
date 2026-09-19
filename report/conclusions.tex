@@ -10,7 +10,7 @@ the limitations and listing some potential future improvements.
 
 In our work we developed a novel support structure 
 optimization algorithm using genetic algorithms. As we explained in the motivations 
-(\ref{cha:motivations}), some similar algorithms exist in the literature, but 
+(chapter \ref{cha:motivations}), some similar algorithms exist in the literature, but 
 they were primarily focused on industrial 3D printing technologies such as SLS, 
 whereas our algorithm is designed explicitly for FDM 3D printing (which is more 
 common in the consumer space).
@@ -22,7 +22,7 @@ of stiffness in a time-efficient manner (which we tackled in chapter
 algorithm that was able to generate and optimize a wide variety of support structures (and 
 not only simple trees).
 
-In the results chapter (\ref{cha:results}) we have shown how our algorithm is 
+In the Results chapter (chapter \ref{cha:results}) we have shown how our algorithm is 
 indeed able to save a significant amount of material compared to state-of-the-art
 methods, with a few minor downsides. Some of these, such as the contact
 points structure being inferior to the state-of-the-art one, are temporary and
@@ -44,7 +44,7 @@ The four contributions are:
 \begin{description}
 \item[Approximated stiffness evaluation] (Chapter~\ref{cha:stiffness_algo})
 This algorithm made the entire project viable, as having a proxy for the stiffness
-of the support structure was essential in the reduction of the z-wobble effect (\ref{sec:wobble-test}).
+of the support structure was essential in the reduction of the z-wobble effect (section \ref{sec:wobble-test}).
 Algorithms for stiffness and flexibility evaluation of rigid frames already existed, of course,
 however, as we showed in section \ref{sec:stiff_speed_cmp}, using those would have resulted
 in our optimization algorithm taking more than one day to execute, which is obviously not worth
@@ -94,7 +94,7 @@ the diameter of the beams (and thus consuming more material).
 This need for a stiffer structure stemmed from the fact that our work is focused 
 on FDM 3D printing, where the nozzle is applying some significant forces to the supports
 while it is depositing the material.
-Previous works (namely Zhang et al. 2020 and Vaissier et al. 2019) did not consider
+Previous works \cite{ZHANG2020117,VAISSIER201911} did not consider
 stiffness in their cost function as they were more focused on industrial technologies such as SLS, resulting
 in their supports being too compliant for an application in FDM 3D printing.
 Our work has therefore ``bridged'' the gap between the research world (where genetic algorithms
@@ -107,7 +107,7 @@ as we have measured an average reduction of 43\% in material consumption.
 For this benchmark we have used OrcaSlicer's ``Tree Supports'' as the baseline method,
 as it was the best available in terms of material consumption, while still
 resulting in supports that were printable on FDM 3D printers.
-Unfortunately we were unable to compare ourselves to Zhang et al. 2020 and Vaissier et al. 2019,
+Unfortunately we were unable to compare ourselves to the methods from \cite{ZHANG2020117,VAISSIER201911},
 as their code was not made publicly available due to some agreement with industrial partners,
 and even if we had had access to the code, the resulting supports would have probably been
 unprintable, as they were designed for SLS/SLA 3D printers.
@@ -128,8 +128,40 @@ we should note that this factor was not considered at all in the cost function, 
 some marginal improvements could be achieved simply by correctly codifying the additional time.
 Overall we think that this thesis has proven the potential that our approach has,
 and we believe that it could gain wider adoption once a few key limitations have been addressed.
-In the next two sections of this chapter we will take a look at what those limitations are and
+Towards the end of this chapter we will take a look at what those limitations are and
 how they could be mitigated in future works.
+
+\section{Environmental Impact}
+
+A full environmental impact assessment of our method is outside the scope of this
+research. However, we can provide a simple thought experiment to determine whether
+the benefit provided by our algorithm (namely the saved material) outweighs the downsides
+(namely the extra computation/print times).
+In the \texttt{Dragon} test case, our approach required on average 29 extra minutes
+($1740\,\mathrm{s}$) of printing and $420\,\mathrm{s}$ of computation. The laptop
+performing the computation drew approximately $50\,\mathrm{W}$, while the printer
+drew approximately $150\,\mathrm{W}$ during operation. The total extra energy
+consumed by our approach is therefore
+\[
+150\,\mathrm{W} \times 1740\,\mathrm{s} + 50\,\mathrm{W} \times 420\,\mathrm{s}
+= 282\,\mathrm{kJ} \approx 0.0783\,\mathrm{kWh}.
+\]
+In exchange, the amount of PLA saved was on average $30\,\mathrm{g}$.
+A definitive value for the $\mathrm{CO_2}$ emitted in the production of one gram of
+PLA is hard to find, with reported values ranging from $0.5$ to almost
+$6\,\mathrm{g\,CO_2eq/g}$. For this thought experiment we use $3.1\,\mathrm{g\,CO_2eq/g}$,
+as reported by \cite{ENAREVBA2025267}. For electricity, we use
+$183\,\mathrm{g\,CO_2eq/kWh}$, as provided by the European Environment Agency
+\cite{electricity_emissions}.
+Combining these values, the additional emissions due to the extra printing time and
+computation amount to
+$0.0783\,\mathrm{kWh} \times 183\,\mathrm{g\,CO_2eq/kWh} \approx 14.3\,\mathrm{g\,CO_2eq}$,
+whereas the emissions avoided by using less material amount to
+$30\,\mathrm{g} \times 3.1\,\mathrm{g\,CO_2eq/g} = 93\,\mathrm{g\,CO_2eq}$.
+We can therefore conclude that, from an environmental standpoint, the benefit of
+reducing plastic consumption outweighs the cost of the extra computation and
+printing time.
+
 
 \section{Limitations}
 
