@@ -2,7 +2,7 @@
 \label{cha:stiffness_algo}
 
 The biggest hurdle that we face when trying to optimize support structures for FDM printing is the
-wobble effect \ref{sec:wobble-test}; as we explained, this is unique to the aforementioned
+wobble effect \cref{sec:wobble-test}; as we explained, this is unique to the aforementioned
 technology, and is therefore not something that has been tackled by the existing literature.
 This problem is fundamentally caused by a lack of horizontal stiffness (i.e., by the support being too compliant
 to horizontal forces that are applied to it by the nozzle).
@@ -19,19 +19,19 @@ in order to achieve the necessary speed.
 The problem itself is extremely simple: given a structure of a support, we want to know the flexibility (the inverse of the stiffness)
 of the point that the nozzle is touching
 (i.e., how much the point moves if a force is applied in a particular direction).
-This can be easily calculated using a ``Flexibility Matrix'' \ref{sec:flex_matrix}, and in the case of a
+This can be easily calculated using a ``Flexibility Matrix'' (see \cref{sec:flex_matrix}), and in the case of a
 single point in three-dimensions, this matrix has a dimensionality of $6 \times  6$ (it can be bigger if we are interested in the 
 displacement of multiple points, but in our application, we are only interested in knowing how much the nozzle moves
 the support at the contact point, so our needs are fully met by a small matrix).
-Defining the problem for an arbitrary support structure can be complicated; fortunately (as we discussed in section \ref{sec:obj})
-we have limited the support structure's search space to the ``struct'' topology (or, to be more precise, a ``rigid frame''~\ref{sec:rigid_frame}); this narrows down the problem's scope, as now it only needs to work for a restricted class of support structures.
+Defining the problem for an arbitrary support structure can be complicated; fortunately (as we discussed in \cref{sec:obj})
+we have limited the support structure's search space to the ``struct'' topology (or, to be more precise, a ``rigid frame'' defined in ~\cref{sec:rigid_frame}); this narrows down the problem's scope, as now it only needs to work for a restricted class of support structures.
 Finally, we have two additional specifications for our algorithm, namely the requirement that it needs to be as fast as possible, and the fact 
 that exact solutions are not needed, as long as solutions are accurate enough. 
 By synthesizing these requirements and constraints, we can define the problem as follows:
 \\
 \\
-\noindent\textit{Given a \textbf{rigid frame (section \ref{sec:rigid_frame})}, find an algorithm that is able to calculate
-an approximation of the \textbf{Flexibility Matrix (section \ref{sec:flex_matrix})} for one specific \textbf{node} in the frame
+\noindent\textit{Given a \textbf{rigid frame (\cref{sec:rigid_frame})}, find an algorithm that is able to calculate
+an approximation of the \textbf{Flexibility Matrix (\cref{sec:flex_matrix})} for one specific \textbf{node} in the frame
 in a timely manner.}
 
 \subsection{Stiffness of partially constructed frames}
@@ -43,7 +43,7 @@ frame. A sufficiently convincing proof of this claim is trivial, as a material c
 is added, the stiffness of any node cannot be reduced (adding something to a frame could in theory increase the load on the system, but this
 type of constraint is not considered in the current model, as the mass of the support structure is usually not a constraint in the additive
 manufacturing field).
-A clear example of this difference between the final structure and the partially completed one can be seen in figure \ref{fig:under_construction_frame}.
+A clear example of this difference between the final structure and the partially completed one can be seen in \cref{fig:under_construction_frame}.
 We can observe how the point circled in red probably has a low stiffness during the construction time, as it is only connected to a
 single (very long) beam. However, as soon as the structure is constructed, that point is connected to two well-constructed towers,
 and therefore the stiffness should be fairly high. This is of course something that we must account for in our evaluation process;
@@ -83,7 +83,7 @@ maintain the same position and orientation relative to each other.
 One final algorithmic note is that, in this thesis, we will consider rigid frames to be ``sparse''
 graphs (the number of edges is linear w.r.t. the number of nodes); in reality this assumption
 is not very limiting as most frames are so by design.
-Figure \ref{fig:rigid_frame} shows some examples of what are considered valid rigid frames.
+\Cref{fig:rigid_frame} shows some examples of what are considered valid rigid frames.
 
 \begin{figure}[ht]
     \centering
@@ -104,11 +104,11 @@ For example, a three-dimensional frame that has 10 points has a stiffness matrix
 (as the degrees of freedom are 6, namely translation and rotation along the $x$, $y$, and $z$ axes).
 The unit of measure of the stiffness matrix is $N/m$ for the translational part, as it represents the force that is required
 to produce a specific displacement; with rotational and coupling blocks having corresponding torque/angle units instead of meters.
-Figure \ref{fig:beam} and equation \ref{for:stiffness} show an example of a Cantilever Stiffness Matrix (a special
-case of the stiffness matrix that represents one beam anchored at one end; see section \ref{sec:cantilever_matrixes}).
+\Cref{fig:beam} and \cref{for:stiffness} show an example of a Cantilever Stiffness Matrix (a special
+case of the stiffness matrix that represents one beam anchored at one end; see \cref{sec:cantilever_matrixes}).
 In this case, the matrix is $6 \times 6$, as there are 6 degrees of freedom in 3D space, and the frame only has
 one node that is free to move.
-The stiffness matrix provides a simple and computationally efficient relation between $\mathbf{u}$ and $\mathbf{f}$ (equation \ref{for:stiffness}).
+The stiffness matrix provides a simple and computationally efficient relation between $\mathbf{u}$ and $\mathbf{f}$ (see \cref{for:stiffness}).
 This, of course, is just a first-order approximation of the real relationship, as in reality the effect is non-linear;
 however, it can be really precise and therefore quite useful if the displacements are small.
 
@@ -188,7 +188,7 @@ and can be used to find the displacement given a force.
 \label{sec:cantilever_matrixes}
 
 A Cantilever beam is a fairly well-known concept in architecture; it is a rigid and straight structure
-that has one side anchored. Figure \ref{fig:beam} shows a vertical Cantilever beam with the
+that has one side anchored. \Cref{fig:beam} shows a vertical Cantilever beam with the
 bottom node anchored to the ground, while a force is being applied at the upper node.
 In 3 dimensions, a Cantilever beam's stiffness matrix is a $6 \times 6$ matrix.
 By convention, the rows and columns are ordered with the coefficients for displacement across
@@ -199,7 +199,7 @@ Calculating the full stiffness matrix of a cantilever beam is a fairly straightf
 and can be achieved using the Euler-Bernoulli Beam Theory \cite{beam_theory}.
 This can be done starting from the shape and dimensions of the beam, as well as the properties of the
 material.
-Equation \ref{for:beam_formula} shows how to calculate a $6 \times 6$ stiffness matrix starting
+\Cref{for:beam_formula} shows how to calculate a $6 \times 6$ stiffness matrix starting
 from the seven fundamental parameters. The formula explicitly calculates the
 stiffness of a beam with the anchored node at $P_1=(0, 0, 0)$ and the node
 that is free to move at point $P_2 = (L, 0, 0)$ (meaning a beam of length $L$ with
@@ -232,16 +232,16 @@ the anchored point in the origin, and extending in the same direction as the $x$
 
 
 
-Equation \ref{for:beam_formula} can be adapted to an arbitrary beam (not just a beam that is parallel
+\Cref{for:beam_formula} can be adapted to an arbitrary beam (not just a beam that is parallel
 to the $x$ axis) using a simple transposition.
 In order to do so, let us assume that $\mathbf{B}$ is the arbitrary beam we need to find the stiffness of.
 We can start by constructing $\mathbf{B}_x$, an equivalently shaped beam, that is parallel to the $x$ axis.
-This setup is shown in figure \ref{fig:stiffness_rotation}.
-Let's call $\mathbf{K}_x$ the stiffness matrix of beam $\mathbf{B}_x$; this matrix can be easily calculated using equation \ref{for:beam_formula}.
+This setup is shown in \cref{fig:stiffness_rotation}.
+Let's call $\mathbf{K}_x$ the stiffness matrix of beam $\mathbf{B}_x$; this matrix can be easily calculated using \cref{for:beam_formula}.
 Then we can calculate the transposition matrix $\mathbf{T}$ that translates from the frame of reference
 of $\mathbf{B}_x$ to the frame of reference of $\mathbf{B}$.
 Using the transposition matrix we can calculate $\mathbf{K}$ (the stiffness matrix of the beam $\mathbf{B}$)
-with a simple set of matrix multiplications, as shown in equation \ref{for:beam_rotation}.
+with a simple set of matrix multiplications, as shown in \cref{for:beam_rotation}.
 
 \begin{equation}
 \mathbf{K} = \mathbf{T}^T \mathbf{K}_x \mathbf{T}
@@ -259,7 +259,7 @@ with a simple set of matrix multiplications, as shown in equation \ref{for:beam_
 \noindent
 The transposition matrix $\mathbf{T}$ is fairly straightforward to calculate and can be done with a simple sequential set of steps
 that start from $\mathbf{b}$ (the vector representing beam $\mathbf{B}$). The first step is to convert $\mathbf{b}$ into $\mathbf{n}_x$ (the unit vector 
-parallel to the $x$ axis of the frame of reference of beam $\mathbf{B}$). This can be done with equation \ref{for:stiffness_nx}.
+parallel to the $x$ axis of the frame of reference of beam $\mathbf{B}$). This can be done with \cref{for:stiffness_nx}.
 
 \begin{equation}
 \mathbf{n}_x = \frac{\mathbf{b}}{\Vert{}\mathbf{b}\Vert{}}
@@ -268,8 +268,8 @@ parallel to the $x$ axis of the frame of reference of beam $\mathbf{B}$). This c
 
 \noindent
 Then, using an auxiliary vector $\mathbf{u}$ (which is an arbitrary vector with the only constraint of not being 
-parallel to $\mathbf{n}_x$ so as to avoid the singularity in the cross product), we can calculate $\mathbf{n}_z$ using equation
-\ref{for:stiffness_nz}. This is the unit vector representing the $z$ axis of the beam $\mathbf{B}$.
+parallel to $\mathbf{n}_x$ so as to avoid the singularity in the cross product), we can calculate $\mathbf{n}_z$ using
+\cref{for:stiffness_nz}. This is the unit vector representing the $z$ axis of the beam $\mathbf{B}$.
 Here we shall note that the choice of $\mathbf{u}$ is arbitrary only in the case in which the stiffness behavior of the
 beam is symmetrical with respect to a rotation around the $x$ axis. This is true if and only if $I_y = I_z$. The stated equality 
 is generally true in the support structures generated by this thesis, but if this
@@ -281,15 +281,15 @@ method is ever applied to a different context, this part might need to be refine
 
 \noindent
 Then, we can calculate the last unit vector (the one representing the $y$ axis of $\mathbf{B}$) using the last cross product, shown
-in equation \ref{for:stiffness_ny}.
+in \cref{for:stiffness_ny}.
 \begin{equation}
 \mathbf{n}_y = \mathbf{n}_z \times \mathbf{n}_x
 \label{for:stiffness_ny}
 \end{equation}
 
 \noindent
-To conclude we can compose $\mathbf{n}_x$, $\mathbf{n}_y$, and $\mathbf{n}_z$ into a regular rotation matrix, as shown in equation
-\ref{for:rotation_mat}.
+To conclude we can compose $\mathbf{n}_x$, $\mathbf{n}_y$, and $\mathbf{n}_z$ into a regular rotation matrix, as shown in
+\cref{for:rotation_mat}.
 
 \begin{equation}
 \mathbf{R} = \begin{bmatrix} \mathbf{n}_x^T \\ \mathbf{n}_y^T \\ \mathbf{n}_z^T \end{bmatrix} = \begin{bmatrix} n_{x,x} & n_{x,y} & n_{x,z} \\ n_{y,x} & n_{y,y} & n_{y,z} \\ n_{z,x} & n_{z,y} & n_{z,z} \end{bmatrix}
@@ -297,8 +297,8 @@ To conclude we can compose $\mathbf{n}_x$, $\mathbf{n}_y$, and $\mathbf{n}_z$ in
 \end{equation}
 
 \noindent
-Finally, to calculate the $6 \times 6$ transposition matrix $\mathbf{T}$, we can use equation \ref{for:transposition_matrix}.
-We then use such a matrix in the rotation equation (equation \ref{for:beam_rotation}) so that we can obtain the stiffness matrix
+Finally, to calculate the $6 \times 6$ transposition matrix $\mathbf{T}$, we can use \cref{for:transposition_matrix}.
+We then use such a matrix in the rotation equation (\cref{for:beam_rotation}) so that we can obtain the stiffness matrix
 of an arbitrary cantilever beam.
 
 
@@ -323,12 +323,12 @@ of an arbitrary cantilever beam.
 
 If two cantilever beams are connected head to tail, they form what could be referred to as a ``series''; an important property of such a structure is that it is possible to calculate the stiffness
 of an equivalent beam.
-For example, in figure \ref{fig:stiffness_series} we can see how the beam $\mathbf{BC}$ is connected
+For example, in \cref{fig:stiffness_series} we can see how the beam $\mathbf{BC}$ is connected
 at the end of the beam $\mathbf{AB}$; this series results in a stiffness matrix
 at the point $\mathbf{C}$ that can be represented by an equivalent beam ($\mathbf{AC}$ in the picture).
 $\mathbf{K}_1$, $\mathbf{K}_2$ and $\mathbf{K}_3$ are the $6 \times 6$ stiffness matrices of the beams $\mathbf{AB}$,
 $\mathbf{BC}$ and $\mathbf{AC}$ respectively. The relationship between the three stiffness matrices is shown
-in equation \ref{for:stiffness_series}.
+in \cref{for:stiffness_series}.
 
 \begin{equation}
 \mathbf{K}_3 = (\mathbf{K}_2^{-1} + \mathbf{J} \mathbf{K}_1^{-1} \mathbf{J}^T)^{-1}
@@ -339,7 +339,7 @@ in equation \ref{for:stiffness_series}.
 Where $\mathbf{J}$ is the Jacobian of the function that translates from the frame of reference
 $\mathbf{B}$ to the frame of reference $\mathbf{C}$, derived w.r.t. the position and orientation
 of frame of reference $\mathbf{B}$. The construction of the Jacobian matrix is seen
-in equation \ref{for:stiffness_jac} (in the matrix, rows and columns follow the standard
+in \cref{for:stiffness_jac} (in the matrix, rows and columns follow the standard
 ordering convention, meaning: $x$ $y$ $z$ $\varphi$ $\theta$ $\psi$).
 In the Jacobian matrix's top left corner we can find a $3 \times 3$ identity matrix; this, of course, represents the fact that moving (without rotating) the frame of reference
 $\mathbf{B}$ by $x^*$, $y^*$ and $z^*$ will result in frame $\mathbf{C}$ being
@@ -355,10 +355,10 @@ we find in the top right part of the Jacobian. This part describes how rotating
 frame $\mathbf{B}$ results in a movement of frame $\mathbf{C}$.
 For example, $\mathbf{J}_{16}$ represents the first derivative of the $x$ position
 of frame $\mathbf{C}$ derived with respect to a change in the yaw ($\psi$ angle)
-of frame of reference $\mathbf{B}$. We can see, from equation \ref{for:stiffness_jac},
+of frame of reference $\mathbf{B}$. We can see, from \cref{for:stiffness_jac},
 that this is set to $-b_y$ (which is the $y$ dimension of beam $\mathbf{BC}$ in the origin
 frame of reference). This makes sense, as a yaw rotation is a rotation around the $z$ axis;
-in figure \ref{fig:stiffness_series} the $z$ axis is coming ``out of the image'', and a positive
+in \cref{fig:stiffness_series} the $z$ axis is coming ``out of the image'', and a positive
 rotation around the $z$ axis would result in the beam $\mathbf{BC}$ rotating counterclockwise.
 We can also note how a counterclockwise rotation would result in the $x$ coordinate of frame $\mathbf{C}$
 decreasing by an amount that is proportional to the length of $\mathbf{BC}$ projected onto the $y$ axis.
@@ -380,10 +380,10 @@ Jacobian matrix.
 \end{equation}
 
 
-Equation \ref{for:stiffness_series} might seem a bit complicated at first, but understanding it is actually
+\Cref{for:stiffness_series} might seem a bit complicated at first, but understanding it is actually
 not that difficult. To explain why it works a bit more in depth, we can start by transforming it 
 from stiffness form to flexibility form. This can be done with a simple matrix inversion, as explained
-in section \ref{sec:flex_matrix}. The resulting equation is shown in \ref{for:flexibility_series}.
+in \cref{sec:flex_matrix}. The resulting equation is shown in \cref{for:flexibility_series}.
 
 \begin{equation}
 \mathbf{D}_3 = \mathbf{D}_2 + \mathbf{J} \mathbf{D}_1 \mathbf{J}^T
@@ -452,9 +452,9 @@ $$
 
 \noindent
 Summing up the two terms on the right side of the equation gives the total displacement of point $\mathbf{C}$
-which of course is the same quantity represented on the left side. This concludes the explanation of equation \ref{for:stiffness_series}.
+which of course is the same quantity represented on the left side. This concludes the explanation of \cref{for:stiffness_series}.
 In this thesis, we will use the ``$\stiffseries$'' (series) operator to represent the series of two cantilever beams, as we defined
-in equation \ref{for:series_operator}:
+in \cref{for:series_operator}:
 
 
 \begin{equation}
@@ -476,10 +476,10 @@ in equation \ref{for:series_operator}:
 
 
 In the same way that beams can be connected in series, they can also be connected in parallel;
-a simple parallel beam setup is shown in figure \ref{fig:parallel}.
+a simple parallel beam setup is shown in \cref{fig:parallel}.
 Calculating the stiffness of the point $\mathbf{C}$ is trivial, as it can be achieved
 by simply summing the stiffness matrices of the two beams that support it.
-With this notion, we can define the ``$\stiffparallel$'' (parallel) operator as shown in equation \ref{for:parallel_operator}.
+With this notion, we can define the ``$\stiffparallel$'' (parallel) operator as shown in \cref{for:parallel_operator}.
 
 
 \begin{equation}
@@ -492,7 +492,7 @@ With this notion, we can define the ``$\stiffparallel$'' (parallel) operator as 
 \label{sec:direct_stiff_method}
 
 The Direct Stiffness Method is a well-known technique in structural engineering
-that solves exactly the problem we described in section \ref{sec:stiff_problem_statement}.
+that solves exactly the problem we described in \cref{sec:stiff_problem_statement}.
 This section does not aim to give a complete explanation of how the method works, as
 such an explanation would both be outside the scope of this thesis and be redundant
 considering that it can be easily found in the literature \cite{direct_stiffness_method}.
@@ -512,7 +512,7 @@ mostly involves starting from a correctly sized matrix full of zeros, and gradua
 adding to it some stiffness components that are derived from each node of the frame.
 Finally, when the stiffness matrix is completed, it can be inverted in order to obtain the
 flexibility matrix.
-Algorithm \ref{alg:dsm} shows a very compact pseudocode of the direct stiffness method.
+\Cref{alg:dsm} shows a very compact pseudocode of the direct stiffness method.
 
 
 \begin{algorithm}
@@ -532,7 +532,7 @@ Algorithm \ref{alg:dsm} shows a very compact pseudocode of the direct stiffness 
 
 \subsection{Time Complexity}
 
-The time complexity of Algorithm \ref{alg:dsm} relative to the number of elements in
+The time complexity of \cref{alg:dsm} relative to the number of elements in
 the frame is $O(n^3)$ time and $O(n^2)$ space.
 The space requirement is trivial to explain, as we are allocating the full $N \times N$
 stiffness matrix at line 2.
@@ -547,12 +547,12 @@ that are relevant to element $e$, making it an $O(n)$ operation.
 
 \section{Proposed solution: Approximated Stiffness Evaluation}
 
-As we mentioned in the requirement section (section \ref{sec:stiff_problem_statement}) one key 
+As we mentioned in the requirement section (\cref{sec:stiff_problem_statement}) one key 
 feature that the stiffness evaluation algorithm needs to have is speed.
 This requirement is not really satisfied by the traditional method for stiffness
-evaluation (the Direct Stiffness Method, see section \ref{sec:direct_stiff_method}),
+evaluation (the Direct Stiffness Method, see \cref{sec:direct_stiff_method}),
 meaning that we need to develop a faster alternative.
-Of course, later in this thesis (more specifically in section \ref{sec:stiff_speed_cmp})
+Of course, later in this thesis (more specifically in \cref{sec:stiff_speed_cmp})
 we will provide more details on the performance of the existing solution, compared to
 ours, so that we can show more clearly why the existing solution is not fast enough.
 But before we do that, we must explain how the ad-hoc solution we developed works.
@@ -590,8 +590,8 @@ allowed the algorithm to provide approximated solutions rather than exact ones.
 
 \subsection{Stiffness evaluation for ``Reducible'' frames}
 
-Previously we have explored some ways of calculating equivalent beams using some series (section \ref{sec:stiffness_series})
-and parallel (section \ref{sec:stiffness_parallel}) transformations.
+Previously we have explored some ways of calculating equivalent beams using some series (\cref{sec:stiffness_series})
+and parallel (\cref{sec:stiffness_parallel}) transformations.
 These two operations can be combined recursively in order to simplify a complex frame into 
 an individual beam. If this is done correctly, we can use the stiffness matrix of the equivalent beam
 as the (local) stiffness matrix of the final point.
@@ -602,9 +602,9 @@ The parallel does not stop here, as, just like in electronics, there are some sp
 that cannot be reduced back to simple parallel and series. In fact, in electronics
 there is the famous Y-$\Delta$ transform \cite{ydelta} that is used to deal with circuits
 that cannot be properly reduced with simple parallel and series rules.
-In the context of rigid reduction, we can find the same issue. For example, figure \ref{fig:reducible_frame} shows a frame that is fully reducible (i.e., it can be reduced
+In the context of rigid reduction, we can find the same issue. For example, \cref{fig:reducible_frame} shows a frame that is fully reducible (i.e., it can be reduced
 to a single beam by applying a specific set of series and parallel operations).
-Instead, figure \ref{fig:non_reducible_frame} shows a frame that is not fully reducible,
+Instead, \cref{fig:non_reducible_frame} shows a frame that is not fully reducible,
 as (like in electronic engineering) there is a $\Delta$ configuration that does not fit
 well in either a parallel or a series configuration.
 Unlike in electronic engineering, however, converting from a $\Delta$ configuration into a Y
@@ -642,25 +642,25 @@ evaluation algorithm we are trying to develop.
 
 
 Calculating the local stiffness matrix at point $P$ of the structure
-shown in figure \ref{fig:reducible_frame} using the reduction method can be achieved with a 
+shown in \cref{fig:reducible_frame} using the reduction method can be achieved with a 
 simple set of steps. The first one is to understand the orientation of the beams. This involves
 starting from point $P$ and traversing the graph in a breadth-first search order, marking the direction
 of travel of every arc in the graph (or beam in the frame); then we can find the direction of the beam,
 as being the opposite with respect to the direction of travel in the graph.
-The result of this traversing operation can be observed in figure \ref{fig:reducible_frame_with_arrow}; here, the arrows indicate the direction of the cantilever beam, where the tail of the arrow
+The result of this traversing operation can be observed in \cref{fig:reducible_frame_with_arrow}; here, the arrows indicate the direction of the cantilever beam, where the tail of the arrow
 represents the anchored point, and the arrow pointer represents the point that flexes in the beam.
 At this point, we can calculate the local stiffness matrix of every individual beam, using the marked
 direction. The process of calculating such a matrix is a constant-time operation, and an in-depth
-explanation of the procedure is found in section \ref{sec:cantilever_matrixes} (in this step,
+explanation of the procedure is found in \cref{sec:cantilever_matrixes} (in this step,
 it is mandatory that we use the same frame of reference for the stiffness of every beam, so that
 they can be added together using series and parallel operations).
 Finally, we can apply a set of series and parallel operations in order to reduce the frame to 
-an individual beam. For the frame shown in figure \ref{fig:reducible_frame_with_arrow}
+an individual beam. For the frame shown in \cref{fig:reducible_frame_with_arrow}
 the equivalent stiffness matrix of point $P$ ($\mathbf{K}_{Peq}$)
 can be expressed as a function of $\mathbf{K}_1 \dots \mathbf{K}_4$ (the local stiffness matrices
-of the beams $\mathbf{B}_1 \dots \mathbf{B}_4$) and the resulting formulation is seen in equation
-\ref{for:reduction_simple} (where $\stiffseries$ and $\stiffparallel$ are the ``series''
-and ``parallel'' operators that we have defined in sections \ref{sec:stiffness_series} and \ref{sec:stiffness_parallel}
+of the beams $\mathbf{B}_1 \dots \mathbf{B}_4$) and the resulting formulation is seen in
+\cref{for:reduction_simple} (where $\stiffseries$ and $\stiffparallel$ are the ``series''
+and ``parallel'' operators that we have defined in \cref{sec:stiffness_series,sec:stiffness_parallel}
 respectively). This reduction is not an approximation, and the resulting stiffness at point $P$ is in fact
 the exact one; this method is also quite fast, as it is linear with respect to
 the number of nodes in the graph; however, it has the major issue of being limited in the class
@@ -698,7 +698,7 @@ We decided to present two algorithms for this; the first one is called ``DAG Met
 it relies on transforming a frame into a Directed Acyclic Graph, and then applying a series of reductions.
 The second one is called ``Weighted DAG Method'' and is a refinement over the first one that managed
 to achieve a level of accuracy that is sufficient for our application.
-Both of the methods will be explained using the structure shown in figure \ref{fig:non_reducible_frame}
+Both of the methods will be explained using the structure shown in \cref{fig:non_reducible_frame}
 as an example, but can of course be applied to an arbitrarily complex frame.
 
 \subsubsection{DAG Method}
@@ -711,11 +711,11 @@ When visiting the graph, the algorithm marks the direction of travel of every ar
 the frame into a Directed Acyclic Graph.
 Once this is done, we can calculate the local stiffness matrix of every beam in the graph (this step remains the same
 as before, where the direction of the beam is the opposite of the direction of travel, and the stiffness matrix
-is calculated using the equations we described in section \ref{sec:cantilever_matrixes}).
+is calculated using the equations we described in \cref{sec:cantilever_matrixes}).
 At this point, we can start recursively calculating the stiffness of every node, as a parallel of all the outgoing
 arcs, where each arc's stiffness is a ``series'' operation between the stiffness
 of the node the arc is going to and the stiffness of the beam that the connection represents.
-This process is described more precisely in Algorithm \ref{alg:dag}.
+This process is described more precisely in \cref{alg:dag}.
 
 
 \begin{figure}[ht]
@@ -757,8 +757,8 @@ This process is described more precisely in Algorithm \ref{alg:dag}.
 \end{algorithm}
 
 
-Applying algorithm \ref{alg:dag} on the frame shown in figure \ref{fig:dag_strategy_image}
-would result in the final stiffness $\mathbf{K}_{Peq}$ that is shown in equation \ref{for:dag_eq}.
+Applying \cref{alg:dag} on the frame shown in \cref{fig:dag_strategy_image}
+would result in the final stiffness $\mathbf{K}_{Peq}$ that is shown in \cref{for:dag_eq}.
 The equation is a valid approximation of the stiffness, but it has a significant source of error.
 As we have highlighted in blue, the term $\mathbf{K}_2$ appears twice in the formulation.
 This is due to the fact that there are two valid paths in the DAG that connect point $P$ to the ground, passing through $\mathbf{B}_2$. This results in the stiffness of beam 2 being counted twice, resulting
@@ -807,11 +807,11 @@ An effective heuristic for weight evaluation can be derived from the distance tr
 this method begins by once again exploring the frame's graph starting from the point we want to know the
 stiffness of ($P$) and traversing the graph using Dijkstra's algorithm until we reach the ground.
 This time, however, instead of just marking the direction of travel of each arc, we also mark the total
-(Euclidean) distance traveled so far. In figure \ref{fig:weighted_dag_strategy}, the traveled Euclidean
+(Euclidean) distance traveled so far. In \cref{fig:weighted_dag_strategy}, the traveled Euclidean
 distances are marked as a small green number close to the beam arrow.
 The idea is to use those distances to ``split'' the stiffness of a node among the 
 incoming arcs, in a way that prevents a gross overestimation of the stiffness value.
-The exact way stiffness is split up can be seen in algorithm \ref{alg:wdag}.
+The exact way stiffness is split up can be seen in \cref{alg:wdag}.
 
 
 \begin{figure}[ht]
@@ -821,8 +821,8 @@ The exact way stiffness is split up can be seen in algorithm \ref{alg:wdag}.
     \label{fig:weighted_dag_strategy}
 \end{figure}
 
-Applying algorithm \ref{alg:wdag} to the frame shown in figure \ref{fig:weighted_dag_strategy} would result 
-in $\mathbf{K}_{Peq}$ (the local stiffness in point $P$) having the exact formulation that is shown in equation \ref{for:wdag_eq}.
+Applying \cref{alg:wdag} to the frame shown in \cref{fig:weighted_dag_strategy} would result 
+in $\mathbf{K}_{Peq}$ (the local stiffness in point $P$) having the exact formulation that is shown in \cref{for:wdag_eq}.
 As we can see from the part highlighted in red, the correction weights are applied to the stiffness in $N1$.
 In the first two equations, we can see how the weights associated with the arcs $\mathbf{B}_3$ and $\mathbf{B}_4$ sum up to one; this ensures that stiffness is not multiplied whenever a node has two incoming arcs. All other arcs
 have a weight of one (that is omitted in the equation for readability).
@@ -914,7 +914,7 @@ Finally, matrix inversion is an $O(1)$ operation, as in this case the matrices h
 three-dimensional frames).
 The time complexity for evaluating an entire frame increases by a factor of $n$ and becomes $O(n^2 \log{n})$; this is because the algorithm shown is local and only calculates the stiffness of a single node; therefore, it needs to be applied multiple times to calculate the stiffness of an entire structure.
 One key advantage of using local methods w.r.t. global methods is that, assuming we want to know the 
-stiffness while the structure is being built (for the reasons explained in section \ref{sec:stiffness_part_frames})
+stiffness while the structure is being built (for the reasons explained in \cref{sec:stiffness_part_frames})
 the complexity does not increase, and it remains $n^2 \log{n}$; this is a simple consequence of the fact
 that we can construct the graph one node at a time (from the lowest $z$ to the highest) and gradually
 evaluate the stiffness of the last node added; the evaluation of a single node stays $n \log {n}$, and therefore
@@ -939,14 +939,14 @@ For evaluating accuracy, we have created a small dataset of 6 rigid frames; we h
 (an open-source library used for complex structural analysis of rigid frames and other structures)
 to obtain the ``ground truth'' stiffness and flexibility matrices at every point.
 With this simple setup, we were able to evaluate the accuracy of the proposed solution.
-Table \ref{tab:dag_performance} shows the test results of the two algorithms presented (DAG and Weighted DAG). The metrics chosen for accuracy evaluation are three: Root Mean Square Relative Error (or RMSRE)
+\Cref{tab:dag_performance} shows the test results of the two algorithms presented (DAG and Weighted DAG). The metrics chosen for accuracy evaluation are three: Root Mean Square Relative Error (or RMSRE)
 is the main and most ``critical'' one, but we have also included Pearson and Spearman correlation
 to capture not only the absolute accuracy of the algorithm, but also how well they correlate.
 In all three cases, a small ($1 \cdot 10^{-5}$) regularization factor has been applied in order to avoid
 floating-point precision issues in the proximity of zeros. This does not affect in any significant way our test results
 as the stiffness values obtained with the parameters used were in the 500-15000 range.
 The code necessary to replicate these experiments is published in the accompanying
-GitHub repository (section \ref{cha:conclusions}).
+GitHub repository (\cref{cha:conclusions}).
 
 
 \begin{table}[htbp]
@@ -972,8 +972,8 @@ GitHub repository (section \ref{cha:conclusions}).
 \end{table}
 
 
-Table \ref{tab:dag_performance} shows that the Weighted DAG algorithm performs surprisingly well; we can, in fact, see that the average error is at approximately 4\%, with the highest error hovering at around 13.5\%.
-Figure \ref{fig:test_structures} shows how those errors are distributed, where the flexibility matrix
+\Cref{tab:dag_performance} shows that the Weighted DAG algorithm performs surprisingly well; we can, in fact, see that the average error is at approximately 4\%, with the highest error hovering at around 13.5\%.
+\Cref{fig:test_structures} shows how those errors are distributed, where the flexibility matrix
 is represented as an ellipsoid, and a longer distance from the center represents a higher flexibility.
 In the figure, we can notice something interesting: the error seems to increase as the number of ``layers'' a structure has increases. The effect is most notable in structs E and F.
 This error increase is, of course, a downside of the algorithm; however,
@@ -1004,7 +1004,7 @@ therefore most structures tend to have no more than four ``layers''.
 
 In terms of speed and time complexity, our proposed solution (Weighted DAG) is unsurprisingly much more performant
 compared to the standard ``Direct Stiffness Method'' approach.
-Table \ref{tab:stiff_time_compl_cmp} shows how, in the third scenario,
+\Cref{tab:stiff_time_compl_cmp} shows how, in the third scenario,
 where we want to calculate the flexibility matrix of all the nodes in the
 frame, while they are under construction (that is what we need in our evaluation function)
 our proposed approximated algorithm provides a time complexity that
@@ -1057,7 +1057,7 @@ In order to get a better picture of how the two algorithms compare, we have
 also decided to provide some real-world data to show how the direct stiffness method
 approach would perform if placed inside the genetic algorithm evaluation loop for this project.
 For this test, we took the full support structure optimization process that we developed (that is explained
-in chapter \ref{cha:support_opt_alg}) and ran the evaluation with both our solution and an
+in \cref{cha:support_opt_alg}) and ran the evaluation with both our solution and an
 approximation of the direct stiffness method's computational load (by approximation we mean that,
 instead of implementing the full direct stiffness method, we simply picked the matrix inversion, as
 the most computationally intensive part, and executed that with an arbitrary matrix of the correct size.
@@ -1071,7 +1071,7 @@ In the test, we limited the number of iterations to 10; this is both for consist
 and to avoid having test cases that are too long. For the test case using our algorithm, we also ran
 a test case limited to 100 iterations, as the single iteration times were so small that the overhead
 associated with the initialization of the generation significantly influenced the results.
-Table \ref{tab:stiff_real_world_runtimes_cmp} shows the test results; we can see there is a
+\Cref{tab:stiff_real_world_runtimes_cmp} shows the test results; we can see there is a
 huge difference of approximately 400x in the execution time of our proposed solution when compared to 
 the standard direct stiffness method approach.
 

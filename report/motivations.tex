@@ -29,7 +29,7 @@ understand the limitations of the previous work, and thus what the motivations b
 but it will also function as some valuable knowledge that helps explain the decisions and motivations
 behind this thesis's proposed solution. In order to study the features of different topologies, the
 following case study is presented: we generated 3 different support structures that all reached the same height of
-15 \SI{}{\centi\metre}; each of them had its own topology (that can be seen in figure \ref{fig:topologies}), namely:
+15 \SI{}{\centi\metre}; each of them had its own topology (that can be seen in \cref{fig:topologies}), namely:
 
 \begin{figure}[h]
     \centering
@@ -54,7 +54,7 @@ following case study is presented: we generated 3 different support structures t
 
 
 
-Table \ref{tab:topologies} shows the results in terms of both printing time and material consumed.
+\Cref{tab:topologies} shows the results in terms of both printing time and material consumed.
 Here we can see that (at least in this evaluation, that is, not considering structural stability) the tree topology
 is the clear winner, as it both prints faster and requires the least material. Second place, however,
 is not clear, as the struct topology excels in material consumption while the cylinder topology is
@@ -77,12 +77,12 @@ to move around as much, and can therefore complete the print faster.
 \end{table}
 
 Even though in theory the tree structure seems to be the clear winner, when we try to print it on a real-world FDM
-3D printer, the z-wobble effect (figure \ref{fig:wobble-test}) is so prevalent that the print results in a failure.
-You can see some pictures from the printing test in figure \ref{fig:topologies_print_test}; however, a much clearer video of the failure can be found on
+3D printer, the z-wobble effect (\cref{fig:wobble-test}) is so prevalent that the print results in a failure.
+You can see some pictures from the printing test in \cref{fig:topologies_print_test}; however, a much clearer video of the failure can be found on
 YouTube: \url{https://youtu.be/ZPdutyBA2Yg}. Fortunately, the other two topologies were able to be printed without
 any issue.
 It is worth pointing out that the reason why the tree topology failed is strictly correlated with the technology
-selected (in this case FDM); as we explained in section \ref{sec:tang_forces}, different technologies
+selected (in this case FDM); as we explained in \cref{sec:tang_forces}, different technologies
 apply different tangential forces to the object while it's being printed. It is possible, if not likely,
 that the same test case on an SLA 3D printer would have resulted in a straightforward success.
 This experiment emphasizes the fact that support structure generation algorithms are not necessarily
@@ -100,7 +100,7 @@ with an SLA printer in mind may not work at all if applied to the FDM technology
 \section{Limitations of previous work}
 \label{sec:limitations}
 
-In both the papers that we have looked at in section \ref{sec:acc_lit}, the topology chosen for the support
+In both the papers that we have looked at in \cref{sec:acc_lit}, the topology chosen for the support
 is a tree; this choice makes total sense in the context of their work, as they were focused on SLA and SLS 3D printing
 techniques; however, as we just explained, this kind of topology is not adequate for FDM 3D printing.
 It is reasonable to think that this limitation could be addressed with some simple modifications to the algorithm,
@@ -119,7 +119,7 @@ any successful adaptation to a different topology would require designing a thir
 use-case.
 
 In the case of commercial software, the limitations are a lot simpler to explain.
-Both Normal Supports (section \ref{sec:normal_supports}) and Tree Supports (section \ref{sec:tree_support}) are simple ``greedy''
+Both Normal Supports (\cref{sec:normal_supports}) and Tree Supports (\cref{sec:tree_support}) are simple ``greedy''
 algorithms that don't perform any kind of optimization. This is not necessarily a bad thing, as greedy solutions are
 extremely fast and can often be quite good if done correctly. However, the question of how much waste is being generated
 by not performing any sort of optimization still remains, and answering such a question is one of the key contributions
@@ -130,9 +130,9 @@ of this thesis.
 \section{Stated objective}
 \label{sec:obj}
 
-All the previous academic literature that we have looked at in section \ref{sec:acc_lit} is primarily
+All the previous academic literature that we have looked at in \cref{sec:acc_lit} is primarily
 focused on industrial technologies such as SLS printing; this means that their work is not easily
-applicable to FDM 3D printing due to the limitations that we explained in section \ref{sec:limitations}.
+applicable to FDM 3D printing due to the limitations that we explained in \cref{sec:limitations}.
 On the other hand, commercial tools available in slicers such as Cura and OrcaSlicer are obviously compatible
 with the FDM technology, but are not subject to any (sophisticated) optimization.
 The objective of this thesis is to bridge the gap between these two worlds, and to create the first public
@@ -147,11 +147,11 @@ In order to achieve the objectives, there are three separate steps that we need 
     \item Creating an algorithm that is able to evaluate stiffness in the solution space defined by the topology selected
     \item Identifying a suitable encoding for a solution and developing an optimization algorithm that works with an arbitrary cost function.
 \end{itemize}
-The first step is the most straightforward one, as we already explored various topologies in section \ref{sec:sup_type}.
+The first step is the most straightforward one, as we already explored various topologies in \cref{sec:sup_type}.
 Having seen the results, it is easy to exclude the ``tree'' topology as it can result in structures that are impossible to print.
-The two remaining options are thus ``struct'' and ``cylinder''. Looking at table \ref{tab:topologies}, it is clear that the struct
+The two remaining options are thus ``struct'' and ``cylinder''. Looking at \cref{tab:topologies}, it is clear that the struct
 is the most promising in terms of material used, while the cylinder is more promising in terms of print time. Since the material reduction
 is often a more important objective than time reduction, and since the difference in material is much bigger than the difference
 in time, the choice of the ``struct'' topology becomes obvious.
-The last two steps are more convoluted than the simple choice of topology, and are explained in chapters \ref{cha:stiffness_algo}
-and \ref{cha:support_opt_alg}.
+The last two steps are more convoluted than the simple choice of topology, and are explained in \cref{cha:stiffness_algo}
+and \cref{cha:support_opt_alg}.

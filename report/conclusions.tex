@@ -10,19 +10,19 @@ the limitations and listing some potential future improvements.
 
 In our work we developed a novel support structure 
 optimization algorithm using genetic algorithms. As we explained in the motivations 
-(chapter \ref{cha:motivations}), some similar algorithms exist in the literature, but 
+(\cref{cha:motivations}), some similar algorithms exist in the literature, but 
 they were primarily focused on industrial 3D printing technologies such as SLS, 
 whereas our algorithm is designed explicitly for FDM 3D printing (which is more 
 common in the consumer space).
 
 In order to apply genetic algorithms to FDM 3D printing support structure 
 generation, two main challenges were solved: the first one was the evaluation 
-of stiffness in a time-efficient manner (which we tackled in chapter
-\ref{cha:stiffness_algo}), and the second one was the implementation of an 
+of stiffness in a time-efficient manner (which we tackled in
+\cref{cha:stiffness_algo}), and the second one was the implementation of an 
 algorithm that was able to generate and optimize a wide variety of support structures (and 
 not only simple trees).
 
-In the Results chapter (chapter \ref{cha:results}) we have shown how our algorithm is 
+In the Results chapter (\cref{cha:results}) we have shown how our algorithm is 
 indeed able to save a significant amount of material compared to state-of-the-art
 methods, with a few minor downsides. Some of these, such as the contact
 points structure being inferior to the state-of-the-art one, are temporary and
@@ -42,21 +42,21 @@ Our work presented four key contributions, of which the first two can be conside
 The four contributions are:
 
 \begin{description}
-\item[Approximated stiffness evaluation] (Chapter~\ref{cha:stiffness_algo})
+\item[Approximated stiffness evaluation] (\cref{cha:stiffness_algo})
 This algorithm made the entire project viable, as having a proxy for the stiffness
-of the support structure was essential in the reduction of the z-wobble effect (section \ref{sec:wobble-test}).
+of the support structure was essential in the reduction of the z-wobble effect (\cref{sec:wobble-test}).
 Algorithms for stiffness and flexibility evaluation of rigid frames already existed, of course,
-however, as we showed in section \ref{sec:stiff_speed_cmp}, using those would have resulted
+however, as we showed in \cref{sec:stiff_speed_cmp}, using those would have resulted
 in our optimization algorithm taking more than one day to execute, which is obviously not worth
 doing to save 10--30 grams of plastic. By contrast, the algorithm we developed for stiffness
 evaluation reduces the computational time from over one day to a few minutes, making the prospect
 of saving those 10--30 grams a lot more enticing.
 
-\item[Non-tree support structure optimization] (Section~\ref{sec:sup_struct_opt})
+\item[Non-tree support structure optimization] (\cref{sec:sup_struct_opt})
 The previous methodologies for support structure optimization adopted
 by Zhang et al. 2020 \cite{ZHANG2020117} and Vaissier et al. 2019 \cite{VAISSIER201911}
-were limited to trees. However, as we showed in section 
-\ref{sec:sup_type}, tree supports (at least if they have a constant beam width)
+were limited to trees. However, as we showed in
+\cref{sec:sup_type}, tree supports (at least if they have a constant beam width)
 are unstable for supporting tall regions in the context of FDM 3D printing, 
 as they tend to flex too much and potentially detach from the plate.
 For this reason we developed a novel optimization algorithm that was able
@@ -64,7 +64,7 @@ to optimize a wider variety of support topologies. This wider variety
 of support topologies was used to produce stiffer structures that were indeed
 able to reach and support taller critical areas.
 
-\item[Improved critical/floating region detection] (Sections~\ref{sec:crit_detection}, \ref{sec:floating_regions_detection})
+\item[Improved critical/floating region detection] (\cref{sec:crit_detection,sec:floating_regions_detection})
 Our proposed solution paid special attention to floating regions, and to the ``propagation'' of critical
 areas, resulting in a support structure generation that was more aware of what regions required to be simply
 supported, and what regions required to be supported and to be provided with some stiffness.
@@ -73,7 +73,7 @@ methods resulted in several failed prints, forcing us to manually add some suppo
 our method was able to generate a feasible support structure without user input.
 
 
-\item[Contact Points Grouping using CPPNs] (Section~\ref{sec:contact_points_grouping})
+\item[Contact Points Grouping using CPPNs] (\cref{sec:contact_points_grouping})
 The grouping of the contact points is not strictly essential, however it is required
 for the divide-and-conquer approach we used to speed up the support structure optimization.
 Our approach for the grouping of nodes was based on a Compositional Pattern Producing
@@ -177,7 +177,7 @@ implementation specific, and can therefore improve with potential future work.
 
 The topology we have selected for the support structure (namely the rigid frame)
 has some structural disadvantages compared to more common topologies such as the one adopted
-by tree supports (\ref{sec:tree_support}).
+by tree supports (\cref{sec:tree_support}).
 The two key limitations are:
 \begin{description}
 
@@ -207,7 +207,7 @@ limitations that we think should be addressed before any wider adoption are:
     however the way that contact points are selected, and especially their structure/topology is another important
     part of support structure generation. This part of the algorithm is not as important in the context of material
     reduction, however it is quite important for the final quality of the printed output.
-    As we have seen in section \ref{sec:print_quality}, there is a small but noticeable difference in quality
+    As we have seen in \cref{sec:print_quality}, there is a small but noticeable difference in quality
     between the support generated by our algorithm, and the one generated by the ``Tree Supports''.
     \item[Better Integration with Slicers] Our algorithm simply outputs a 3D mesh that is then imported
     into the slicer software together with the mesh of the object we want to print. This approach is 
@@ -241,7 +241,7 @@ new functionalities/capabilities to our algorithm.
 
 \subsection{Refinement Works}
 Refining the work for a wide scale deployment mostly involves fixing
-the implementation-specific limitations we listed in section \ref{sec:imp_spec_limit}.
+the implementation-specific limitations we listed in \cref{sec:imp_spec_limit}.
 Fixing those limitations would involve:
 \begin{itemize}
     \item Creating a better algorithm for the generation
@@ -265,7 +265,7 @@ potential future improvements of our work, those are:
 
 \begin{description}
     \item[Introducing Print Time Costs] 
-    In the results chapter (\ref{cha:results}) we have noted that our algorithm produces supports that
+    In the results chapter (\cref{cha:results}) we have noted that our algorithm produces supports that
     on average take slightly longer to print. This primarily stems from the fact that the ``rigid frame''
     support topology requires that the nozzle move around more to deposit the material, however this does
     not mean that this print time can never improve; indeed our current algorithm is not properly

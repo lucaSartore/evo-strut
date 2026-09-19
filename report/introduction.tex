@@ -19,7 +19,7 @@ RepRap (Replicating Rapid Prototyper) \cite{reprap} was a project developed at t
 to develop an open-source 3D printer that was cheap to produce.
 The project was widely regarded as a success, and managed to build approximately 4500 machines in two and a half years.
 
-In 2012, Prusa Research was founded, and the company started selling its famous i3 model (figure \ref{fig:prusa_i3}) (which was based on the RepRap project)
+In 2012, Prusa Research was founded, and the company started selling its famous i3 model (\cref{fig:prusa_i3}) (which was based on the RepRap project)
 at a starting price of approximately €600. Since then, consumer 3D printers have only become better and cheaper thanks to companies
 such as Creality, Elegoo, and Bambu Lab.
 
@@ -55,7 +55,7 @@ the level of detail provided in this introduction is more than enough to underst
 
 \subsection{Fused Deposition Modeling (FDM)}
 
-FDM or Fused Deposition Modeling (Figure \ref{fig:fdm}) is a technique that relies on a thermoplastic filament that is fed by an extruder into a heated nozzle.
+FDM or Fused Deposition Modeling (\cref{fig:fdm}) is a technique that relies on a thermoplastic filament that is fed by an extruder into a heated nozzle.
 This nozzle melts the filament and moves through 3D space using a set of at least three motors.
 To control this movement, a software program called a ``slicer'' converts a 3D model into a set of instructions known as ``gcode''.
 These instructions are then processed by the printer's controller, guiding the nozzle to deposit the material layer by layer
@@ -159,13 +159,13 @@ angle that is too steep.
 \end{figure}
 
 
-As a general rule of thumb, angles that are above 45-60 degrees (as shown in figure \ref{fig:overhangs})
+As a general rule of thumb, angles that are above 45-60 degrees (as shown in \cref{fig:overhangs})
 are understood to require some supports in order to be printed successfully (although precise
 numbers widely vary by technology, printer model, material and settings).
 The reason why supports are required (at least in the case of FDM 3D printing) is that
 when the filament is deposited, it is in a semi-solid state, and it would have a tendency to fall
 down before it solidifies. On smaller overhanging angles, this is not a big issue; however, as the angle increases, 
-the effect becomes more and more pronounced, and the printing quality progressively deteriorates, as we can see in figure \ref{fig:overhangs_det}.
+the effect becomes more and more pronounced, and the printing quality progressively deteriorates, as we can see in \cref{fig:overhangs_det}.
 
 
 \begin{figure}[ht]
@@ -179,7 +179,7 @@ the effect becomes more and more pronounced, and the printing quality progressiv
 Another instance where supports are mandatory is the case when the object that is being printed
 has some ``floating regions''; this is an extreme case when a specific region of the printed object is
 attached to the plate only thanks to a section of the model that is higher than the floating region itself.
-This means (as we can see in figure \ref{fig:floating_reg}) that, since the printer is constructing
+This means (as we can see in \cref{fig:floating_reg}) that, since the printer is constructing
 the object layer by layer, starting from the bottom, and moving up to the top, there is a moment
 during the print where the floating region is not connected to the plate in any way, and is therefore
 ``floating''. This scenario, of course, requires supports in order to be printed successfully.
@@ -209,14 +209,14 @@ below before it solidifies).
 
 In conclusion, supports are often mandatory to print some specific structures
 that may contain overhanging angles that are too steep, or some floating regions; however,
-in the case of some complex structures, such as the one shown in figure \ref{fig:support_dual_color},
+in the case of some complex structures, such as the one shown in \cref{fig:support_dual_color},
 the amount of material used to print the supports can be a significant portion of the total
 bill of materials necessary for a print.
 Since the recyclability of the supports ranges from hard to impossible, depending on the
 type of material used, supports are often considered a form of waste, and there have therefore
 been many attempts at creating more efficient algorithms that are able to reduce the material
 necessary to create effective supports.
-We will explore more in depth the history of those types of algorithms in chapter \ref{cha:prev_literature}.
+We will explore more in depth the history of those types of algorithms in \cref{cha:prev_literature}.
 
 \section{Forces applied to the object during printing}
 \label{sec:tang_forces}
@@ -246,7 +246,7 @@ The reason why tangential forces are relevant is that they make some shapes hard
 In particular, in the 3D printing community there is this test, referred to as the ``z-wobble test'',
 that involves printing a narrow and tall structure in order to see when the tangential forces
 applied to the structure will make the model bend, and therefore result in a poor-quality print.
-In figure \ref{fig:wobble-test} you can see a cylindrical beam with a diameter of
+In \cref{fig:wobble-test} you can see a cylindrical beam with a diameter of
 3 \SI{}{\milli\metre} and a height of approximately 10 \SI{}{\centi\metre} that is being printed,
 and you can clearly see the bending effect caused by the force applied by the nozzle.
 The final result is a print that progressively deteriorates in quality as the height increases,
