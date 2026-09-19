@@ -459,7 +459,7 @@ stage is probably the least useful of the three, and could easily be replaced by
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.7\textwidth]{images/conatct_points_optimization.png}
+    \includegraphics[width=0.7\textwidth]{images/contact_points_optimization.png}
     \caption{Where contact points are placed inside a critical region (taken from the model ``Dragon'')}
     \label{fig:contact_points_opt}
 \end{figure}
@@ -677,7 +677,7 @@ individually as we did in the previous section.
 \subsection{Genotype Structure}
 \label{sec:contact_points_grouping_gs}
 
-In the contact point grouping stage, we aim to evolve the weigths of a fixed-size Compositional Pattenr Producing Network or CPPN \cite{cppn}. The network takes as input the position of a contact point (the $x$, $y$ and $z$ coordinates)
+In the contact point grouping stage, we aim to evolve the weights of a fixed-size Compositional Pattern Producing Network or CPPN \cite{cppn}. The network takes as input the position of a contact point (the $x$, $y$ and $z$ coordinates)
 and gives as output the group that the node is part of.
 To categorize a point into a group we just take the last layer of the network, and pick the group
 corresponding to the neuron with the highest output. This means that the maximum number of groups
