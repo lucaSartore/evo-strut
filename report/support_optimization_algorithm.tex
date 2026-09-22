@@ -120,7 +120,7 @@ We can get a sense of why propagation is important
 by looking at \cref{fig:critical_detect_no_prop,fig:critical_detect}.
 In the former, we see what the critical regions are if no propagation is applied; meanwhile, in the latter one,
 we see the same output, but propagation is applied. The most notable difference is in the bottom part
-of the dragon's wing. As we can see, in the version with no propagation, there is a tiny critical area in the tip of the wing, but as soon as the overhanging angle is small enough, the critical area disappears.
+of the dragon's wing. As we can see, in the version with no propagation, there is a tiny critical area at the tip of the wing, but as soon as the overhanging angle is small enough, the critical area disappears.
 In contrast, in the version that has propagation, the criticality starts at a high value in the bottom
 part of the wing, and requires a bit of time for the score to reach zero, resulting in a much larger critical
 region. This behavior is desirable, as it is unreasonable to think that a single support at the tip of the wing
@@ -336,7 +336,7 @@ too much and reaches zones that are actually not considered ``floating''.
 
 In this stage of the pipeline, we have a set of nodes inside the mesh graph that are deemed
 ``critical''; however, we have no grouping or topology of the critical areas themselves.
-This is not strictly speaking an issue, as we could in theory execute the next stage (contact
+This is not strictly speaking an issue, as we could, in theory, execute the next stage (contact
 points optimization) only once, for the entire set of critical regions; however, this would 
 be less than ideal from a performance standpoint. In fact, generally speaking, in this kind of 
 optimization problem it is more efficient to optimize many small problems rather than
@@ -505,7 +505,7 @@ was added to avoid detecting only a tiny critical region in some particular
 scenarios, such as, for example, the wing of the dragon 
 (see \cref{fig:critical_detect,fig:critical_detect_no_prop}).
 Without this cost term, a single well-placed support in the ``tip'' of the dragon's wing
-would singlehandedly remove the entire critical region; however, in real life such a
+would single-handedly remove the entire critical region; however, in real life such a
 support would create many problems, both because of the z-wobble effect (\cref{sec:wobble-test})
 and because the connection points are designed
 to be fragile on purpose, in order to simplify the removal process, making it extremely
@@ -566,7 +566,7 @@ The four fundamental mutations are:
 \label{sec:contact_points_opt_cross}
 
 The crossover strategy is simple to explain: given two genotypes, a random plane is generated
-in 3D space; then we can create a new genotypes by selecting all the points that are on one side
+in 3D space; then we can create a new genotype by selecting all the points that are on one side
 of the plane from Parent A, and all the points that are on the other side of the plane from 
 Parent B.
 \Cref{fig:crossover_cpo} shows this process in action with a two-dimensional representation
@@ -583,7 +583,7 @@ close to the border, making the split a bit unequal and potentially causing wors
 In the algorithm described, there is one small edge case; in fact, it cannot work if there are
 fewer than three points in a genotype, or if the three points selected are in a straight line,
 making it impossible to build the plane. In all of these circumstances, the algorithm simply
-ignores the crossover and returns a genotypes identical to one random parent.
+ignores the crossover and returns a genotype identical to one random parent.
 
 
 \begin{figure}[ht]
@@ -641,27 +641,27 @@ tournament size of 10.
 
 This stage in the pipeline aims to group contact points based on proximity, in order to optimize
 each section individually. As in the previous ``grouping'' step, this is not strictly necessary
-from a theoretical point of view, however it is essentially required for good performance in practice.
+from a theoretical point of view; however, it is essentially required for good performance in practice.
 The reason why splitting is acceptable in this scenario is that the support structures
 of areas that are far apart are generally independent from each other. For example,
 in our ``Dragon'' test-case we can imagine how the structure generated to support the left
 wing is roughly independent from the structure generated for the right wing.
-For this reason optimizing them together gives minimal benefit to the objective function,
-however optimizing them separately has big performance benefits. This is because the algorithm
+For this reason, optimizing them together gives minimal benefit to the objective function,
+however, optimizing them separately has big performance benefits. This is because the algorithm
 for stiffness evaluation we explained in \cref{cha:stiffness_algo} has a complexity
-of $O(n^2 \log (n))$ meaning that a divide and conquer approach can be highly effective
+of $O(n^2 \log (n))$, meaning that a divide and conquer approach can be highly effective
 in reducing the computational complexity of the algorithm.
-Initially some simpler ``greedy'' algorithms for the grouping of contact points were tested,
-however none of them provided satisfactory results. These tests included strategies such as using the
+Initially, some simpler ``greedy'' algorithms for the grouping of contact points were tested;
+however, none of them provided satisfactory results. These tests included strategies such as using the
 ``critical areas'' as a starting point, and merging them based on proximity, and other similar
-heuristics. However we found that with those types of approaches it was extremely difficult to regulate
+heuristics. However, we found that with those types of approaches it was extremely difficult to regulate
 the right amount of ``grouping'' required for different shapes, as they tended to either
-group too aggressively, or not group enough. For this reason an optimization-based
+group too aggressively, or not group enough. For this reason, an optimization-based
 solution was adopted using a Compositional Pattern Producing Network for generating the groups,
 with a genetic algorithm based optimization.
 The final result of a grouping step executed on the ``Dragon'' test-case can be seen in
 \cref{fig:cp_grouping}. To explain the optimization process that led to the result seen in the
-picture we will explain each component of the genetic algorithm
+picture, we will explain each component of the genetic algorithm
 individually as we did in the previous section.
 
 
@@ -679,9 +679,9 @@ individually as we did in the previous section.
 
 In the contact point grouping stage, we aim to evolve the weights of a fixed-size Compositional Pattern Producing Network or CPPN \cite{cppn}. The network takes as input the position of a contact point (the $x$, $y$ and $z$ coordinates)
 and gives as output the group that the node is part of.
-To categorize a point into a group we just take the last layer of the network, and pick the group
+To categorize a point into a group, we just take the last layer of the network, and pick the group
 corresponding to the neuron with the highest output. This means that the maximum number of groups
-the network can produce is upper bounded by the size of the last layer. Generally speaking this is not an
+the network can produce is upper bounded by the size of the last layer. Generally speaking, this is not an
 issue as the number of groups generated is not particularly high, meaning that even with a small
 25-neuron output layer we are not placing significant constraints on the model.
 We tested different network topologies, and ultimately ended up with a fully connected NN, having an input layer
@@ -699,14 +699,14 @@ are easier to train.
 The cost function associated with grouping is parametrized by three values
 ($K_{\text{height}}$, $K_{\text{area}}$ and $K_{\text{volume}}$).
 Their use is illustrated in \cref{alg:cpg_cf}.
-The general idea is that once a group is created we compute its (three dimensional) convex hull
+The general idea is that once a group is created, we compute its (three-dimensional) convex hull
 (calculated using the efficient Quick Hull algorithm \cite{quickhull}),
 and then apply three main costs.
 The first two are proportional to the area and the volume of the convex hull, and are
 essentially there to incentivize the algorithm to create groups that contain points
 that are close together, in order to minimize the cost. Meanwhile the third one is
 a cost that is proportional to the height of the group. This is a regularization term
-that ensures there is a cost in creating a group, otherwise the optimizer would always end up
+that ensures there is a cost in creating a group; otherwise the optimizer would always end up
 with a solution that uses the highest number of groups possible.
 Generally speaking it is less desirable to create too many groups, because we give fewer
 opportunities to the optimizer to ``merge'' support structures together, and therefore
@@ -743,8 +743,8 @@ Defining mutations on a neural network (especially if the network is small and s
 is particularly easy, as the network can be seen as a set of weights we need to tune. For this reason
 the mutation is parametrized by 4 parameters: a mutation rate ($p_m$), a reset rate ($p_r$)
 and two random distributions for mutation and reset ($\mathcal{D}_m$ and $\mathcal{D}_r$).
-With these four parameters the mutation can be easily described with \cref{alg:network_mut}.
-In the final implementation we ended up defining four different sets of the four parameters,
+With these four parameters, the mutation can be easily described with \cref{alg:network_mut}.
+In the final implementation, we ended up defining four different sets of the four parameters,
 and randomly picking one for every mutation operation.
 This was done in order to increase the stochasticity of the mutation, which is generally
 speaking a good idea for genetic algorithms.
@@ -791,7 +791,7 @@ The three strategies selected are:
 \begin{description}
     \item [Uniform:] This is the traditional uniform crossover where every weight in the offspring's network
     is either inherited from Parent A or from Parent B with 50-50 probability.
-    \item [Single Point:] In this case a random number is generated between zero and the number of parameters,
+    \item [Single Point:] In this case, a random number is generated between zero and the number of parameters,
     and then all of the weights that have an index lower than the generated number are inherited from one
     parent, while the remaining ones are inherited from the other.
     \item [Arithmetic:] In this case we decide a parameter $\alpha$ (usually 0.5) and then the weights of the
@@ -819,8 +819,8 @@ CPU cycles, and the maximum number of generations allowed without progress is se
 The selection process is elitist, with the 10 best individuals always passing to the next generation,
 while the selection of the remaining 90 individuals is done using tournament selection with a 
 tournament size of 10.
-During our testing we found that this optimization problem was really sensitive to the initialization
-of the neural network. Therefore, to reduce variability the optimization process is repeated 5 times,
+During our testing, we found that this optimization problem was really sensitive to the initialization
+of the neural network. Therefore, to reduce variability, the optimization process is repeated 5 times,
 and only the best output is selected. The decision to do so was also made easier by the fact
 that this step is by far the fastest, taking no more than a few seconds.
 
@@ -839,9 +839,9 @@ The optimization algorithm can be seen at work in this
 YouTube video: \url{https://www.youtube.com/watch?v=muGUorMoAzM},
 or in \cref{fig:struct_opt} where an extrapolation of six 
 frames is displayed.
-For explaining this optimizer we will follow the same approach
+To explain this optimizer, we will follow the same approach
 as the other two, meaning that we will explain the individual components
-of the genetic algorithm starting as always with the genotype structure.
+of the genetic algorithm, starting as always with the genotype structure.
 
 
 \begin{figure}[ht]
@@ -863,7 +863,7 @@ $$\mathbf{G} = \{ g_1, g_2, ..., g_m\}$$
 Each gene $g_i$ is represented by two parameters: a position in 3D space ($p_i$) and a number
 $n$ (in the range 1 to 3) that defines the number of neighbors the point ``wants'' to connect to. In mathematical terms:
 $$g_i = (p_i, n_i) \qquad \forall i \in [1, m]$$
-This representation is quite simple indeed, however the slightly more complicated part
+This representation is quite simple indeed; however, the slightly more complicated part
 is transforming this simple encoding into a rigid frame. This is done with
 \cref{alg:gene_to_frame}.
 As we can see in the algorithm, every gene $g_i$ is converted into a node in the rigid
@@ -871,12 +871,12 @@ frame $F$. Then every node is connected to at most $n_i$ neighbors below that pr
 support. Neighbors are eligible only if the connection angle is within the acceptable
 steepness range; this ensures that the frames produced are printable by guaranteeing
 at construction time that the frame will not have excessive overhanging angles.
-Finally there are two minor details that are worth mentioning.
+Finally, there are two minor details that are worth mentioning.
 The first one is that all nodes that don't have any support are automatically 
 connected to the ground; this is of course necessary if we want the structure to not float in the void.
 The second one is that the connections to the contact points (i.e., the points of contact
 between the support frame and the printed object) are treated almost in the same way as
-regular nodes with the only two differences being that the number of neighbors ($n$)
+regular nodes, with the only two differences being that the number of neighbors ($n$)
 is automatically set to one, and that those points are not eligible for being ``supporters''
 (this is to ensure that a contact point is not connected to another contact point with a beam
 in the final structure, which of course would be less than desirable).
@@ -929,28 +929,28 @@ to the right).
     \label{fig:sup_struct_opt_gene_struct}
 \end{figure}
 
-Generally speaking the primary challenge when designing the genetic representation
+Generally speaking, the primary challenge when designing the genetic representation
 of any genetic-based solver is striking a balance between a complex formulation 
 that is able to be very expressive, and a simpler formulation that is easy to optimize
 using crossover and mutation.
 The genetic representation we presented is a good middle ground between the two 
 constraints. The fact that we only allow each node to connect to the $n$ closest eligible
-neighbors is of course a reduction in the expressiveness of the system, however
+neighbors is of course a reduction in the expressiveness of the system; however,
 this downside comes with the benefit of a much simpler representation that is easier to optimize.
-During the design process more options were tested.
+During the design process, more options were tested.
 Some of those options included:
 a representation that organized the support structure into layers, where each layer was 
 able to be mutated separately, and then the crossover was achieved by merging different layers.
-This representation was easy to optimize, however the topology of the output frame was found 
+This representation was easy to optimize; however, the topology of the output frame was found 
 to be too restricted, and the results were not satisfactory.
 Another representation that was tested involved using a Compositional Pattern Producing Network
-that essentially had as output a multi dimensional vector field, that was then used to generate
+that essentially had as output a multi-dimensional vector field, which was then used to generate
 the rigid frame. This version, however, although quite interesting in theory, failed to deliver
 acceptable results in practice; the primary issue stemmed from the relation
 between the size of the network and the ability to train one efficiently.
-Small networks were able to be trained effectively using this method, however the resulting
+Small networks were able to be trained effectively using this method; however, the resulting
 frames were not good, as the network was too small to learn any meaningful pattern.
-Increasing the size of the network would have resolved this issue, however the fact that we are
+Increasing the size of the network would have resolved this issue; however, the fact that we are
 optimizing the network using a genetic algorithm (rather than a gradient-based method)
 makes the optimization process much slower and more inefficient, effectively limiting the
 size of the networks we can train in a reasonable amount of time.
@@ -994,12 +994,12 @@ for cost calculation. We can see in the function ``StiffnessCost'' that the fram
 constructed one node at a time; this ensures we can calculate the stiffness of every point
 while it's being built, and not just with the final structure, which, as we discussed in
 \cref{sec:stiffness_part_frames}, is quite important for a few mechanical reasons.
-While the frame is being constructed two different sources of costs are evaluated:
+While the frame is being constructed, two different sources of costs are evaluated:
 
 \begin{description}
     \item[Stiffness Cost:] 
     The stiffness cost is simply a function of the stiffness of each beam; this value is calculated
-    inside the function ``BeamCost'' and is essentially a linear with threshold function of the compliance,
+    inside the function ``BeamCost'' and is essentially a linear-with-threshold function of the compliance,
     sampled in a set of equally spaced points inside the beam.
     The compliance is calculated inside the ``Compliance'' function, and we can see that it is a simple
     L2 norm of the $xx$ and $yy$ components of the flexibility matrix $\mathbf{D}$.
@@ -1011,22 +1011,22 @@ While the frame is being constructed two different sources of costs are evaluate
     (definition and detection of floating regions are defined in \cref{sec:floating_regions_detection}).
     In a traditional ``critical area'' (i.e., an area where the overhanging angle
     is above a specific threshold) the support is placed to sustain the melted
-    filament while it cools down, but once the cooling process has concluded the support is no longer necessary.
+    filament while it cools down, but once the cooling process has concluded, the support is no longer necessary.
     In the case of floating regions, however, the printed object is (at first) not directly connected to the plate
     if not for the supports themselves, so the usefulness of the support is not limited to the first few seconds
     after the filament is extruded, but it remains crucial until the floating regions are connected
     to the plate by means other than the support structure. This means that, in the period of time when the floating region is not connected
     to the build plate, the support must provide an adequate level of stiffness to the floating region,
     to avoid having to deal with the z-wobble effect (\cref{sec:wobble-test}).
-    For this reason the function ``FloatingRegionCost'' calculates the equivalent stiffness (that is approximated by calculating the stiffness of a point
+    For this reason, the function ``FloatingRegionCost'' calculates the equivalent stiffness (that is approximated by calculating the stiffness of a point
     in the center of the floating region, connected to all contact points) of every floating region.
     This equivalent stiffness is then simply converted to compliance and transformed into cost with a simple
-    linear with threshold model.
+    linear-with-threshold model.
     The threshold value and weight are parameters of the floating region itself (with larger floating regions
     requiring more stiffness).
     Disregarding the application of this cost would result in a support structure such as the one shown in
     \cref{fig:no_floating_regions_cost}, where we can see that the entire floating region is being supported by a
-    single beam. This would be fine if we only needed support while the filament is cooling, however,
+    single beam. This would be fine if we only needed support while the filament is cooling; however,
     since while the print is ongoing the floating region is connected to the plate only
     by the single support beam, the z-wobble effect would cause serious quality issues.
 \end{description}
@@ -1108,15 +1108,15 @@ Another undesirable feature of the generated supports is them having
 an overhanging angle (or steepness) that is too low. If this was the case,
 the support structure would itself not be printable without
 some kind of support, resulting in a problem with infinite recursion.
-For this reason a simple cost based on the steepness of the
+For this reason, a simple cost based on the steepness of the
 beams is applied in order to encourage the optimizer to produce structures
 that are fully printable.
 It should be said that due to the way we convert the genotype into a rigid
 frame, we could ensure that all overhanging angles are above a certain threshold
 by setting $\varPhi_{{th}}$ (line 2 of \cref{alg:gene_to_frame})
-to an appropriate value, however the ability to apply a separate cost function
+to an appropriate value; however, the ability to apply a separate cost function
 to the steepness of support is still a desirable trait, as it allows
-expressing more complex requirements such as for example: ``You must keep all overhanging
+expressing more complex requirements such as, for example: ``You must keep all overhanging
 angles above $30^\circ$, and preferably above $45^\circ$, with a certain penalty
 applied for every beam with an overhanging angle in the $30^\circ$ to
 $45^\circ$ range''.
@@ -1147,12 +1147,12 @@ longer beams being weighted more in the cost function).
 
 \subsubsection{Material Cost}
 
-If we want to minimize the use of material we of course must apply a cost that tells the optimizer
+If we want to minimize the use of material, we of course must apply a cost that tells the optimizer
 to do so. In the previous literature we have looked at in \cref{cha:prev_literature}
-this cost was a function of the volume of the supports, however this mostly stemmed from the fact
+this cost was a function of the volume of the supports; however, this mostly stemmed from the fact
 that their focus was primarily on SLS 3D printing, where printing empty objects is not possible (as the
-powder will remain trapped inside). Our work however is more focused on FDM 3D printing, where
-printing hollow objects is not only possible but very common. For this reason our material cost function
+powder will remain trapped inside). Our work, however, is more focused on FDM 3D printing, where
+printing hollow objects is not only possible but very common. For this reason, our material cost function
 is not a function of volume, but rather a function of the surface area of the supports.
 \Cref{alg:material_cost} shows exactly how the cost is calculated. Here we are approximating
 every beam as a cylinder, and calculating the lateral area of the cylinder.
@@ -1188,7 +1188,7 @@ the supports. Furthermore, supports that originate from the printed object rathe
 are either fragile and risk detaching while the print is ongoing, or, if they are
 strong enough, they often are hard to remove, potentially causing damage to the printed object
 while being detached.
-For this reason we assign a cost to supports that intersect with the volume
+For this reason, we assign a cost to supports that intersect with the volume
 of the printed object. \Cref{alg:collision_cost} shows the formulation of the cost function;
 we can see that it is based on a simple iteration over the beams of the frame.
 Each beam is converted into a set of equally spaced points, and a penalty is applied
@@ -1229,8 +1229,8 @@ with a few minor modifications to expose the correct APIs.
 \subsection{Mutations}
 \label{sec:sup_struct_opt_mut}
 
-Thanks to the genotype representation of the frame being relatively simple we are able to
-define some simple yet effective fundamental mutations. Then to perform a complex mutation
+Thanks to the genotype representation of the frame being relatively simple, we are able to
+define some simple yet effective fundamental mutations. Then, to perform a complex mutation,
 we select a number $n$ of fundamental mutations we want to apply (in the range 1 to 3 in our case)
 and apply the $n$ fundamental mutations in series.
 The 5 fundamental mutations we defined are:
@@ -1275,9 +1275,9 @@ randomly selected from the points inside the support structure.
 \subsection{Initialization}
 \label{sec:sup_struct_opt_init}
 
-The initialization of a new genotype is achieved in three steps: initially we calculate the total volume
+The initialization of a new genotype is achieved in three steps: initially, we calculate the total volume
 of the bounded region where points are allowed to be added (shown in orange in \cref{fig:add_point_mutation})
-then we can calculate the amount of points our genotype should have by multiplying the volume by a ``support density'' 
+then we can calculate the number of points our genotype should have by multiplying the volume by a ``support density'' 
 parameter, and then finally we can start with an empty genotype, and apply the mutation ``AddPoint'' as many times as is 
 necessary to reach the desired number of nodes.
 
@@ -1301,16 +1301,16 @@ The easiest way to do so is to export the support as a 3D volume (in our case us
 STL format), so that printing an object using the generated support is as simple as
 importing the two models together in the slicer, and generating the g-code.
 This was not the only option, as a different one could have been to directly integrate with 
-a slicing software, which would provide some quality and usability benefits as we will discuss
+a slicing software, which would provide some quality and usability benefits, as we will discuss
 in the Future Work section (\cref{sec:future_work}).
 For this thesis we chose the first option, of directly exporting a 3D model,
-both for its simpler implementation, and also for the fact that it makes the solution
+both for its simpler implementation, and for the fact that it makes the solution
 more portable (as it could work with any slicing software, rather than being locked down 
 to a single one).
 The creation of the final volume is obtained by means of merging a set of primitive
 shapes into the final structure. The shapes in question are: a cylinder that is used to
 represent every beam, a cone that is used for the connection to the contact points (given that
-contact points may have a radius different from the one of the beams), a sphere placed
+contact points may have a radius different from that of the beams), a sphere placed
 at every intersection between multiple beams, and a ``GroundFeet'' shape (basically a short
 and wide cylinder) that is added to the nodes that are attached to the ground in order 
 to help them stick to the plate.

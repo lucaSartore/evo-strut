@@ -235,7 +235,7 @@ the anchored point in the origin, and extending in the same direction as the $x$
 \Cref{for:beam_formula} can be adapted to an arbitrary beam (not just a beam that is parallel
 to the $x$ axis) using a simple transposition.
 In order to do so, let us assume that $\mathbf{B}$ is the arbitrary beam we need to find the stiffness of.
-We can start by constructing $\mathbf{B}_x$, an equivalently shaped beam, that is parallel to the $x$ axis.
+We can start by constructing $\mathbf{B}_x$, an equivalently shaped beam that is parallel to the $x$ axis.
 This setup is shown in \cref{fig:stiffness_rotation}.
 Let's call $\mathbf{K}_x$ the stiffness matrix of beam $\mathbf{B}_x$; this matrix can be easily calculated using \cref{for:beam_formula}.
 Then we can calculate the transposition matrix $\mathbf{T}$ that translates from the frame of reference
@@ -341,7 +341,7 @@ $\mathbf{B}$ to the frame of reference $\mathbf{C}$, derived w.r.t. the position
 of frame of reference $\mathbf{B}$. The construction of the Jacobian matrix is seen
 in \cref{for:stiffness_jac} (in the matrix, rows and columns follow the standard
 ordering convention, meaning: $x$ $y$ $z$ $\varphi$ $\theta$ $\psi$).
-In the Jacobian matrix's top left corner we can find a $3 \times 3$ identity matrix; this, of course, represents the fact that moving (without rotating) the frame of reference
+In the Jacobian matrix's top-left corner we can find a $3 \times 3$ identity matrix; this, of course, represents the fact that moving (without rotating) the frame of reference
 $\mathbf{B}$ by $x^*$, $y^*$ and $z^*$ will result in frame $\mathbf{C}$ being
 moved by the same amount.
 Another $3 \times 3$ identity matrix can be found in the bottom right corner of $\mathbf{J}$;
@@ -590,7 +590,7 @@ allowed the algorithm to provide approximated solutions rather than exact ones.
 
 \subsection{Stiffness evaluation for ``Reducible'' frames}
 
-Previously we have explored some ways of calculating equivalent beams using some series (\cref{sec:stiffness_series})
+Previously, we have explored some ways of calculating equivalent beams using some series (\cref{sec:stiffness_series})
 and parallel (\cref{sec:stiffness_parallel}) transformations.
 These two operations can be combined recursively in order to simplify a complex frame into 
 an individual beam. If this is done correctly, we can use the stiffness matrix of the equivalent beam
@@ -1047,7 +1047,7 @@ making it the clear winner in this scenario.
     \begin{tablenotes}
       \footnotesize
       \item[*] Not measured: The 100 iteration test-case, was only necessary for the 
-      weighted dag strategy, where the few seconds of ``startup time'' have a disproportionate
+      weighted DAG strategy, where the few seconds of ``startup time'' have a disproportionate
       effect on the 10 iterations test-case.
     \end{tablenotes}
   \end{threeparttable}

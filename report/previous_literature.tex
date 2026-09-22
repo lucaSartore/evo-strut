@@ -156,7 +156,7 @@ to handle supports that are ``multi-layer'' (defined as a critical area that, in
 to the build plate has another part of the printed object that blocks the direct path from the critical area to the floor).
 We can see this clearly in \cref{fig:multi-layer-support},
 where the normal support algorithm, when faced with a ``multi-layer'' support, simply creates a structure that goes
-straight down, and that rests on the printed object. This is generally considered undesirable, as it creates twice
+straight down, and rests on the printed object. This is generally considered undesirable, as it creates twice
 as many contact points between the support and the object, thus making the support removal process more complicated.
 
 
@@ -203,7 +203,7 @@ and therefore the bottom part of the tree is subject to a larger force compared 
 \end{figure}
 
 One final feature of the tree supports is the way they handle ``multi-layer supports'' (defined in \cref{sec:normal_supports}).
-As you can see in \cref{fig:multi-layer-support} when faced with this circumstance, the algorithm tries to find a diagonal
+As you can see in \cref{fig:multi-layer-support}, when faced with this circumstance, the algorithm tries to find a diagonal
 route that manages to support the critical area without intersecting with the printed object. This feature is quite
 liked by the community as it makes the supports easier to detach, even though it slightly increases the amount of material required
 for the supports.
