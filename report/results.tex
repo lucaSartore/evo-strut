@@ -21,10 +21,10 @@ solutions that we will compare our results with), and the hardware and software 
 
 Evaluating a support generation algorithm requires of course having some 3D models to evaluate 
 the solution on. Since the research field of optimizing support structure generation for additive manufacturing
-is quite niche, there is not a standard dataset that we can simply pick and use. Therefore we have manually
+is quite niche, there is not a standard dataset that we can simply pick and use. Therefore, we have manually
 selected three models. We should note that those three models are not representative of the average object
 printed by a regular user; this is because most 3D printing models are explicitly designed to be printed without
-the need for supports, and would therefore be terrible test-cases for our needs. For this reason we have 
+the need for supports, and would therefore be terrible test-cases for our needs. For this reason, we have
 explicitly ``cherry picked'' models that require a heavy use of supports, so that we could better
 appreciate the difference between the various approaches.
 The three models we selected are a ``Dragon''\footnote{\url{https://makerworld.com/it/models/666708-dragon}}
@@ -38,7 +38,7 @@ taken from Stanford's 3D Scanning Repository.
 Selecting our baseline methods was a bit challenging as there is no clear ``state of the art''
 for what we are trying to do. The two papers that we have looked at in \cref{cha:prev_literature}
 are not concerned with FDM 3D printing, and don't consider the necessary requirements of
-stiffness, making them not really suitable for our application. Furthermore their code is not publicly
+stiffness, making them not really suitable for our application. Furthermore, their code is not publicly
 available (we have even asked the authors for access to the code for comparison use only,
 but they were unable to fulfill our request due to contractual obligations with industrial partners).
 This left us only with the options provided by the industry: ``Normal'' and ``Tree'' supports (that we have
